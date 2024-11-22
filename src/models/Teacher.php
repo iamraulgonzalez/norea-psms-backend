@@ -10,7 +10,7 @@ class Teacher {
     }
 
     public function fetchAll() {
-        $query = "SELECT * FROM tbl_teacher_info";
+        $query = "SELECT * FROM tbl_teacher";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
