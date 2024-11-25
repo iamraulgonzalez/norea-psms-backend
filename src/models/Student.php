@@ -65,16 +65,17 @@ class Student {
         $mother_job = isset($data['mother_job']) ? $data['mother_job'] : null;
         $mother_phone = isset($data['mother_phone']) ? $data['mother_phone'] : null;
         $family_status = isset($data['family_status']) ? $data['family_status'] : null;
+        $status = isset($data['status']) ? $data['status'] : null;
         
         // Prepare and execute the INSERT statement
         $stmt = $this->conn->prepare("INSERT INTO tbl_student_info 
                                       (student_id, student_name, gender, dob, pob_village, pob_commune, pob_province, pob_district, 
                                        current_village, current_commune, current_province, current_district, father_name, 
-                                       father_job, father_phone, mother_name, mother_job, mother_phone, family_status) 
+                                       father_job, father_phone, mother_name, mother_job, mother_phone, family_status,status) 
                                       VALUES 
                                       (:student_id, :student_name, :gender, :dob, :pob_village, :pob_commune, :pob_province, 
                                        :pob_district, :current_village, :current_commune, :current_province, :current_district, 
-                                       :father_name, :father_job, :father_phone, :mother_name, :mother_job, :mother_phone, :family_status)");
+                                       :father_name, :father_job, :father_phone, :mother_name, :mother_job, :mother_phone, :family_status, :status)");
         
         // Bind values
         $stmt->bindParam(':student_id', $student_id);
@@ -96,6 +97,7 @@ class Student {
         $stmt->bindParam(':mother_job', $mother_job);
         $stmt->bindParam(':mother_phone', $mother_phone);
         $stmt->bindParam(':family_status', $family_status);
+        $stmt->bindParam(':status', $status);
         
         return $stmt->execute();
     }        
@@ -131,7 +133,8 @@ class Student {
                       mother_name = :mother_name, 
                       mother_job = :mother_job, 
                       mother_phone = :mother_phone, 
-                      family_status = :family_status
+                      family_status = :family_status,
+                      status = :status
                   WHERE student_id = :student_id";
         
         // Prepare the statement for execution
@@ -157,6 +160,7 @@ class Student {
         $stmt->bindParam(':mother_job', $data['mother_job']);
         $stmt->bindParam(':mother_phone', $data['mother_phone']);
         $stmt->bindParam(':family_status', $data['family_status']);
+        $stmt->bindParam(':status', $data['status']);
         
         // Execute the query and return the result
         return $stmt->execute();
