@@ -1,8 +1,7 @@
 <?php
-
 require_once __DIR__ . '/../config/database.php';
 
-class Subject{
+class YearStudy {
     private $conn;
     public function __construct() {
         $database = new Database();
@@ -10,7 +9,7 @@ class Subject{
     }
 
     public function fetchAll() {
-        $query = "SELECT * FROM tbl_subject";
+        $query = "SELECT * FROM tbl_year_study";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -19,43 +18,43 @@ class Subject{
 // Classroom.php (Model)
 
     public function create($data) {
-        $subject_name = isset($data['subject_name']) ? $data['subject_name'] : null;
+        $year_study = isset($data['year_study']) ? $data['year_study'] : null;
 
-        if ($subject_name === null) {
+        if ($year_study === null) {
             return false;
         }
 
         // Prepare the SQL query to insert a new classroom
-        $query = "INSERT INTO tbl_subject (subject_name) VALUES (:subject_name)";
+        $query = "INSERT INTO tbl_year_study (year_study) VALUES (:year_study)";
         $stmt = $this->conn->prepare($query);
 
         // Bind the class_name parameter
-        $stmt->bindParam(':subject_name', $subject_name);
+        $stmt->bindParam(':year_study', $year_study);
 
         // Execute the query
         return $stmt->execute();
     }
    
 
-    public function updateSubject($id, $data) {
-        $query = "UPDATE tbl_subject SET subject_name = :subject_name WHERE subject_code = :subject_code";
+    public function updateYearStudy($id, $data) {
+        $query = "UPDATE tbl_year_study SET year_study = :year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':subject_code', $id);
-        $stmt->bindParam(':subject_name', $data['subject_name']);
+        $stmt->bindParam(':year_study_id', $id);
+        $stmt->bindParam(':year_study', $data['year_study']);
         return $stmt->execute();
     }
     
-    public function deleteSubject($id) {
-        $query = "DELETE FROM tbl_subject WHERE subject_code = :subject_code";
+    public function deleteYearStudy($id) {
+        $query = "DELETE FROM tbl_year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':subject_code', $id);
+        $stmt->bindParam(':year_study_id', $id);
         return $stmt->execute();
     }
     
-    public function fetchSubjectById($id) {
-        $query = "SELECT * FROM tbl_subject WHERE subject_code = :subject_code";
+    public function fetchYearStudyById($id) {
+        $query = "SELECT * FROM tbl_year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':subject_code', $id);
+        $stmt->bindParam(':year_study_id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../models/Student.php';
+require_once __DIR__ . '/../models/StudentInfo.php';
 require_once __DIR__ . '/../utils/response.php';
 
-class StudentController {
+class StudentInfoController {
+
     public function getAllStudents() {
         $student = new Student();
         $students = $student->fetchAll();

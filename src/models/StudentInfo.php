@@ -46,7 +46,6 @@ class Student {
             }
         } while ($existing_id_count > 0);
         
-        // Rest of the fields
         $student_name = isset($data['student_name']) ? $data['student_name'] : null;
         $gender = isset($data['gender']) ? $data['gender'] : null;
         $dob = isset($data['dob']) ? $data['dob'] : null;

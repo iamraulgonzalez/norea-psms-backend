@@ -10,8 +10,8 @@ function route($uri, $method) {
         
         switch ($resource) {
             case 'students':
-                require_once __DIR__ . '/../controllers/StudentController.php';
-                $controller = new StudentController();
+                require_once __DIR__ . '/../controllers/StudentInfoController.php';
+                $controller = new StudentInfoController();
                 
                 if ($method === 'GET' && $action === 'getAllStudents') {
                     $controller->getAllStudents();
@@ -29,10 +29,9 @@ function route($uri, $method) {
 
                 // Updating a student
                 if ($method === 'PUT' && $action === 'updateStudent') {
-                    // Ensure ID is provided as part of the URL
                     if (isset($uriParts[2])) {
                         $id = $uriParts[2];
-                        $data = json_decode(file_get_contents('php://input'), true);  // Capture JSON input
+                        $data = json_decode(file_get_contents('php://input'), true);
                         if ($data) {
                             $controller->updateStudent($id, $data);
                         } else {
@@ -43,7 +42,6 @@ function route($uri, $method) {
                     }
                 }
 
-                // Deleting a student
                 if ($method === 'DELETE' && $action === 'deleteStudent') {
                     if (isset($uriParts[2])) {
                         $controller->deleteStudent($uriParts[2]);
@@ -52,7 +50,6 @@ function route($uri, $method) {
                     }
                 }
 
-                // Getting a student by ID
                 if ($method === 'GET' && $action === 'getStudentById') {
                     if (isset($uriParts[2])) {
                         $controller->getStudentById($uriParts[2]);
@@ -69,7 +66,7 @@ function route($uri, $method) {
                 if ($method === 'GET' && $action === 'getAllTeachers') {
                     $controller->getAllTeachers();
                 }
-                if ($method === 'GET' && $action === 'AddTeacher') {
+                if ($method === 'POST' && $action === 'AddTeacher') {
                     $data = json_decode(file_get_contents('php://input'), true);
                     if ($data) {
                         $controller->addTeacher($data);
@@ -77,9 +74,36 @@ function route($uri, $method) {
                         echo json_encode(['message' => 'Invalid input data']);
                     }
                 }
-                
+                if ($method === 'PUT' && $action === 'updateTeacher') {
+                    if (isset($uriParts[2])) {
+                        $id = $uriParts[2];
+                        $data = json_decode(file_get_contents('php://input'), true);
+                        if ($data) {
+                            $controller->updateTeacher($id, $data);
+                        } else {
+                            echo json_encode(['message' => 'Invalid input data']);
+                        }
+                    } else {
+                        echo json_encode(['message' => 'Teacher ID not provided']);
+                    }
+                }
+                if ($method === 'DELETE' && $action === 'deleteTeacher') {
+                    if (isset($uriParts[2])) {
+                        $controller->deleteTeacher($uriParts[2]);
+                    } else {
+                        echo json_encode(['message' => 'Teacher ID not provided']);
+                    }
+                }
+                if ($method === 'GET' && $action === 'getTeacherById') {
+                    if (isset($uriParts[2])) {
+                        $controller->getTeacherById($uriParts[2]);
+                    } else {
+                        echo json_encode(['message' => 'Teacher ID not provided']);
+                    }
+                }
                 break;
 
+            
             case 'classrooms':
                 require_once __DIR__ . '/../controllers/ClassroomController.php';
                 $controller = new ClassroomController();
@@ -87,7 +111,7 @@ function route($uri, $method) {
                 if ($method === 'GET' && $action === 'getAllClassrooms') {
                     $controller->getAllClassrooms();
                 }
-                if ($method === 'GET' && $action === 'addClassroom') {
+                if ($method === 'POST' && $action === 'addClassroom') {
                     $data = json_decode(file_get_contents('php://input'), true);
                     if ($data) {
                         $controller->addClassroom($data);
@@ -125,10 +149,145 @@ function route($uri, $method) {
                 }
                 break;
 
+                // Yearstudies
+                case 'yearstudies':
+                    require_once __DIR__ . '/../controllers/YearstudyController.php';
+                    $controller = new YearstudyController();
+                    
+                    if ($method === 'GET' && $action === 'getAllYearStudies') {
+                        $controller->getAllYearStudies();
+                    }
+                    if ($method === 'POST' && $action === 'addYearStudy') {
+                        $data = json_decode(file_get_contents('php://input'), true);
+                        if ($data) {
+                            $controller->AddYearStudy($data);
+                        } else {
+                            echo json_encode(['message' => 'Invalid input data']);
+                        }
+                    }
+                    if ($method === 'PUT' && $action === 'updateYearStudy') {
+                        if (isset($uriParts[2])) {
+                            $id = $uriParts[2];
+                            $data = json_decode(file_get_contents('php://input'), true);
+                            if ($data) {
+                                $controller->updateYearStudy($id, $data);
+                            } else {
+                                echo json_encode(['message' => 'Invalid input data']);
+                            }
+                        } else {
+                            echo json_encode(['message' => 'Classroom ID not provided']);
+                        }
+                    }
+                    if ($method === 'DELETE' && $action === 'deleteYearStudy') {
+                        if (isset($uriParts[2])) {
+                            $controller->deleteYearStudy($uriParts[2]);
+                        } else {
+                            echo json_encode(['message' => 'YearStudy ID not provided']);
+                        }
+                    
+                    }
+                    if ($method === 'GET' && $action === 'getYearStudyById') {
+                        if (isset($uriParts[2])) {
+                            $controller->getYearStudyById($uriParts[2]);
+                        } else {
+                            echo json_encode(['message' => 'YearStudy ID not provided']);
+                        }
+                    }
+                    break;
+                    
+                    //subject case
+                    case "sunjects" :
+                        require_once __DIR__ . '/../controllers/SubjectController.php';
+                        $controller = new SubjectController();
+                        if($method === "GET" && $action === "getAllSubjects"){
+                            $controller->getAllSubject();
+                        }
+                        if($method === "POST" && $action === "addSubject"){
+                            $data = json_decode(file_get_contents('php://input'), true);
+                            if($data){
+                                $controller->AddSubject($data);
+                            }else{
+                                echo json_encode(['message' => 'Invalid input data']);
+                            }
+                        }
+                        if($method === "PUT" && $action === "updateSubject"){
+                            if(isset($uriParts[2])){
+                                $id = $uriParts[2];
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->updateSubject($id, $data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }else{
+                                echo json_encode(['message' => 'Subject ID not provided']);
+                            }
+                        }
+                        if($method === "DELETE" && $action === "deleteSubject"){
+                            if(isset($uriParts[2])){
+                                $controller->deleteSubject($uriParts[2]);
+                            }else{
+                                echo json_encode(['message' => 'Subject ID not provided']);
+                            }
+                        
+                        }
+                        if($method === "GET" && $action === "getSubjectById"){
+                            if(isset($uriParts[2])){
+                                $controller->getSubjectById($uriParts[2]);
+                            }else{
+                                echo json_encode(['message' => 'Subject ID not provided']);
+                            }
+                        }
+                        break;
+
+                    case 'subsubjects':
+                        require_once __DIR__ . '/../controllers/SubSubjectController.php';
+                        $controller = new SubSubjectController();
+                        if ($method === 'GET' && $action === 'getAllSubSubjects') {
+                            $controller->getAllSubSubject();
+                        }
+                        if ($method === 'POST' && $action === 'addSubSubject') {
+                            $data = json_decode(file_get_contents('php://input'), true);
+                            if ($data) {
+                                $controller->AddSubSubject($data);
+                            } else {
+                                echo json_encode(['message' => 'Invalid input data']);
+                            }
+                        }
+                        if ($method === 'PUT' && $action === 'updateSubSubject') {
+                            if (isset($uriParts[2])) {
+                                $id = $uriParts[2];
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if ($data) {
+                                    $controller->updateSubSubject($id, $data);
+                                } else {
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            } else {
+                                echo json_encode(['message' => 'SubSubject ID not provided']);
+                            }
+                        }
+                        if ($method === 'DELETE' && $action === 'deleteSubSubject') {
+                            if (isset($uriParts[2])) {
+                                $controller->deleteSubSubject($uriParts[2]);
+                            } else {
+                                echo json_encode(['message' => 'SubSubject ID not provided']);
+                            }
+                        }
+                        if ($method === 'GET' && $action === 'getSubSubjectById') {
+                            if (isset($uriParts[2])) {
+                                $controller->getSubSubjectById($uriParts[2]);
+                            } else {
+                                echo json_encode(['message' => 'SubSubject ID not provided']);
+                            }
+                        }
+                        break;
+    
             default:
                 echo json_encode(['message' => 'Route not found']);
                 break;
         }
+        
     } else {
         echo json_encode(['message' => 'Route not found']);
     }
