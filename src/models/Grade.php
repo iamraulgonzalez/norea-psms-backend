@@ -1,0 +1,60 @@
+<?php
+require_once __DIR__ . '/../config/database.php';
+    class Grade{
+        private $conn;
+        public function __construct() {
+            $database = new Database();
+            $this->conn = $database->getConnection();
+        }
+    
+        public function fetchAll() {
+            $query = "SELECT * FROM tbl_grade";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+    // Classroom.php (Model)
+    
+        public function create($data) {
+            $grade_name = isset($data['grade_name']) ? $data['grade_name'] : null;
+    
+            if ($grade_name === null) {
+                return false;
+            }
+    
+            // Prepare the SQL query to insert a new classroom
+            $query = "INSERT INTO tbl_grade (grade_name) VALUES (:grade_name)";
+            $stmt = $this->conn->prepare($query);
+    
+            // Bind the class_name parameter
+            $stmt->bindParam(':grade_name', $grade_name);
+    
+            // Execute the query
+            return $stmt->execute();
+        }
+       
+    
+        public function updateGrade($id, $data) {
+            $query = "UPDATE tbl_grade SET grade_name = :grade_name WHERE grade_id = :grade_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':grade_id', $id);
+            $stmt->bindParam(':grade_name', $data['grade_name']);
+            return $stmt->execute();
+        }
+        
+        public function deleteGrade($id) {
+            $query = "DELETE FROM tbl_grade WHERE grade_id = :grade_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':grade_id', $id);
+            return $stmt->execute();
+        }
+        
+        public function fetchGradeById($id) {
+            $query = "SELECT * FROM tbl_grade WHERE grade_id = :grade_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':grade_id', $id);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+    }
