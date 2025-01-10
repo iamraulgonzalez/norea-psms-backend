@@ -13,8 +13,6 @@ require_once __DIR__ . '/../config/database.php';
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
-    // Classroom.php (Model)
     
         public function create($data) {
             $grade_name = isset($data['grade_name']) ? $data['grade_name'] : null;
@@ -35,7 +33,7 @@ require_once __DIR__ . '/../config/database.php';
         }
        
     
-        public function updateGrade($id, $data) {
+        public function update($id, $data) {
             $query = "UPDATE tbl_grade SET grade_name = :grade_name WHERE grade_id = :grade_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
@@ -43,14 +41,14 @@ require_once __DIR__ . '/../config/database.php';
             return $stmt->execute();
         }
         
-        public function deleteGrade($id) {
+        public function delete($id) {
             $query = "DELETE FROM tbl_grade WHERE grade_id = :grade_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
             return $stmt->execute();
         }
         
-        public function fetchGradeById($id) {
+        public function fetchById($id) {
             $query = "SELECT * FROM tbl_grade WHERE grade_id = :grade_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);

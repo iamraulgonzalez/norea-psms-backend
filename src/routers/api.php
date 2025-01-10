@@ -282,7 +282,290 @@ function route($uri, $method) {
                             }
                         }
                         break;
-    
+
+                        case 'assign_monthly_subject_grade':
+                            require_once __DIR__ . '/../controllers/AssignMonthlySubjectGradeController.php';
+                            $controller = new AssignMonthlySubjectGradeController();
+                            if($method === "GET" && $action === "getAllAssignMonthlySubjectGrades"){
+                                $controller->getAllAssignMonthlySubjectGrades();
+                            }
+                            if($method === "POST" && $action === "addAssignMonthlySubjectGrade"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addAssignMonthlySubjectGrade($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateAssignMonthlySubjectGrade"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateAssignMonthlySubjectGrade($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteAssignMonthlySubjectGrade"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteAssignMonthlySubjectGrade($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'AssignMonthlySubjectGrade ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getAssignMonthlySubjectGradeById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getAssignMonthlySubjectGradeById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'AssignMonthlySubjectGrade ID not provided']);
+                                }
+                            }
+                        break;
+
+                        case 'semesters':
+                            require_once __DIR__ . '/../controllers/SemesterController.php';
+                            $controller = new SemesterController();
+                            if($method === "GET" && $action === "getAllSemesters"){
+                                $controller->getAllSemesters();
+                            }
+                            if($method === "POST" && $action === "addSemester"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addSemester($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateSemester"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateSemester($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteSemester"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteSemester($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Semester ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getSemesterById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getSemesterById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Semester ID not provided']);
+                                }
+                            }
+                        break;
+                        case 'semester_score':
+                            require_once __DIR__ . '/../controllers/SemesterScoreController.php';
+                            $controller = new SemesterScoreController();
+                            if($method === "GET" && $action === "getAllSemesterScore"){
+                                $controller->getAllSemesterScore();
+                            }
+                            if($method === "POST" && $action === "addSemesterScore"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addSemesterScore($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateSemesterScore"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateSemesterScore($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteSemesterScore"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteSemesterScore($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'SemesterScore ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getSemesterScoreById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getSemesterScoreById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'SemesterScore ID not provided']);
+                                }
+                            }
+                        break;
+
+                        case 'monthly_score':
+                            require_once __DIR__ . '/../controllers/MonthlyScoreController.php';
+                            $controller = new MonthlyScoreController();
+                            if($method === "GET" && $action === "getAllMonthlyScore"){
+                                $controller->getAllMonthlyScores();
+                            }
+                            if($method === "POST" && $action === "addMonthlyScore"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addMonthlyScore($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateMonthlyScore"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateMonthlyScore($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteMonthlyScore"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteMonthlyScore($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'MonthlyScore ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getMonthlyScoreById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getMonthlyScoreById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'MonthlyScore ID not provided']);
+                                }
+                            }
+                        break;
+                        case 'monthly':
+                            require_once __DIR__ . '/../controllers/MonthlyController.php';
+                            $controller = new MonthlyController();
+                            if($method === "GET" && $action === "getAllMonthly"){
+                                $controller->getAllMonthlies();
+                            }
+                            if($method === "POST" && $action === "addMonthly"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addMonthly($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateMonthly"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateMonthly($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteMonthly"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteMonthly($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Monthly ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getMonthlyById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getMonthlyById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Monthly ID not provided']);
+                                }
+                            }
+                        break;
+                        case 'month_attendance':
+                            require_once __DIR__ . '/../controllers/MonthAttendanceController.php';
+                            $controller = new MonthAttendanceController();
+                            if($method === "GET" && $action === "getAllMonthAttendance"){
+                                $controller->getAllMonthAttendances();
+                            }
+                            if($method === "POST" && $action === "addMonthAttendance"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addMonthAttendance($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateMonthAttendance"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateMonthAttendance($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteMonthAttendance"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteMonthAttendance($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'MonthAttendance ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getMonthAttendanceById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getMonthAttendanceById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'MonthAttendance ID not provided']);
+                                }
+                            }
+                        break;
+                        case 'grade':
+                            require_once __DIR__ . '/../controllers/GradeController.php';
+                            $controller = new GradeController();
+                            if($method === "GET" && $action === "getAllGrades"){
+                                $controller->getAllGrades();
+                            }
+                            if($method === "POST" && $action === "addGrade"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addGrade($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateGrade"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateGrade($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteGrade"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteGrade($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Grade ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getGradeById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getGradeById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Grade ID not provided']);
+                                }
+                            }
+                        break;
+                        case '':
             default:
                 echo json_encode(['message' => 'Route not found']);
                 break;

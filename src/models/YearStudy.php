@@ -14,8 +14,6 @@ class YearStudy {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-// Classroom.php (Model)
 
     public function create($data) {
         $year_study = isset($data['year_study']) ? $data['year_study'] : null;
@@ -36,7 +34,7 @@ class YearStudy {
     }
    
 
-    public function updateYearStudy($id, $data) {
+    public function update($id, $data) {
         $query = "UPDATE tbl_year_study SET year_study = :year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':year_study_id', $id);
@@ -44,14 +42,14 @@ class YearStudy {
         return $stmt->execute();
     }
     
-    public function deleteYearStudy($id) {
+    public function delete($id) {
         $query = "DELETE FROM tbl_year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':year_study_id', $id);
         return $stmt->execute();
     }
     
-    public function fetchYearStudyById($id) {
+    public function fetchById($id) {
         $query = "SELECT * FROM tbl_year_study WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':year_study_id', $id);

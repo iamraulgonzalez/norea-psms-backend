@@ -49,7 +49,7 @@ require_once __DIR__ . '/../config/database.php';
         }
        
     
-        public function updateSamesterScore($id, $data) {
+        public function update($id, $data) {
             $query = "UPDATE tbl_samester_score SET score = :score WHERE samester_score_id = :samester_score_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_score_id', $id);
@@ -57,7 +57,7 @@ require_once __DIR__ . '/../config/database.php';
             return $stmt->execute();
         }
         
-        public function deleteSamesterScore($id) {
+        public function delete($id) {
             $query = "DELETE FROM tbl_samester_score WHERE samester_score_id = :samester_score_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_score_id', $id);
@@ -65,7 +65,7 @@ require_once __DIR__ . '/../config/database.php';
         }
         
 
-        public function fetchSamesterScoreById($id) {
+        public function fetchById($id) {
             $query = "SELECT * FROM tbl_samester_score WHERE samester_score_id = :samester_score_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_score_id', $id);

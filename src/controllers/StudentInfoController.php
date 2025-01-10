@@ -1,36 +1,57 @@
 <?php
+require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../models/StudentInfo.php';
 require_once __DIR__ . '/../utils/response.php';
 
-class StudentInfoController {
+class StudentInfoController extends BaseController {
+    private $studentModel;
+
+    public function __construct() {
+        $this->studentModel = new Student();
+    }
 
     public function getAllStudents() {
-        $student = new Student();
-        $students = $student->fetchAll();
-        echo jsonResponse(200, $students);
-    }
-
-    public function addStudent($data) {
-        $student = new Student();
-        $result = $student->create($data);
-        echo jsonResponse(201, ['message' => 'Student created successfully']);
-    }
-
-    public function updateStudent($id, $data) {
-        $student = new Student();
-        $result = $student->update($id, $data);
-        echo jsonResponse(200, ['message' => 'Student updated successfully']);
-    }
-
-    public function deleteStudent($id) {
-        $student = new Student();
-        $result = $student->delete($id);
-        echo jsonResponse(200, ['message' => 'Student deleted successfully']);
+        try {
+            error_log("Fetching all students...");
+            $students = $this->studentModel->fetchAll();
+            error_log("Found " . count($students) . " students");
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $students
+            ]);
+        } catch (Exception $e) {
+            error_log("Error in getAllStudents: " . $e->getMessage());
+            $this->sendError($e->getMessage());
+        }
     }
 
     public function getStudentById($id) {
-        $student = new Student();
-        $student = $student->fetchById($id);
-        echo jsonResponse(200, $student);
+        if (!$id) {
+            $this->sendError('Student ID not provided');
+            return;
+        }
+        try {
+            $student = $this->studentModel->fetchById($id);
+            echo json_encode([
+                'status' => 'success',
+                'data' => $student
+            ]);
+        } catch (Exception $e) {
+            $this->sendError($e->getMessage());
+        }
+    }
+
+    public function addStudent($data) {
+        // Implementation
+    }
+
+    public function updateStudent($id, $data) {
+        // Implementation
+    }
+
+    public function deleteStudent($id) {
+        // Implementation
     }
 }

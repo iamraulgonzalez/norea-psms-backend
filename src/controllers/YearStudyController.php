@@ -19,19 +19,19 @@ class YearstudyController {
 
     public function updateYearStudy($id, $data) {
         $yearstudy = new YearStudy();
-        $result = $yearstudy->updateYearStudy($id, $data);
+        $result = $yearstudy->update($id, $data);
         echo jsonResponse(200, ['message' => 'YearStudy updated successfully']);
     }
 
     public function deleteYearStudy($id) {
         $yearstudy = new YearStudy();
-        $result = $yearstudy->deleteYearStudy($id);
+        $result = $yearstudy->delete($id);
         echo jsonResponse(200, ['message' => 'YearStudy deleted successfully']);
     }
     
     public function getYearStudyById($id) {
         $yearstudy = new YearStudy();
-        $yearstudys = $yearstudy->fetchYearStudyById($id);
+        $yearstudys = $yearstudy->fetchById($id);
         echo jsonResponse(200, $yearstudys);
     }
 }

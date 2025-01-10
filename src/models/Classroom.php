@@ -36,7 +36,7 @@ class Classroom {
     }
    
 
-    public function updateClassroom($id, $data) {
+    public function update($id, $data) {
         $query = "UPDATE tbl_classroom SET class_name = :class_name WHERE class_id = :class_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);
@@ -44,14 +44,14 @@ class Classroom {
         return $stmt->execute();
     }
     
-    public function deleteClassroom($id) {
+    public function delete($id) {
         $query = "DELETE FROM tbl_classroom WHERE class_id = :class_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);
         return $stmt->execute();
     }
     
-    public function fetchClassroomById($id) {
+    public function fetchById($id) {
         $query = "SELECT * FROM tbl_classroom WHERE class_id = :class_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);

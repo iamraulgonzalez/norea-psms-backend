@@ -37,7 +37,7 @@ class Subject{
     }
    
 
-    public function updateSubject($id, $data) {
+    public function update($id, $data) {
         $query = "UPDATE tbl_subject SET subject_name = :subject_name WHERE subject_code = :subject_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
@@ -45,14 +45,14 @@ class Subject{
         return $stmt->execute();
     }
     
-    public function deleteSubject($id) {
+    public function delete($id) {
         $query = "DELETE FROM tbl_subject WHERE subject_code = :subject_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
         return $stmt->execute();
     }
     
-    public function fetchSubjectById($id) {
+    public function fetchById($id) {
         $query = "SELECT * FROM tbl_subject WHERE subject_code = :subject_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);

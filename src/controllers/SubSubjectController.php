@@ -19,19 +19,19 @@ class SubSubjectController {
 
     public function updateSubSubject($id, $data) {
         $sub_subject = new SubSubject();
-        $result = $sub_subject->updateSubSubject($id, $data);
+        $result = $sub_subject->update($id, $data);
         echo jsonResponse(200, ['message' => 'Sub Subject updated successfully']);
     }
 
     public function deleteSubSubject($id) {
         $sub_subject = new SubSubject();
-        $result = $sub_subject->deleteSubSubject($id);
+        $result = $sub_subject->delete($id);
         echo jsonResponse(200, ['message' => 'Sub Subject deleted successfully']);
     }
     
     public function getSubSubjectById($id) {
         $sub_subject = new SubSubject();
-        $sub_subjects = $sub_subject->fetchSubSubjectById($id);
+        $sub_subjects = $sub_subject->fetchById($id);
         echo jsonResponse(200, $sub_subjects);
     }
 }

@@ -4,7 +4,7 @@ class Database {
     private $db_name = "norea_psms";
     private $username = "root";
     private $password = "";
-    public $conn;
+    private $conn;
 
     public function getConnection() {
         $this->conn = null;

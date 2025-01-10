@@ -19,19 +19,19 @@ class ClassroomController {
 
     public function updateClassroom($id, $data) {
         $classroom = new Classroom();
-        $result = $classroom->updateClassroom($id, $data);
+        $result = $classroom->update($id, $data);
         echo jsonResponse(200, ['message' => 'Classroom updated successfully']);
     }
 
     public function deleteClassroom($id) {
         $classroom = new Classroom();
-        $result = $classroom->deleteClassroom($id);
+        $result = $classroom->delete($id);
         echo jsonResponse(200, ['message' => 'Classroom deleted successfully']);
     }
     
     public function getClassroomById($id) {
         $classroom = new Classroom();
-        $classroom = $classroom->fetchClassroomById($id);
+        $classroom = $classroom->fetchById($id);
         echo jsonResponse(200, $classroom);
     }
 }

@@ -19,19 +19,19 @@ class SubjectController {
 
     public function updateSubject($id, $data) {
         $subject = new Subject();
-        $result = $subject->updateSubject($id, $data);
+        $result = $subject->update($id, $data);
         echo jsonResponse(200, ['message' => 'Subject updated successfully']);
     }
 
     public function deleteSubject($id) {
         $subject = new Subject();
-        $result = $subject->deleteSubject($id);
+        $result = $subject->delete($id);
         echo jsonResponse(200, ['message' => 'Subject deleted successfully']);
     }
     
     public function getSubjectById($id) {
         $subject = new Subject();
-        $subjects = $subject->fetchSubjectById($id);
+        $subjects = $subject->fetchById($id);
         echo jsonResponse(200, $subjects);
     }
 }

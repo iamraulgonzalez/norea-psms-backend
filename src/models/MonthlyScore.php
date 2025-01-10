@@ -47,7 +47,7 @@ require_once __DIR__ . '/../config/database.php';
             return $stmt->execute();
         }
     
-        public function updateMonthlyScore($id, $data) {
+        public function update($id, $data) {
             $query = "UPDATE tbl_monthly_score SET score = :score WHERE monthly_id = :monthly_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':monthly_score_id', $id);
@@ -55,14 +55,14 @@ require_once __DIR__ . '/../config/database.php';
             return $stmt->execute();
         }
 
-        public function deleteMonthlyScore($id) {
+        public function delete($id) {
             $query = "DELETE FROM tbl_monthly_score WHERE monthly_score_id = :monthly_score_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':monthly_score_id', $id);
             return $stmt->execute();
         }
         
-        public function fetchMonthById($id) {
+        public function fetchById($id) {
             $query = "SELECT * FROM tbl_monthly_score WHERE monthly_score_id = :monthly_score_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':monthly_score_id', $id);

@@ -13,8 +13,6 @@ require_once __DIR__ . '/../config/database.php';
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
-    // Classroom.php (Model)
     
         public function create($data) {
             $samester_name = isset($data['samester_name']) ? $data['samester_name'] : null;
@@ -35,7 +33,7 @@ require_once __DIR__ . '/../config/database.php';
         }
        
     
-        public function updateSamester($id, $data) {
+        public function update($id, $data) {
             $query = "UPDATE tbl_samester SET samester_name = :samster_name WHERE samester_id = :samester_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_id', $id);
@@ -43,14 +41,14 @@ require_once __DIR__ . '/../config/database.php';
             return $stmt->execute();
         }
         
-        public function deleteSamester($id) {
+        public function delete($id) {
             $query = "DELETE FROM tbl_samester WHERE samester_id = :samster_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_id', $id);
             return $stmt->execute();
         }
         
-        public function fetchSamesterById($id) {
+        public function fetchById($id) {
             $query = "SELECT * FROM tbl_samester WHERE samester_id = :samester_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':samester_id', $id);

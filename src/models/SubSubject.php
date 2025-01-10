@@ -34,7 +34,7 @@ class SubSubject{
         return $stmt->execute();
     }
    
-    public function updateSubSubject($id, $data) {
+    public function update($id, $data) {
         $query = "UPDATE tbl_sub_subject SET subject_code,sub_subject_name = :subject_code, :sub_subject_name WHERE sub_code = :sub_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
@@ -42,14 +42,14 @@ class SubSubject{
         return $stmt->execute();
     }
     
-    public function deleteSubSubject($id) {
+    public function delete($id) {
         $query = "DELETE FROM tbl_sub_subject WHERE sub_code = :sub_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':sub_code', $id);
         return $stmt->execute();
     }
     
-    public function fetchSubSubjectById($id) {
+    public function fetchById($id) {
         $query = "SELECT * FROM tbl_sub_subject WHERE sub_code = :sub_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':sub_code', $id);
