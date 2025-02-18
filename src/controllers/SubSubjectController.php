@@ -34,4 +34,20 @@ class SubSubjectController {
         $sub_subjects = $sub_subject->fetchById($id);
         echo jsonResponse(200, $sub_subjects);
     }
+
+    public function getSubSubjectsBySubjectCode($subjectCode) {
+        try {
+            $subSubject = new SubSubject();
+            $result = $subSubject->fetchBySubjectCode($subjectCode);
+            
+            if ($result) {
+                echo jsonResponse(200, $result);
+            } else {
+                echo jsonResponse(404, ['message' => 'No sub-subjects found for this subject code']);
+            }
+        } catch (Exception $e) {
+            error_log("Error in getSubSubjectsBySubjectCode: " . $e->getMessage());
+            echo jsonResponse(500, ['message' => 'Failed to fetch sub-subjects']);
+        }
+    }
 }

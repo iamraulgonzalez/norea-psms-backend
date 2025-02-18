@@ -8,10 +8,23 @@ require_once __DIR__ . '/../config/database.php';
         }
     
         public function fetchAll() {
-            $query = "SELECT * FROM tbl_grade";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            try {
+                $query = "SELECT 
+                            grade_id,
+                            grade_name,
+                            level,
+                            create_date 
+                        FROM tbl_grade 
+                        WHERE isDeleted = 0 
+                        ORDER BY grade_id";
+                        
+                $stmt = $this->conn->prepare($query);
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                error_log("Database Error in fetchAll: " . $e->getMessage());
+                throw $e;
+            }
         }
     
         public function create($data) {
@@ -21,20 +34,17 @@ require_once __DIR__ . '/../config/database.php';
                 return false;
             }
     
-            // Prepare the SQL query to insert a new classroom
             $query = "INSERT INTO tbl_grade (grade_name) VALUES (:grade_name)";
             $stmt = $this->conn->prepare($query);
-    
-            // Bind the class_name parameter
+            
             $stmt->bindParam(':grade_name', $grade_name);
     
-            // Execute the query
             return $stmt->execute();
         }
        
     
         public function update($id, $data) {
-            $query = "UPDATE tbl_grade SET grade_name = :grade_name WHERE grade_id = :grade_id";
+            $query = "UPDATE tbl_grade SET grade_name = :grade_name WHERE grade_id = :grade_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
             $stmt->bindParam(':grade_name', $data['grade_name']);
@@ -42,17 +52,39 @@ require_once __DIR__ . '/../config/database.php';
         }
         
         public function delete($id) {
-            $query = "DELETE FROM tbl_grade WHERE grade_id = :grade_id";
+            $query = "UPDATE tbl_grade SET isDeleted = 1 WHERE grade_id = :grade_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
             return $stmt->execute();
         }
         
         public function fetchById($id) {
-            $query = "SELECT * FROM tbl_grade WHERE grade_id = :grade_id";
+            $query = "SELECT * FROM tbl_grade WHERE grade_id = :grade_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        public function fetchByLevel($level) {
+            try {
+                $query = "SELECT 
+                            grade_id,
+                            grade_name,
+                            level,
+                            create_date 
+                        FROM tbl_grade 
+                        WHERE level = :level 
+                        AND isDeleted = 0 
+                        ORDER BY grade_id";
+                        
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':level', $level);
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                error_log("Database Error in fetchByLevel: " . $e->getMessage());
+                throw $e;
+            }
         }
     }

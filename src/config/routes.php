@@ -108,7 +108,7 @@ return [
             ]
         ]
     ],
-    'assign_monthly_subject_grade' => [
+    'assign_monthly' => [
         'controller' => 'AssignMonthlySubjectGradeController',
         'actions' => [
             'GET' => [
@@ -233,5 +233,5 @@ return [
                 'deleteGrade' => 'deleteGrade'
             ]
         ]
-    ]
+            ]
 ]; 

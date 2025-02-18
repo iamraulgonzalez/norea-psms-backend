@@ -8,50 +8,46 @@ require_once __DIR__ . '/../config/database.php';
         }
     
         public function fetchAll() {
-            $query = "SELECT * FROM tbl_samester";
+            $query = "SELECT * FROM tbl_semester WHERE isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     
         public function create($data) {
-            $samester_name = isset($data['samester_name']) ? $data['samester_name'] : null;
+            $semester_name = isset($data['semester_name']) ? $data['semester_name'] : null;
     
-            if ($samester_name === null) {
+            if ($semester_name === null) {
                 return false;
             }
     
-            // Prepare the SQL query to insert a new classroom
-            $query = "INSERT INTO tbl_samester (samester_name) VALUES (:samester_name)";
+            $query = "INSERT INTO tbl_semester (semester_name) VALUES (:semester_name)";
             $stmt = $this->conn->prepare($query);
     
-            // Bind the class_name parameter
-            $stmt->bindParam(':samester_name', $samester_name);
+            $stmt->bindParam(':semester_name', $semester_name);
     
-            // Execute the query
             return $stmt->execute();
         }
-       
     
         public function update($id, $data) {
-            $query = "UPDATE tbl_samester SET samester_name = :samster_name WHERE samester_id = :samester_id";
+            $query = "UPDATE tbl_semester SET semester_name = :semester_name WHERE semester_id = :semester_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':samester_id', $id);
-            $stmt->bindParam(':samester_name', $data['samester_name']);
+            $stmt->bindParam(':semester_id', $id);
+            $stmt->bindParam(':semester_name', $data['semester_name']);
             return $stmt->execute();
         }
         
         public function delete($id) {
-            $query = "DELETE FROM tbl_samester WHERE samester_id = :samster_id";
+            $query = "UPDATE tbl_semester SET isDeleted = 1 WHERE semester_id = :semster_id";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':samester_id', $id);
+            $stmt->bindParam(':semester_id', $id);
             return $stmt->execute();
         }
         
         public function fetchById($id) {
-            $query = "SELECT * FROM tbl_samester WHERE samester_id = :samester_id";
+            $query = "SELECT * FROM tbl_semester WHERE semester_id = :semester_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':samester_id', $id);
+            $stmt->bindParam(':semester_id', $id);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }

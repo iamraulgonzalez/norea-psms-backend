@@ -32,4 +32,42 @@ class TeacherController {
         $teacher = $teacher->fetchById($id);
         echo jsonResponse(200, $teacher);
     }
+
+    public function getTeachersByClassId($class_id) {
+        try {
+            $teacher = new Teacher();
+            if (ob_get_level()) ob_end_clean();
+            
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $teachers = $teacher->getTeachersByClassId($class_id);
+            
+            echo json_encode($teachers, JSON_UNESCAPED_UNICODE);
+            exit();
+
+        } catch (Exception $e) {
+            error_log("Error getting teacher by class: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to get teachers'
+            ]);
+            exit();
+
+        }
+    }
+
+    public function getTeacherCount() {
+        $teacher = new Teacher();
+
+        try {
+            $count = $teacher->getCount();
+            jsonResponse(200, [
+                'status' => 'success',
+                'count' => (int)$count
+            ]);
+        } catch (Exception $e) {
+            errorResponse(500, 'Failed to get teacher count');
+        }
+    }
 }

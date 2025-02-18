@@ -34,4 +34,18 @@ class SubjectController {
         $subjects = $subject->fetchById($id);
         echo jsonResponse(200, $subjects);
     }
+
+    public function getSubjectCount() {
+        $subject = new Subject();
+        try {
+            $count = $subject->getCount();
+            jsonResponse(200, [
+
+                'status' => 'success',
+                'count' => (int)$count
+            ]);
+        } catch (Exception $e) {
+            errorResponse(500, 'Failed to get subject count');
+        }
+    }
 }

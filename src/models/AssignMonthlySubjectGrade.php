@@ -6,33 +6,28 @@
             $this->conn = $database->getConnection();
         }
         public function fetchAll() {
-            $query = "SELECT * FROM tbl_assign_monthlysubject_grade";
+            $query = "SELECT * FROM tbl_assign_monthlysubject_grade WHERE isDeleted = 0 ORDER BY create_date DESC";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
         public function create($data) {
-            $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
-            $sub_code = isset($data['sub_code']) ? $data['sub_code'] : null;
-
-            if ($grade_id === null || $sub_code === null) {
-                return false;
-            }
-    
-            $query = "INSERT INTO tbl_assign_monthlysubject_grade (grade_id, sub_code) VALUES (:grade_id, :sub_code)";
+            $currentDate = date('Y-m-d H:i:s');
+            $query = "INSERT INTO tbl_assign_monthlysubject_grade 
+                      (grade_id, sub_code, create_date, isDeleted) 
+                      VALUES (:grade_id, :sub_code, :create_date, 0)";
+            
             $stmt = $this->conn->prepare($query);
-    
-            $stmt->bindParam(':grade_id', $grade_id);
-            $stmt->bindParam(':sub_code', $sub_code);
-    
-            // Execute the query
+            $stmt->bindParam(':grade_id', $data['grade_id']);
+            $stmt->bindParam(':sub_code', $data['sub_code']);
+            $stmt->bindParam(':create_date', $currentDate);
+            
             return $stmt->execute();
         }
        
 
         public function update($id, $data) {
-            $query = "UPDATE tbl_assign_monthlysubject_grade SET grade_id = :grade_id, sub_code = :sub_code WHERE assign_monthsub_id = :assign_monthsub_id";
+            $query = "UPDATE tbl_assign_monthlysubject_grade SET grade_id = :grade_id, sub_code = :sub_code WHERE assign_monthsub_id = :assign_monthsub_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $id);
             $stmt->bindParam(':sub_code', $data['sub_code']);
@@ -41,14 +36,15 @@
         }
         
         public function delete($id) {
-            $query = "DELETE FROM tbl_assign_monthlysubject_grade WHERE assign_monthsub_id = :assign_monthsub_id";
+            $query = "UPDATE tbl_assign_monthlysubject_grade SET isDeleted = 1 
+                      WHERE assign_monthsub_id = :assign_monthsub_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':assign_monthsub_id', $id);
             return $stmt->execute();
         }
         
         public function fetchById($id) {
-            $query = "SELECT * FROM tbl_assign_monthlysubject_grade WHERE assign_monthsub_id = :assign_monthsub_id";
+            $query = "SELECT * FROM tbl_assign_monthlysubject_grade WHERE assign_monthsub_id = :assign_monthsub_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':assign_monthsub_id', $id);
             $stmt->execute();

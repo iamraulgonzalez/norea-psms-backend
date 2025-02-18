@@ -9,53 +9,279 @@ class Classroom {
     }
 
     public function fetchAll() {
-        $query = "SELECT * FROM tbl_classroom";
+        $query = "SELECT c.*, s.session_name, g.grade_name, num_students_in_class,c.create_date
+                  FROM tbl_classroom c 
+                  INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
+                  INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                  WHERE c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     
-// Classroom.php (Model)
-
     public function create($data) {
-        $class_name = isset($data['class_name']) ? $data['class_name'] : null;
+        try {
+            $class_name = isset($data['class_name']) ? $data['class_name'] : null;
+            $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
+            $session_id = isset($data['session_id']) ? $data['session_id'] : null;
+            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : 45; // Default value
 
-        if ($class_name === null) {
-            return false;
+            // Validate required fields
+            if ($class_name === null || $grade_id === null || $session_id === null) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Missing required fields'
+                ];
+            }
+
+            // First check if this class name already exists in any session
+            $checkExistingClass = "SELECT s.session_name 
+                                 FROM tbl_classroom c
+                                 JOIN tbl_school_session s ON c.session_id = s.session_id
+                                 WHERE c.class_name = :class_name 
+                                 AND c.grade_id = :grade_id
+                                 AND c.isDeleted = 0
+                                 LIMIT 1";
+            
+            $stmt = $this->conn->prepare($checkExistingClass);
+            $stmt->bindParam(':class_name', $class_name);
+            $stmt->bindParam(':grade_id', $grade_id);
+            $stmt->execute();
+            
+            if ($existingClass = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                return [
+                    'status' => 'error',
+                    'message' => "ថ្នាក់ " . $class_name . " " . $existingClass['session_name'] . " មានរួចហើយ"
+                ];
+            }
+
+            // Insert new class
+            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, num_students_in_class) 
+                           VALUES (:class_name, :grade_id, :session_id, :num_students_in_class)";
+            $stmt = $this->conn->prepare($insertQuery);
+
+            $stmt->bindParam(':class_name', $class_name);
+            $stmt->bindParam(':grade_id', $grade_id);
+            $stmt->bindParam(':session_id', $session_id);
+            $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'Class created successfully',
+                    'id' => $this->conn->lastInsertId()
+                ];
+            }
+
+            return [
+                'status' => 'error',
+                'message' => 'Failed to create class'
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Database Error in create: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
         }
-
-        // Prepare the SQL query to insert a new classroom
-        $query = "INSERT INTO tbl_classroom (class_name) VALUES (:class_name)";
-        $stmt = $this->conn->prepare($query);
-
-        // Bind the class_name parameter
-        $stmt->bindParam(':class_name', $class_name);
-
-        // Execute the query
-        return $stmt->execute();
     }
    
 
     public function update($id, $data) {
-        $query = "UPDATE tbl_classroom SET class_name = :class_name WHERE class_id = :class_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':class_id', $id);
-        $stmt->bindParam(':class_name', $data['class_name']);
-        return $stmt->execute();
+        try {
+            $class_name = isset($data['class_name']) ? $data['class_name'] : null;
+            $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
+            $session_id = isset($data['session_id']) ? $data['session_id'] : null;
+            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : null;
+
+            if ($class_name === null || $grade_id === null || $session_id === null || $num_students_in_class === null) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Missing required fields'
+                ];
+            }
+
+            // Check current student count
+            $currentStudentsQuery = "SELECT COUNT(*) as count 
+                                   FROM tbl_student_info 
+                                   WHERE class_id = :class_id 
+                                   AND isDeleted = 0";
+            $stmt = $this->conn->prepare($currentStudentsQuery);
+            $stmt->bindParam(':class_id', $id);
+            $stmt->execute();
+            $currentCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+            // Don't allow setting capacity below current student count
+            if ($currentCount > $num_students_in_class) {
+                return [
+                    'status' => 'error',
+                    'message' => "មិនអាចកំណត់ចំនួនសិស្សតិចជាងចំនួនសិស្សដែលមានស្រាប់ ($currentCount)"
+                ];
+            }
+
+            // Check if this class name exists in any other session
+            $checkExistingClass = "SELECT s.session_name 
+                                 FROM tbl_classroom c
+                                 JOIN tbl_school_session s ON c.session_id = s.session_id
+                                 WHERE c.class_name = :class_name 
+                                 AND c.grade_id = :grade_id 
+                                 AND c.class_id != :class_id
+                                 AND c.isDeleted = 0
+                                 LIMIT 1";
+            
+            $stmt = $this->conn->prepare($checkExistingClass);
+            $stmt->bindParam(':class_name', $class_name);
+            $stmt->bindParam(':grade_id', $grade_id);
+            $stmt->bindParam(':class_id', $id);
+            $stmt->execute();
+            
+            if ($existingClass = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                return [
+                    'status' => 'error',
+                    'message' => "This class already exists in " . $existingClass['session_name'] . " session"
+                ];
+            }
+
+            // Update the class
+            $updateQuery = "UPDATE tbl_classroom 
+                           SET class_name = :class_name, 
+                               grade_id = :grade_id, 
+                               session_id = :session_id,
+                               num_students_in_class = :num_students_in_class
+                           WHERE class_id = :class_id 
+                           AND isDeleted = 0";
+
+            $stmt = $this->conn->prepare($updateQuery);
+            $stmt->bindParam(':class_id', $id);
+            $stmt->bindParam(':class_name', $class_name);
+            $stmt->bindParam(':grade_id', $grade_id);
+            $stmt->bindParam(':session_id', $session_id);
+            $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'Class updated successfully'
+                ];
+            }
+
+            return [
+                'status' => 'error',
+                'message' => 'Failed to update class'
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Database Error in update: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
+        }
     }
     
     public function delete($id) {
-        $query = "DELETE FROM tbl_classroom WHERE class_id = :class_id";
+        $query = "UPDATE tbl_classroom SET isDeleted = 1 WHERE class_id = :class_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);
         return $stmt->execute();
     }
     
     public function fetchById($id) {
-        $query = "SELECT * FROM tbl_classroom WHERE class_id = :class_id";
+        $query = "SELECT c.*, s.session_name, g.grade_name, num_students_in_class,c.create_date  FROM tbl_classroom c 
+        INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
+        INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+        WHERE c.class_id = :class_id AND c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);
         $stmt->execute();
+
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+    public function getClassesByGrade($gradeId) {
+        try {
+            $query = "SELECT 
+                        c.*,
+                        g.grade_name,
+                        s.session_name,
+                        num_students_in_class,
+                        c.create_date
+                      FROM tbl_classroom c
+                      LEFT JOIN tbl_grade g ON c.grade_id = g.grade_id
+                      LEFT JOIN tbl_school_session s ON c.session_id = s.session_id
+                      WHERE c.grade_id = :grade_id 
+                      AND c.isDeleted = 0
+                      AND s.isDeleted = 0
+
+                      ORDER BY c.class_name";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':grade_id', $gradeId);
+            $stmt->execute();
+            
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error fetching classes by grade: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch classes'
+            ];
+        }
+    }
+
+    public function getCount() {
+        try {
+            $query = "SELECT COUNT(*) as count 
+                     FROM tbl_classroom 
+                     WHERE isDeleted = 0";
+                     
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+        } catch (PDOException $e) {
+            error_log("Error in getCount: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getClassesByGradeAndSession($gradeId, $sessionId) {
+        try {
+            $query = "SELECT 
+                        c.*,
+                        g.grade_name,
+                        s.session_name,
+                        num_students_in_class,
+                        c.create_date
+                      FROM tbl_classroom c
+                      INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                INNER JOIN tbl_school_session s ON c.session_id = s.session_id
+                      WHERE c.grade_id = :grade_id 
+                      AND c.session_id = :session_id
+                      AND c.isDeleted = 0
+                      ORDER BY c.class_name";
+
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':grade_id', $gradeId);
+            $stmt->bindParam(':session_id', $sessionId);
+            $stmt->execute();
+            
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error fetching classes: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch classes'
+            ];
+        }
     }
 }

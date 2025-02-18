@@ -10,14 +10,12 @@ class Subject{
     }
 
     public function fetchAll() {
-        $query = "SELECT * FROM tbl_subject";
+        $query = "SELECT * FROM tbl_subject WHERE isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-// Classroom.php (Model)
-
     public function create($data) {
         $subject_name = isset($data['subject_name']) ? $data['subject_name'] : null;
 
@@ -25,20 +23,17 @@ class Subject{
             return false;
         }
 
-        // Prepare the SQL query to insert a new classroom
         $query = "INSERT INTO tbl_subject (subject_name) VALUES (:subject_name)";
         $stmt = $this->conn->prepare($query);
 
-        // Bind the class_name parameter
         $stmt->bindParam(':subject_name', $subject_name);
 
-        // Execute the query
         return $stmt->execute();
     }
    
 
     public function update($id, $data) {
-        $query = "UPDATE tbl_subject SET subject_name = :subject_name WHERE subject_code = :subject_code";
+        $query = "UPDATE tbl_subject SET subject_name = :subject_name WHERE subject_code = :subject_code AND isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
         $stmt->bindParam(':subject_name', $data['subject_name']);
@@ -46,17 +41,32 @@ class Subject{
     }
     
     public function delete($id) {
-        $query = "DELETE FROM tbl_subject WHERE subject_code = :subject_code";
+        $query = "UPDATE tbl_subject SET isDeleted = 1 WHERE subject_code = :subject_code";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
         return $stmt->execute();
     }
     
     public function fetchById($id) {
-        $query = "SELECT * FROM tbl_subject WHERE subject_code = :subject_code";
+        $query = "SELECT * FROM tbl_subject WHERE subject_code = :subject_code AND isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':subject_code', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getCount() {
+        try {
+            $query = "SELECT COUNT(*) as count 
+                     FROM tbl_subject 
+                     WHERE isDeleted = 0";
+                     
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+        } catch (PDOException $e) {
+            error_log("Error in getCount: " . $e->getMessage());
+            throw $e;
+        }
     }
 }

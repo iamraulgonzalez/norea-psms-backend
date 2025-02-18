@@ -8,13 +8,11 @@ require_once __DIR__ . '/../config/database.php';
         }
     
         public function fetchAll() {
-            $query = "SELECT * FROM tbl_monthly";
+            $query = "SELECT * FROM tbl_monthly WHERE isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
-    // Classroom.php (Model)
     
         public function create($data) {
             $month_name = isset($data['month_name']) ? $data['month_name'] : null;
@@ -23,14 +21,11 @@ require_once __DIR__ . '/../config/database.php';
                 return false;
             }
     
-            // Prepare the SQL query to insert a new classroom
             $query = "INSERT INTO tbl_monthly (month_name) VALUES (:month_name)";
             $stmt = $this->conn->prepare($query);
     
-            // Bind the class_name parameter
             $stmt->bindParam(':month_name', $month_name);
     
-            // Execute the query
             return $stmt->execute();
         }
        
