@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-    class SemsterScore {
+    class StudentSemesterScore {
         private $conn;
         public function __construct() {
             $database = new Database();

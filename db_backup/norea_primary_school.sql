@@ -1,0 +1,302 @@
+/*
+SQLyog Enterprise - MySQL GUI v8.18 
+MySQL - 5.5.5-10.4.32-MariaDB : Database - norea_psms
+*********************************************************************
+*/
+
+
+/*!40101 SET NAMES utf8 */;
+
+/*!40101 SET SQL_MODE=''*/;
+
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/`norea_psms` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+
+USE `norea_psms`;
+
+/*Table structure for table `tbl_classroom` */
+
+DROP TABLE IF EXISTS `tbl_classroom`;
+
+CREATE TABLE `tbl_classroom` (
+  `class_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `class_name` varchar(255) NOT NULL,
+  `grade_id` int(11) NOT NULL,
+  `session_id` int(10) DEFAULT NULL,
+  `num_students_in_class` int(11) DEFAULT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`class_id`,`class_name`),
+  KEY `fk_classroom_session` (`session_id`),
+  CONSTRAINT `fk_classroom_session` FOREIGN KEY (`session_id`) REFERENCES `tbl_school_session` (`session_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_classroom` */
+
+insert  into `tbl_classroom`(`class_id`,`class_name`,`grade_id`,`session_id`,`num_students_in_class`,`create_date`,`isDeleted`) values (1,'១ក',1,1,45,'2025-02-08 17:07:59',0),(2,'២ក',2,1,45,'2025-02-08 17:19:28',0),(3,'២ខ',2,2,45,'2025-02-08 17:20:15',0),(4,'១ខ',1,1,45,'2025-02-08 18:24:32',0),(5,'១គ',1,1,45,'2025-02-09 17:13:01',0),(6,'៤ក',4,1,45,'2025-02-11 19:14:21',0),(7,'៤​ខ',4,1,45,'2025-02-11 19:27:08',0);
+
+/*Table structure for table `tbl_classroom_subject` */
+
+DROP TABLE IF EXISTS `tbl_classroom_subject`;
+
+CREATE TABLE `tbl_classroom_subject` (
+  `classroom_subject_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `class_id` int(11) unsigned NOT NULL,
+  `subject_code` int(10) unsigned DEFAULT NULL,
+  `sub_code` int(10) unsigned DEFAULT NULL,
+  `teacher_id` int(11) unsigned NOT NULL,
+  `is_main_subject` tinyint(1) DEFAULT 0,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`classroom_subject_id`),
+  KEY `fk_classroom` (`class_id`),
+  KEY `fk_subject` (`subject_code`),
+  KEY `fk_sub_subject` (`sub_code`),
+  KEY `fk_teacher` (`teacher_id`),
+  CONSTRAINT `fk_classroom` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sub_subject` FOREIGN KEY (`sub_code`) REFERENCES `tbl_sub_subject` (`sub_code`) ON DELETE CASCADE,
+  CONSTRAINT `fk_subject` FOREIGN KEY (`subject_code`) REFERENCES `tbl_subject` (`subject_code`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_classroom_subject` */
+
+insert  into `tbl_classroom_subject`(`classroom_subject_id`,`class_id`,`subject_code`,`sub_code`,`teacher_id`,`is_main_subject`,`create_date`,`isDeleted`) values (12,1,1,1,0,0,'2025-02-18 17:14:29',0),(13,1,1,2,0,0,'2025-02-18 17:14:29',0),(14,1,1,3,0,0,'2025-02-18 17:14:29',0);
+
+/*Table structure for table `tbl_grade` */
+
+DROP TABLE IF EXISTS `tbl_grade`;
+
+CREATE TABLE `tbl_grade` (
+  `grade_id` int(11) NOT NULL,
+  `grade_name` varchar(255) NOT NULL,
+  `level` int(50) DEFAULT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`grade_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_grade` */
+
+insert  into `tbl_grade`(`grade_id`,`grade_name`,`level`,`create_date`,`isDeleted`) values (1,'ថ្នាក់ទី ១',1,'2025-02-02 09:52:57',0),(2,'ថ្នាក់ទី ២',2,'2025-02-02 09:52:57',0),(3,'ថ្នាក់ទី ៣',3,'2025-02-02 09:52:57',0),(4,'ថ្នាក់ទី ៤',4,'2025-02-02 09:52:57',0),(5,'ថ្នាក់ទី ៥',5,'2025-02-02 09:52:57',0),(6,'ថ្នាក់ទី ៦',6,'2025-02-02 09:52:57',0);
+
+/*Table structure for table `tbl_monthly` */
+
+DROP TABLE IF EXISTS `tbl_monthly`;
+
+CREATE TABLE `tbl_monthly` (
+  `monthly_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `month_name` varchar(255) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`monthly_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_monthly` */
+
+insert  into `tbl_monthly`(`monthly_id`,`month_name`,`create_date`,`isDeleted`) values (1,'មករា','2025-02-02 09:52:34',0),(2,'កុម្ភះ','2025-02-02 09:52:34',0),(3,'មិនា','2025-02-02 09:52:34',0),(4,'មេសា','2025-02-02 09:52:34',0),(5,'ឧសភា','2025-02-02 09:52:34',0),(6,'មិថុនា','2025-02-02 09:52:34',0),(7,'កក្កដា','2025-02-02 09:52:34',0),(8,'សីហា','2025-02-02 09:52:34',0),(9,'កញ្ញា','2025-02-02 09:52:34',0),(10,'តុលា','2025-02-02 09:52:34',0),(11,'វិច្ឆិកា','2025-02-02 09:52:34',0),(12,'ធ្នូ','2025-02-02 09:52:34',0);
+
+/*Table structure for table `tbl_school_session` */
+
+DROP TABLE IF EXISTS `tbl_school_session`;
+
+CREATE TABLE `tbl_school_session` (
+  `session_id` int(11) NOT NULL AUTO_INCREMENT,
+  `session_name` varchar(50) NOT NULL,
+  `isDeleted` int(2) DEFAULT 0,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_school_session` */
+
+insert  into `tbl_school_session`(`session_id`,`session_name`,`isDeleted`,`create_date`) values (1,'វេនព្រឹក',0,'2025-02-08 16:29:07'),(2,'វេនរសៀល',0,'2025-02-08 16:29:13');
+
+/*Table structure for table `tbl_semester` */
+
+DROP TABLE IF EXISTS `tbl_semester`;
+
+CREATE TABLE `tbl_semester` (
+  `semester_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `semester_name` varchar(255) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`semester_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_semester` */
+
+insert  into `tbl_semester`(`semester_id`,`semester_name`,`create_date`,`isDeleted`) values (1,'ឆមាសទី១','2025-02-02 09:51:24',0),(2,'ឆមាសទី២','2025-02-02 09:51:24',0);
+
+/*Table structure for table `tbl_student_info` */
+
+DROP TABLE IF EXISTS `tbl_student_info`;
+
+CREATE TABLE `tbl_student_info` (
+  `student_id` int(10) unsigned NOT NULL,
+  `student_name` varchar(255) NOT NULL,
+  `gender` varchar(255) NOT NULL,
+  `dob` date NOT NULL,
+  `class_id` int(11) NOT NULL,
+  `pob_address` varchar(255) NOT NULL,
+  `current_address` varchar(255) NOT NULL,
+  `father_name` varchar(255) NOT NULL,
+  `father_job` varchar(255) NOT NULL,
+  `father_phone` varchar(255) NOT NULL,
+  `mother_name` varchar(255) NOT NULL,
+  `mother_job` varchar(255) NOT NULL,
+  `mother_phone` varchar(255) NOT NULL,
+  `family_status` varchar(255) NOT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`student_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_student_info` */
+
+insert  into `tbl_student_info`(`student_id`,`student_name`,`gender`,`dob`,`class_id`,`pob_address`,`current_address`,`father_name`,`father_job`,`father_phone`,`mother_name`,`mother_job`,`mother_phone`,`family_status`,`status`,`isDeleted`) values (1001,'ជា សុខា','ប្រុស','2000-01-01',6,'ភូមិថ្មី សង្កាត់ដង្កោ ខណ្ឌដង្កោ រាជធានីភ្នំពេញ','ភូមិថ្មី សង្កាត់ដង្កោ ខណ្ឌដង្កោ រាជធានីភ្នំពេញ','ជា សុខុម','គ្រូបង្រៀន','012345678','យិន សុខា','មេផ្ទះ','012345679','រស់នៅជាមួយឪពុកម្តាយ','active',0),(1002,'dfd','female','2025-02-11',6,'','','','','','','','','','inactive',0),(1003,'ជា សំណាង','male','2010-10-10',6,'តេស្ត','តេស្ត','ហង់ ជា','none','0987654','ចរណៃ','sdf','09818263','level1','active',0),(1004,'Hi','male','2024-12-29',6,'j','n','test test','none','0987654','DD','sdf','09818263','level1','active',0),(1005,'តេស្ត','male','2025-01-26',6,'jksdbfjkb','kjbdfuijb','jrnf','jkfh','jhdfh','jhdfj','jhbf','`jbf','level1','active',0),(1006,'hsfdjb','male','2025-01-27',5,'mndvbfc','jhfbjhbfdgmsmhgd','djfg','jgfhg','jfgb','jgfbhj','jgfduj','jgfb','level2','active',1),(1007,'sgdbhj','male','2025-01-27',1,'edsgh','hdgb','ujgedf','ujgd','ugf','ufg','ufg','fugh','level1','active',1),(1008,'dfd','female','2025-02-09',6,'mjdgyjh','bhjfmvhj','kdghf','ujfhuj','ujfh','hfd','ufh','fuh','level1','active',0),(1009,'dfd','male','2025-02-09',1,'mjdgyjh','bhjfmvhj','kdghf','ujfhuj','ujfh','hfd','ufh','fuh','level1','active',1);
+
+/*Table structure for table `tbl_student_monthly_score` */
+
+DROP TABLE IF EXISTS `tbl_student_monthly_score`;
+
+CREATE TABLE `tbl_student_monthly_score` (
+  `student_monthly_score_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int(10) unsigned NOT NULL,
+  `classroom_subject_id` int(10) unsigned NOT NULL,
+  `monthly_id` int(10) unsigned NOT NULL,
+  `score` float NOT NULL,
+  `year_study_id` int(10) unsigned NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`student_monthly_score_id`),
+  KEY `student_id` (`student_id`),
+  KEY `classroom_subject_id` (`classroom_subject_id`),
+  KEY `monthly_id` (`monthly_id`),
+  KEY `year_study_id` (`year_study_id`),
+  CONSTRAINT `tbl_student_monthly_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_monthly_score_ibfk_2` FOREIGN KEY (`classroom_subject_id`) REFERENCES `tbl_classroom_subject` (`classroom_subject_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_monthly_score_ibfk_3` FOREIGN KEY (`monthly_id`) REFERENCES `tbl_monthly` (`monthly_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_monthly_score_ibfk_4` FOREIGN KEY (`year_study_id`) REFERENCES `tbl_year_study` (`year_study_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_student_monthly_score` */
+
+/*Table structure for table `tbl_student_semester_score` */
+
+DROP TABLE IF EXISTS `tbl_student_semester_score`;
+
+CREATE TABLE `tbl_student_semester_score` (
+  `student_semester_score_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int(10) unsigned NOT NULL,
+  `classroom_subject_id` int(10) unsigned NOT NULL,
+  `semester_id` int(10) unsigned NOT NULL,
+  `score` float NOT NULL,
+  `year_study_id` int(10) unsigned NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`student_semester_score_id`),
+  KEY `student_id` (`student_id`),
+  KEY `classroom_subject_id` (`classroom_subject_id`),
+  KEY `semester_id` (`semester_id`),
+  KEY `year_study_id` (`year_study_id`),
+  CONSTRAINT `tbl_student_semester_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_semester_score_ibfk_2` FOREIGN KEY (`classroom_subject_id`) REFERENCES `tbl_classroom_subject` (`classroom_subject_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_semester_score_ibfk_3` FOREIGN KEY (`semester_id`) REFERENCES `tbl_semester` (`semester_id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_semester_score_ibfk_4` FOREIGN KEY (`year_study_id`) REFERENCES `tbl_year_study` (`year_study_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_student_semester_score` */
+
+/*Table structure for table `tbl_sub_subject` */
+
+DROP TABLE IF EXISTS `tbl_sub_subject`;
+
+CREATE TABLE `tbl_sub_subject` (
+  `sub_code` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `subject_code` int(11) NOT NULL,
+  `sub_subject_name` varchar(255) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`sub_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_sub_subject` */
+
+insert  into `tbl_sub_subject`(`sub_code`,`subject_code`,`sub_subject_name`,`create_date`,`isDeleted`) values (1,1,'ចំនួន','2025-02-02 09:50:54',0),(2,1,'រង្វាស់រង្វាល់','2025-02-02 09:50:54',0),(3,2,'អំណាន','2025-02-02 09:50:54',0),(4,1,'ធរណីមាត្រ','2025-02-02 09:50:54',0),(5,2,'សរសេរតាមអាន','2025-02-02 09:50:54',0),(6,1,'ពេជ្រគណិត','2025-02-02 11:01:56',0),(7,1,'ស្ថិតិ','2025-02-02 14:11:12',0),(8,4,'គីមី','2025-02-11 18:46:41',0),(9,4,'រូបវិទ្យា','2025-02-11 18:48:21',0),(10,5,'កីឡា','2025-02-11 18:48:33',0),(11,5,'អប់រំសុខភាព','2025-02-11 18:48:42',0),(12,2,'តេស្ត','2025-02-11 23:09:31',0);
+
+/*Table structure for table `tbl_subject` */
+
+DROP TABLE IF EXISTS `tbl_subject`;
+
+CREATE TABLE `tbl_subject` (
+  `subject_code` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `subject_name` varchar(255) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`subject_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_subject` */
+
+insert  into `tbl_subject`(`subject_code`,`subject_name`,`create_date`,`isDeleted`) values (1,'គណិតវិទ្យា','2025-02-02 09:50:47',0),(2,'ភាសាខ្មែរ','2025-02-02 09:50:47',0),(3,'សិក្សាសង្គម','2025-02-02 09:50:47',0),(4,'វិទ្យាសាស្រ្ត','2025-02-02 09:50:47',0),(5,'អប់រំកាយ','2025-02-02 09:50:47',0),(6,'អប់រំបំណិតជីវិត','2025-02-02 09:50:47',0),(7,'ភាសាបរទេស','2025-02-02 09:50:47',0);
+
+/*Table structure for table `tbl_teacher` */
+
+DROP TABLE IF EXISTS `tbl_teacher`;
+
+CREATE TABLE `tbl_teacher` (
+  `teacher_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `teacher_name` varchar(255) NOT NULL,
+  `class_id` int(11) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`teacher_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_teacher` */
+
+insert  into `tbl_teacher`(`teacher_id`,`teacher_name`,`class_id`,`create_date`,`isDeleted`) values (1001,'កែវ វាសនា',1,'2025-02-02 09:50:02',0),(1002,'អ៊ុំ វ៉ាន់ច័ន្ទ',3,'2025-02-02 09:50:02',0),(1003,'ដួង រតនា',6,'2025-02-05 20:13:09',0),(1004,'កែវ ចាន់សម្ភស្ស',3,'2025-02-05 20:38:29',0);
+
+/*Table structure for table `tbl_user` */
+
+DROP TABLE IF EXISTS `tbl_user`;
+
+CREATE TABLE `tbl_user` (
+  `user_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(255) DEFAULT NULL,
+  `user_name` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `phone` varchar(255) NOT NULL,
+  `user_type` varchar(255) NOT NULL,
+  `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_user` */
+
+insert  into `tbl_user`(`user_id`,`full_name`,`user_name`,`password`,`phone`,`user_type`,`created_date`,`isDeleted`) values (1,'Poeu Sam','khmersr','$2y$10$LljfIoNdd4ua088RMl9NnOowB8a.ljbgQd6wD.hBX0jnNNfiGXE1q','098582828','admin','0000-00-00 00:00:00',0),(2,'Norea PMS','admin_norea','$2y$10$1Ow1S23GKdkv1uR5ZS.seOO0w0.t4AMkZyOmJm6I3lmnMOsyVLaQa','0123456789','super_admin','2025-02-02 11:41:44',0),(3,'Ny lenin','lenin','$2y$10$F05Y.0ET3h7BBJHwmqPyuuu7nyhKLnmwtAEhyyIb7BlLibt.Bt04S','054359273','user','2025-02-02 11:42:01',0),(4,'Test','test','$2y$10$y7fU6kwX40R/wYZUu9zrNe5fFQ1eQKNn4g0M/R8AKpwo6eiQpl/YO','098583828','user','2025-02-11 23:15:10',0);
+
+/*Table structure for table `tbl_year_study` */
+
+DROP TABLE IF EXISTS `tbl_year_study`;
+
+CREATE TABLE `tbl_year_study` (
+  `year_study_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `year_study` varchar(255) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `isDeleted` int(2) DEFAULT 0,
+  PRIMARY KEY (`year_study_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `tbl_year_study` */
+
+insert  into `tbl_year_study`(`year_study_id`,`year_study`,`create_date`,`isDeleted`) values (1,'2023-2024','2025-02-02 09:49:37',0),(2,'2024-2025','2025-02-02 09:49:37',0),(3,'2026-2027','2025-02-02 09:49:37',0);
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;

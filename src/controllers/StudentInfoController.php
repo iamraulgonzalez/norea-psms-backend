@@ -60,6 +60,9 @@ class StudentInfoController extends BaseController {
 
     public function addStudent($data) {
         try {
+            // Clean any existing output
+            if (ob_get_level()) ob_end_clean();
+            
             // Validate required fields
             if (!isset($data['student_name']) || empty($data['student_name'])) {
                 throw new Exception('Student name is required');
@@ -69,17 +72,25 @@ class StudentInfoController extends BaseController {
             $result = $this->studentModel->create($data);
             
             if ($result) {
-                header('Content-Type: application/json');
+                header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'success',
-                    'message' => 'Student created successfully'
-                ]);
+                    'message' => 'Student created successfully',
+                    'student_id' => $result // Assuming create() returns the new student ID
+                ], JSON_UNESCAPED_UNICODE);
+                exit(); // Add this to prevent further execution
             } else {
                 throw new Exception('Failed to create student');
             }
         } catch (Exception $e) {
             error_log("Error in addStudent: " . $e->getMessage());
-            $this->sendError($e->getMessage());
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+            exit(); // Add this to prevent further execution
         }
     }
 
@@ -168,6 +179,42 @@ class StudentInfoController extends BaseController {
             ]);
         } catch (Exception $e) {
             errorResponse(500, 'Failed to get student count');
+        }
+    }
+
+    public function promoteStudent($student_id) {
+        try {
+            if (!$student_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Student ID is required'
+                ]);
+                return;
+            }
+
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (!isset($data['new_class_id'])) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'New class ID is required'
+                ]);
+                return;
+            }
+
+            $result = $this->studentModel->promoteStudent($student_id, $data['new_class_id']);
+            
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 400,
+                $result
+            );
+            
+        } catch (Exception $e) {
+            error_log("Error in promoteStudent: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
         }
     }
 

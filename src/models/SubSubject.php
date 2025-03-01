@@ -19,14 +19,42 @@ class SubSubject{
                     FROM tbl_sub_subject ss
                     LEFT JOIN tbl_subject s ON ss.subject_code = s.subject_code
                     WHERE ss.isDeleted = 0
-                    ORDER BY ss.subject_code, ss.sub_subject_name";
+                    ORDER BY s.subject_name, ss.sub_subject_name";
             
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Group by subject
+            $groupedSubjects = [];
+            foreach ($results as $row) {
+                $subjectCode = $row['subject_code'];
+                
+                if (!isset($groupedSubjects[$subjectCode])) {
+                    $groupedSubjects[$subjectCode] = [
+                        'subject_code' => (int)$subjectCode,
+                        'subject_name' => $row['subject_name'],
+                        'sub_subjects' => []
+                    ];
+                }
+
+                $groupedSubjects[$subjectCode]['sub_subjects'][] = [
+                    'sub_code' => (int)$row['sub_code'],
+                    'sub_subject_name' => $row['sub_subject_name']
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'data' => array_values($groupedSubjects)
+            ];
+
         } catch (PDOException $e) {
             error_log("Database Error in fetchAll: " . $e->getMessage());
-            throw $e;
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch subjects'
+            ];
         }
     }
     

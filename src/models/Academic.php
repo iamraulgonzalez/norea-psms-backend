@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
-class YearStudy {
+class Academic {   
     private $conn;
     public function __construct() {
         $database = new Database();

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
-
+require_once __DIR__ . '/../config/database.php';
 class Student {
     private $conn;
     private $table = 'tbl_student_info';
@@ -44,8 +44,15 @@ class Student {
 
     public function create($data) {
         try {
-            // Check classroom capacity before creating student
-            $class_id = isset($data['class_id']) ? $data['class_id'] : null;
+            $this->conn->beginTransaction();
+
+            // Get next student ID
+            $stmt = $this->conn->prepare("SELECT COALESCE(MAX(student_id), 1000) FROM tbl_student_info");
+            $stmt->execute();
+            $student_id = (int)$stmt->fetchColumn() + 1;
+
+            // Check classroom capacity
+            $class_id = $data['class_id'] ?? null;
             if ($class_id) {
                 $checkCapacityQuery = "SELECT 
                     (SELECT COUNT(*) FROM tbl_student_info 
@@ -58,11 +65,12 @@ class Student {
                     WHERE c.class_id = :class_id";
                 
                 $stmt = $this->conn->prepare($checkCapacityQuery);
-                $stmt->bindParam(':class_id', $class_id);
+                $stmt->bindValue(':class_id', $class_id);
                 $stmt->execute();
                 $capacityInfo = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($capacityInfo && $capacityInfo['current_count'] >= $capacityInfo['max_capacity']) {
+                    $this->conn->rollBack();
                     return [
                         'status' => 'error',
                         'message' => "ថ្នាក់ទី " . $capacityInfo['grade_name'] . " " . $capacityInfo['class_name'] . 
@@ -71,96 +79,73 @@ class Student {
                 }
             }
 
-            error_log("Starting student creation with data: " . json_encode($data));
-            
-            $stmt = $this->conn->prepare("SELECT student_id FROM tbl_student_info ORDER BY student_id DESC LIMIT 1");
-            $stmt->execute();
-            $last_student_id = $stmt->fetchColumn();
-            
-            if ($last_student_id) {
-                $last_number = (int)$last_student_id;
-            } else {
-                $last_number = 1000;
-            }
-            $new_student_number = $last_number + 1;
-            
-            do {
-                $student_id = $new_student_number;
-                
-                $stmt = $this->conn->prepare("SELECT COUNT(*) FROM tbl_student_info WHERE student_id = :student_id");
-                $stmt->bindParam(':student_id', $student_id);
-                $stmt->execute();
-                $existing_id_count = $stmt->fetchColumn();
-                
-                if ($existing_id_count > 0) {
-                    $new_student_number++;
-                }
-            } while ($existing_id_count > 0);
+            // Prepare the data
+            $student_name = $data['student_name'] ?? null;
+            $gender = $data['gender'] ?? null;
+            $dob = $data['dob'] ?? null;
 
-        
-            $student_name = isset($data['student_name']) ? $data['student_name'] : null;
-            $gender = isset($data['gender']) ? $data['gender'] : null;
-            $dob = isset($data['dob']) ? $data['dob'] : null;
-            $class_id = isset($data['class_id']) ? $data['class_id'] : null;
-            $pob_address = isset($data['pob_address']) ? $data['pob_address'] : null;
-            $current_address = isset($data['current_address']) ? $data['current_address'] : null;
-            $father_name = isset($data['father_name']) ? $data['father_name'] : null;
-            $father_job = isset($data['father_job']) ? $data['father_job'] : null;
-            $father_phone = isset($data['father_phone']) ? $data['father_phone'] : null;
-            $mother_name = isset($data['mother_name']) ? $data['mother_name'] : null;
-            $mother_job = isset($data['mother_job']) ? $data['mother_job'] : null;
-            $mother_phone = isset($data['mother_phone']) ? $data['mother_phone'] : null;
-            $family_status = isset($data['family_status']) ? $data['family_status'] : null;
-            $status = isset($data['status']) ? $data['status'] : null;
-            
-            $stmt = $this->conn->prepare("INSERT INTO tbl_student_info 
-                                          (student_id, student_name, gender, dob, pob_address, current_address, class_id, 
-                                           father_name, father_job, father_phone, mother_name, mother_job, mother_phone, 
-                                           family_status, status) 
-                                          VALUES 
-                                          (:student_id, :student_name, :gender, :dob, :pob_address, :current_address, :class_id, 
-                                           :father_name, :father_job, :father_phone, :mother_name, :mother_job, :mother_phone, 
-                                           :family_status, :status)");
-            
-            $stmt->bindParam(':student_id', $student_id);
-            $stmt->bindParam(':student_name', $student_name);
-            $stmt->bindParam(':gender', $gender);
-            $stmt->bindParam(':dob', $dob);
-            $stmt->bindParam(':pob_address', $pob_address);
-            $stmt->bindParam(':current_address', $current_address);
-            $stmt->bindParam(':class_id', $class_id);
-            $stmt->bindParam(':father_name', $father_name);
-            $stmt->bindParam(':father_job', $father_job);
-            $stmt->bindParam(':father_phone', $father_phone);
-            $stmt->bindParam(':mother_name', $mother_name);
-            $stmt->bindParam(':mother_job', $mother_job);
-            $stmt->bindParam(':mother_phone', $mother_phone);
-            $stmt->bindParam(':family_status', $family_status);
-            $stmt->bindParam(':status', $status);
-
-            $result = $stmt->execute();
-            
-            if (!$result) {
-                error_log("SQL Error: " . json_encode($stmt->errorInfo()));
-            }
-            
-            if ($result) {
+            // Validate required fields
+            if (!$student_name || !$gender || !$dob || !$class_id) {
+                $this->conn->rollBack();
                 return [
-                    'status' => 'success',
-                    'message' => 'សិស្សត្រូវបានបង្កើតដោយជោគជ័យ'
+                    'status' => 'error',
+                    'message' => 'សូមបំពេញព័ត៌មានសំខាន់ៗរបស់សិស្ស'
                 ];
-            } else {
+            }
+
+            $query = "INSERT INTO tbl_student_info (
+                student_id, student_name, gender, dob, class_id, 
+                pob_address, current_address, father_name, father_job, 
+                father_phone, mother_name, mother_job, mother_phone, 
+                family_status, status
+            ) VALUES (
+                :student_id, :student_name, :gender, :dob, :class_id,
+                :pob_address, :current_address, :father_name, :father_job,
+                :father_phone, :mother_name, :mother_job, :mother_phone,
+                :family_status, :status
+            )";
+
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind all parameters
+            $stmt->bindValue(':student_id', $student_id);
+            $stmt->bindValue(':student_name', $student_name);
+            $stmt->bindValue(':gender', $gender);
+            $stmt->bindValue(':dob', $dob);
+            $stmt->bindValue(':class_id', $class_id);
+            $stmt->bindValue(':pob_address', $data['pob_address'] ?? null);
+            $stmt->bindValue(':current_address', $data['current_address'] ?? null);
+            $stmt->bindValue(':father_name', $data['father_name'] ?? null);
+            $stmt->bindValue(':father_job', $data['father_job'] ?? null);
+            $stmt->bindValue(':father_phone', $data['father_phone'] ?? null);
+            $stmt->bindValue(':mother_name', $data['mother_name'] ?? null);
+            $stmt->bindValue(':mother_job', $data['mother_job'] ?? null);
+            $stmt->bindValue(':mother_phone', $data['mother_phone'] ?? null);
+            $stmt->bindValue(':family_status', $data['family_status'] ?? null);
+            $stmt->bindValue(':status', $data['status'] ?? 'active');
+
+            if (!$stmt->execute()) {
+                $this->conn->rollBack();
+                error_log("SQL Error: " . json_encode($stmt->errorInfo()));
                 return [
                     'status' => 'error',
                     'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស'
                 ];
             }
+
+            $this->conn->commit();
+            return [
+                'status' => 'success',
+                'message' => 'សិស្សត្រូវបានបង្កើតដោយជោគជ័យ'
+            ];
+
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Database Error: " . $e->getMessage());
-            throw $e;
-        } catch (Exception $e) {
-            error_log("General Error: " . $e->getMessage());
-            throw $e;
+            return [
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស'
+            ];
         }
     }        
 
@@ -402,6 +387,62 @@ class Student {
         } catch (PDOException $e) {
             error_log("Error in getCount: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function promoteStudent($student_id, $new_class_id) {
+        try {
+            // First verify if student exists
+            $stmt = $this->conn->prepare("SELECT class_id FROM tbl_student_info WHERE student_id = :student_id AND isDeleted = 0");
+            $stmt->bindParam(':student_id', $student_id);
+            $stmt->execute();
+            
+            if (!$stmt->fetch()) {
+                return [
+                    'status' => 'error',
+                    'message' => 'សិស្សមិនឃើញទេ'
+                ];
+            }
+
+            // Verify if new class exists
+            $stmt = $this->conn->prepare("SELECT class_id FROM tbl_classroom WHERE class_id = :class_id AND isDeleted = 0");
+            $stmt->bindParam(':class_id', $new_class_id);
+            $stmt->execute();
+            
+            if (!$stmt->fetch()) {
+                return [
+                    'status' => 'error',
+                    'message' => 'ថ្នាក់មិនឃើញទេ'
+                ];
+            }
+
+            // Update student's class
+            $query = "UPDATE tbl_student_info 
+                     SET class_id = :new_class_id 
+                     WHERE student_id = :student_id 
+                     AND isDeleted = 0";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':student_id', $student_id);
+            $stmt->bindParam(':new_class_id', $new_class_id);
+            
+            if ($stmt->execute()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'Student promoted successfully'
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'message' => 'Failed to promote student'
+                ];
+            }
+        } catch (PDOException $e) {
+            error_log("Error in promoteStudent: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
         }
     }
 

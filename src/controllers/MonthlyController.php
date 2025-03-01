@@ -3,6 +3,7 @@ require_once __DIR__ . '/../models/Monthly.php';
 require_once __DIR__ . '/../utils/response.php';
 
 class MonthlyController {
+
     public function getAllMonthlies() {
         $monthly = new Monthly();
         $monthlies = $monthly->fetchAll();
