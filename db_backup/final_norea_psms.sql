@@ -42,17 +42,18 @@ CREATE TABLE `tbl_classroom` (
   `class_name` varchar(255) NOT NULL,
   `grade_id` int(11) NOT NULL,
   `session_id` int(10) DEFAULT NULL,
+  `teacher_id` int(11) DEFAULT NULL,
   `num_students_in_class` int(11) DEFAULT NULL,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
   PRIMARY KEY (`class_id`,`class_name`),
   KEY `fk_classroom_session` (`session_id`),
   CONSTRAINT `fk_classroom_session` FOREIGN KEY (`session_id`) REFERENCES `tbl_school_session` (`session_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_classroom` */
 
-insert  into `tbl_classroom`(`class_id`,`class_name`,`grade_id`,`session_id`,`num_students_in_class`,`create_date`,`isDeleted`) values (1,'១ក',1,1,45,'2025-02-08 17:07:59',0),(2,'២ក',2,1,45,'2025-02-08 17:19:28',0),(3,'២ខ',2,2,45,'2025-02-08 17:20:15',0),(4,'១ខ',1,1,45,'2025-02-08 18:24:32',0),(5,'១គ',1,1,45,'2025-02-09 17:13:01',0),(6,'៤ក',4,1,45,'2025-02-11 19:14:21',0),(7,'៤​ខ',4,1,45,'2025-02-11 19:27:08',0);
+insert  into `tbl_classroom`(`class_id`,`class_name`,`grade_id`,`session_id`,`teacher_id`,`num_students_in_class`,`create_date`,`isDeleted`) values (1,'១ក',1,1,1001,45,'2025-02-08 17:07:59',0),(2,'២ក',2,1,1001,45,'2025-02-08 17:19:28',0),(3,'២ខ',2,2,1001,45,'2025-02-08 17:20:15',0),(4,'១ខ',1,1,1001,45,'2025-02-08 18:24:32',0),(5,'១គ',1,1,1002,45,'2025-02-09 17:13:01',0),(6,'៤ក',4,1,1003,45,'2025-02-11 19:14:21',0),(7,'៤​ខ',4,1,1004,45,'2025-02-11 19:27:08',0),(8,'3ក',3,1,1001,45,'2025-03-01 13:36:57',0);
 
 /*Table structure for table `tbl_grade` */
 
@@ -218,7 +219,6 @@ DROP TABLE IF EXISTS `tbl_teacher`;
 CREATE TABLE `tbl_teacher` (
   `teacher_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `teacher_name` varchar(255) NOT NULL,
-  `class_id` int(11) NOT NULL,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
   PRIMARY KEY (`teacher_id`)
@@ -226,7 +226,7 @@ CREATE TABLE `tbl_teacher` (
 
 /*Data for the table `tbl_teacher` */
 
-insert  into `tbl_teacher`(`teacher_id`,`teacher_name`,`class_id`,`create_date`,`isDeleted`) values (1001,'កែវ វាសនា',1,'2025-02-02 09:50:02',0),(1002,'អ៊ុំ វ៉ាន់ច័ន្ទ',3,'2025-02-02 09:50:02',0),(1003,'ដួង រតនា',6,'2025-02-05 20:13:09',0),(1004,'កែវ ចាន់សម្ភស្ស',3,'2025-02-05 20:38:29',0);
+insert  into `tbl_teacher`(`teacher_id`,`teacher_name`,`create_date`,`isDeleted`) values (1001,'កែវ វាសនា','2025-02-02 09:50:02',0),(1002,'អ៊ុំ វ៉ាន់ច័ន្ទ','2025-02-02 09:50:02',0),(1003,'ដួង រតនា','2025-02-05 20:13:09',0),(1004,'កែវ ចាន់សម្ភស្ស','2025-02-05 20:38:29',0);
 
 /*Table structure for table `tbl_user` */
 

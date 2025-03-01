@@ -9,10 +9,12 @@ class Classroom {
     }
 
     public function fetchAll() {
-        $query = "SELECT c.*, s.session_name, g.grade_name, num_students_in_class,c.create_date
+        $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
+                  num_students_in_class, c.create_date
                   FROM tbl_classroom c 
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                  LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
                   WHERE c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -25,7 +27,8 @@ class Classroom {
             $class_name = isset($data['class_name']) ? $data['class_name'] : null;
             $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
             $session_id = isset($data['session_id']) ? $data['session_id'] : null;
-            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : 45; // Default value
+            $teacher_id = isset($data['teacher_id']) ? $data['teacher_id'] : null;
+            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : 45;
 
             // Validate required fields
             if ($class_name === null || $grade_id === null || $session_id === null) {
@@ -57,13 +60,14 @@ class Classroom {
             }
 
             // Insert new class
-            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, num_students_in_class) 
-                           VALUES (:class_name, :grade_id, :session_id, :num_students_in_class)";
+            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, teacher_id, num_students_in_class) 
+                           VALUES (:class_name, :grade_id, :session_id, :teacher_id, :num_students_in_class)";
             $stmt = $this->conn->prepare($insertQuery);
 
             $stmt->bindParam(':class_name', $class_name);
             $stmt->bindParam(':grade_id', $grade_id);
             $stmt->bindParam(':session_id', $session_id);
+            $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
@@ -94,6 +98,7 @@ class Classroom {
             $class_name = isset($data['class_name']) ? $data['class_name'] : null;
             $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
             $session_id = isset($data['session_id']) ? $data['session_id'] : null;
+            $teacher_id = isset($data['teacher_id']) ? $data['teacher_id'] : null;
             $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : null;
 
             if ($class_name === null || $grade_id === null || $session_id === null || $num_students_in_class === null) {
@@ -149,6 +154,7 @@ class Classroom {
                            SET class_name = :class_name, 
                                grade_id = :grade_id, 
                                session_id = :session_id,
+                               teacher_id = :teacher_id,
                                num_students_in_class = :num_students_in_class
                            WHERE class_id = :class_id 
                            AND isDeleted = 0";
@@ -158,6 +164,7 @@ class Classroom {
             $stmt->bindParam(':class_name', $class_name);
             $stmt->bindParam(':grade_id', $grade_id);
             $stmt->bindParam(':session_id', $session_id);
+            $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
@@ -189,10 +196,13 @@ class Classroom {
     }
     
     public function fetchById($id) {
-        $query = "SELECT c.*, s.session_name, g.grade_name, num_students_in_class,c.create_date  FROM tbl_classroom c 
-        INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
-        INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
-        WHERE c.class_id = :class_id AND c.isDeleted = 0";
+        $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
+                  num_students_in_class, c.create_date  
+                  FROM tbl_classroom c 
+                  INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
+                  INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                  LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
+                  WHERE c.class_id = :class_id AND c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':class_id', $id);
         $stmt->execute();
@@ -207,15 +217,17 @@ class Classroom {
                         c.*,
                         g.grade_name,
                         s.session_name,
+                        t.teacher_name,
+                        t.teacher_id,
                         num_students_in_class,
                         c.create_date
                       FROM tbl_classroom c
                       LEFT JOIN tbl_grade g ON c.grade_id = g.grade_id
                       LEFT JOIN tbl_school_session s ON c.session_id = s.session_id
+                      LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
                       WHERE c.grade_id = :grade_id 
                       AND c.isDeleted = 0
                       AND s.isDeleted = 0
-
                       ORDER BY c.class_name";
             
             $stmt = $this->conn->prepare($query);
@@ -256,17 +268,19 @@ class Classroom {
                         c.*,
                         g.grade_name,
                         s.session_name,
+                        t.teacher_name,
+                        t.teacher_id,
                         num_students_in_class,
                         c.create_date
                       FROM tbl_classroom c
                       INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
-                INNER JOIN tbl_school_session s ON c.session_id = s.session_id
+                      INNER JOIN tbl_school_session s ON c.session_id = s.session_id
+                      LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
                       WHERE c.grade_id = :grade_id 
                       AND c.session_id = :session_id
                       AND c.isDeleted = 0
                       ORDER BY c.class_name";
 
-            
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':grade_id', $gradeId);
             $stmt->bindParam(':session_id', $sessionId);
