@@ -63,6 +63,8 @@ class StudentInfoController extends BaseController {
             // Clean any existing output
             if (ob_get_level()) ob_end_clean();
             
+            error_log("Received data in controller: " . json_encode($data));
+            
             // Validate required fields
             if (!isset($data['student_name']) || empty($data['student_name'])) {
                 throw new Exception('Student name is required');
@@ -70,17 +72,14 @@ class StudentInfoController extends BaseController {
 
             // Attempt to create the student
             $result = $this->studentModel->create($data);
+            error_log("Model create result: " . json_encode($result));
             
-            if ($result) {
+            if (isset($result['status'])) {
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Student created successfully',
-                    'student_id' => $result // Assuming create() returns the new student ID
-                ], JSON_UNESCAPED_UNICODE);
-                exit(); // Add this to prevent further execution
+                echo json_encode($result, JSON_UNESCAPED_UNICODE);
+                exit();
             } else {
-                throw new Exception('Failed to create student');
+                throw new Exception('Invalid response from model');
             }
         } catch (Exception $e) {
             error_log("Error in addStudent: " . $e->getMessage());
@@ -90,7 +89,7 @@ class StudentInfoController extends BaseController {
                 'status' => 'error',
                 'message' => $e->getMessage()
             ], JSON_UNESCAPED_UNICODE);
-            exit(); // Add this to prevent further execution
+            exit();
         }
     }
 

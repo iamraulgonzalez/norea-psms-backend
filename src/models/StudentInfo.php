@@ -20,6 +20,8 @@ class Student {
                         s.pob_address, 
                         s.current_address, 
                         s.class_id, 
+                        s.year_study_id,
+                        y.year_study,
                         s.father_name,
                         s.father_job,
                         s.father_phone,
@@ -31,6 +33,7 @@ class Student {
                         c.class_name
                       FROM tbl_student_info s
                       LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
+                      LEFT JOIN tbl_year_study y ON s.year_study_id = y.year_study_id
                       WHERE s.isDeleted = 0
                       ORDER BY s.student_id";
             $stmt = $this->conn->prepare($query);
@@ -45,11 +48,16 @@ class Student {
     public function create($data) {
         try {
             $this->conn->beginTransaction();
+            error_log("Transaction started");
+
+            // Debug log the incoming data
+            error_log("Creating student with data: " . json_encode($data));
 
             // Get next student ID
             $stmt = $this->conn->prepare("SELECT COALESCE(MAX(student_id), 1000) FROM tbl_student_info");
             $stmt->execute();
             $student_id = (int)$stmt->fetchColumn() + 1;
+            error_log("Generated student_id: " . $student_id);
 
             // Check classroom capacity
             $class_id = $data['class_id'] ?? null;
@@ -59,15 +67,19 @@ class Student {
                      WHERE class_id = :class_id AND isDeleted = 0) as current_count,
                     c.num_students_in_class as max_capacity,
                     c.class_name,
-                    g.grade_name
+                    g.grade_name,
+                    y.year_study
                     FROM tbl_classroom c 
                     INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                    LEFT JOIN tbl_year_study y ON y.year_study_id = :year_study_id
                     WHERE c.class_id = :class_id";
                 
                 $stmt = $this->conn->prepare($checkCapacityQuery);
                 $stmt->bindValue(':class_id', $class_id);
+                $stmt->bindValue(':year_study_id', $data['year_study_id']);
                 $stmt->execute();
                 $capacityInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                error_log("Capacity check result: " . json_encode($capacityInfo));
                 
                 if ($capacityInfo && $capacityInfo['current_count'] >= $capacityInfo['max_capacity']) {
                     $this->conn->rollBack();
@@ -83,23 +95,41 @@ class Student {
             $student_name = $data['student_name'] ?? null;
             $gender = $data['gender'] ?? null;
             $dob = $data['dob'] ?? null;
+            $year_study_id = $data['year_study_id'] ?? null;
+
+            error_log("Validating required fields:");
+            error_log("student_name: " . ($student_name ?? 'null'));
+            error_log("gender: " . ($gender ?? 'null'));
+            error_log("dob: " . ($dob ?? 'null'));
+            error_log("class_id: " . ($class_id ?? 'null'));
+            error_log("year_study_id: " . ($year_study_id ?? 'null'));
 
             // Validate required fields
-            if (!$student_name || !$gender || !$dob || !$class_id) {
+            if (!$student_name || !$gender || !$dob || !$class_id || !$year_study_id) {
                 $this->conn->rollBack();
+                error_log("Validation failed - missing required fields");
                 return [
                     'status' => 'error',
-                    'message' => 'សូមបំពេញព័ត៌មានសំខាន់ៗរបស់សិស្ស'
+                    'message' => 'សូមបំពេញព័ត៌មានសំខាន់ៗរបស់សិស្ស',
+                    'debug' => [
+                        'missing_fields' => [
+                            'student_name' => !$student_name,
+                            'gender' => !$gender,
+                            'dob' => !$dob,
+                            'class_id' => !$class_id,
+                            'year_study_id' => !$year_study_id
+                        ]
+                    ]
                 ];
             }
 
             $query = "INSERT INTO tbl_student_info (
-                student_id, student_name, gender, dob, class_id, 
+                student_id, student_name, gender, dob, class_id, year_study_id,
                 pob_address, current_address, father_name, father_job, 
                 father_phone, mother_name, mother_job, mother_phone, 
                 family_status, status
             ) VALUES (
-                :student_id, :student_name, :gender, :dob, :class_id,
+                :student_id, :student_name, :gender, :dob, :class_id, :year_study_id,
                 :pob_address, :current_address, :father_name, :father_job,
                 :father_phone, :mother_name, :mother_job, :mother_phone,
                 :family_status, :status
@@ -107,33 +137,51 @@ class Student {
 
             $stmt = $this->conn->prepare($query);
             
+            // Debug log for all bound values
+            $boundValues = [
+                'student_id' => $student_id,
+                'student_name' => $student_name,
+                'gender' => $gender,
+                'dob' => $dob,
+                'class_id' => $class_id,
+                'year_study_id' => $year_study_id,
+                'pob_address' => $data['pob_address'] ?? null,
+                'current_address' => $data['current_address'] ?? null,
+                'father_name' => $data['father_name'] ?? null,
+                'father_job' => $data['father_job'] ?? null,
+                'father_phone' => $data['father_phone'] ?? null,
+                'mother_name' => $data['mother_name'] ?? null,
+                'mother_job' => $data['mother_job'] ?? null,
+                'mother_phone' => $data['mother_phone'] ?? null,
+                'family_status' => $data['family_status'] ?? null,
+                'status' => $data['status'] ?? 'active'
+            ];
+            error_log("Binding values: " . json_encode($boundValues));
+            
             // Bind all parameters
-            $stmt->bindValue(':student_id', $student_id);
-            $stmt->bindValue(':student_name', $student_name);
-            $stmt->bindValue(':gender', $gender);
-            $stmt->bindValue(':dob', $dob);
-            $stmt->bindValue(':class_id', $class_id);
-            $stmt->bindValue(':pob_address', $data['pob_address'] ?? null);
-            $stmt->bindValue(':current_address', $data['current_address'] ?? null);
-            $stmt->bindValue(':father_name', $data['father_name'] ?? null);
-            $stmt->bindValue(':father_job', $data['father_job'] ?? null);
-            $stmt->bindValue(':father_phone', $data['father_phone'] ?? null);
-            $stmt->bindValue(':mother_name', $data['mother_name'] ?? null);
-            $stmt->bindValue(':mother_job', $data['mother_job'] ?? null);
-            $stmt->bindValue(':mother_phone', $data['mother_phone'] ?? null);
-            $stmt->bindValue(':family_status', $data['family_status'] ?? null);
-            $stmt->bindValue(':status', $data['status'] ?? 'active');
+            foreach ($boundValues as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
 
             if (!$stmt->execute()) {
                 $this->conn->rollBack();
-                error_log("SQL Error: " . json_encode($stmt->errorInfo()));
+                $error = $stmt->errorInfo();
+                error_log("SQL Error during insert: " . json_encode($error));
+                error_log("SQL Query: " . $query);
+                error_log("Bound values: " . json_encode($boundValues));
                 return [
                     'status' => 'error',
-                    'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស'
+                    'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស',
+                    'debug' => [
+                        'sql_error' => $error,
+                        'query' => $query,
+                        'values' => $boundValues
+                    ]
                 ];
             }
 
             $this->conn->commit();
+            error_log("Transaction committed successfully");
             return [
                 'status' => 'success',
                 'message' => 'សិស្សត្រូវបានបង្កើតដោយជោគជ័យ'
@@ -142,9 +190,14 @@ class Student {
         } catch (PDOException $e) {
             $this->conn->rollBack();
             error_log("Database Error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return [
                 'status' => 'error',
-                'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស'
+                'message' => 'មានបញ្ហាក្នុងការបង្កើតសិស្ស',
+                'debug' => [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]
             ];
         }
     }        
@@ -173,9 +226,11 @@ class Student {
                          WHERE class_id = :class_id AND isDeleted = 0) as current_count,
                         c.num_students_in_class as max_capacity,
                         c.class_name,
-                        g.grade_name
+                        g.grade_name,
+                        y.year_study
                         FROM tbl_classroom c 
                         INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                        LEFT JOIN tbl_year_study y ON c.year_study_id = y.year_study_id
                         WHERE c.class_id = :class_id";
                     
                     $stmt = $this->conn->prepare($checkCapacityQuery);
@@ -219,6 +274,7 @@ class Student {
                          gender = :gender, 
                          dob = :dob, 
                          class_id = :class_id,
+                         year_study_id = :year_study_id,
                          pob_address = :pob_address, 
                          current_address = :current_address, 
                          father_name = :father_name, 
@@ -240,6 +296,7 @@ class Student {
             $pob_address = isset($data['pob_address']) ? $data['pob_address'] : null;
             $current_address = isset($data['current_address']) ? $data['current_address'] : null;
             $class_id = isset($data['class_id']) ? $data['class_id'] : null;
+            $year_study_id = isset($data['year_study_id']) ? $data['year_study_id'] : null;
             $father_name = isset($data['father_name']) ? $data['father_name'] : null;
             $father_job = isset($data['father_job']) ? $data['father_job'] : null;
             $father_phone = isset($data['father_phone']) ? $data['father_phone'] : null;
@@ -254,9 +311,10 @@ class Student {
             $stmt->bindParam(':student_name', $student_name);
             $stmt->bindParam(':gender', $gender);
             $stmt->bindParam(':dob', $dob);
+            $stmt->bindParam(':class_id', $class_id);
+            $stmt->bindParam(':year_study_id', $year_study_id);
             $stmt->bindParam(':pob_address', $pob_address);
             $stmt->bindParam(':current_address', $current_address);
-            $stmt->bindParam(':class_id', $class_id);
             $stmt->bindParam(':father_name', $father_name);
             $stmt->bindParam(':father_job', $father_job);
             $stmt->bindParam(':father_phone', $father_phone);
@@ -352,9 +410,12 @@ class Student {
                 s.gender, 
                 s.dob, 
                 s.status,
+                s.year_study_id,
+                y.year_study,
                 c.class_name 
             FROM tbl_student_info s
             LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
+            LEFT JOIN tbl_year_study y ON s.year_study_id = y.year_study_id
             WHERE s.class_id = :class_id 
             AND s.isDeleted = 0";
             
