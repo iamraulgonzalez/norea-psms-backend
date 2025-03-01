@@ -91,8 +91,8 @@ class Classroom {
             ];
         }
     }
-   
-
+    
+    
     public function update($id, $data) {
         try {
             $class_name = isset($data['class_name']) ? $data['class_name'] : null;

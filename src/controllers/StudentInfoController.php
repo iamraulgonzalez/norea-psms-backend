@@ -217,4 +217,43 @@ class StudentInfoController extends BaseController {
         }
     }
 
+    public function promoteStudentsByGrade($currentGradeId, $newGradeId) {
+        try {
+            $studentModel = new Student();
+            $result = $studentModel->promoteStudentsByGrade($currentGradeId, $newGradeId);
+            
+            header('Content-Type: application/json');
+            echo json_encode($result);
+        } catch (Exception $e) {
+            error_log("Error in promoteStudentsByGrade: " . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to promote students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getStudentsByGradeId($grade_id) {
+        try {
+            if (ob_get_level()) ob_end_clean();
+            
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $students = $this->studentModel->fetchByGradeId($grade_id);
+            
+            echo json_encode($students, JSON_UNESCAPED_UNICODE);
+            exit();
+            
+        } catch (Exception $e) {
+            error_log("Error getting students by grade: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to get students'
+            ]);
+            exit();
+        }
+    }
+
 }

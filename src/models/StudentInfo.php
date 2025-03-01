@@ -507,4 +507,149 @@ class Student {
         }
     }
 
+    public function promoteStudentsByGrade($currentGradeId, $newGradeId) {
+        try {
+            $this->conn->beginTransaction();
+
+            // First, verify if the grades exist
+            $gradeCheckStmt = $this->conn->prepare("
+                SELECT COUNT(*) FROM tbl_grade 
+                WHERE grade_id IN (:current_grade_id, :new_grade_id)
+            ");
+            $gradeCheckStmt->bindParam(':current_grade_id', $currentGradeId);
+            $gradeCheckStmt->bindParam(':new_grade_id', $newGradeId);
+            $gradeCheckStmt->execute();
+            
+            if ($gradeCheckStmt->fetchColumn() < 2) {
+                $this->conn->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => 'ថ្នាក់មិនត្រឹមត្រូវ'
+                ];
+            }
+
+            // Get all active students from the current grade
+            $stmt = $this->conn->prepare("
+                SELECT s.student_id, s.student_name, s.class_id 
+                FROM tbl_student_info s
+                JOIN tbl_classroom c ON s.class_id = c.class_id
+                WHERE c.grade_id = :grade_id
+                AND s.status = 'active'
+                AND s.isDeleted = 0
+            ");
+            $stmt->bindParam(':grade_id', $currentGradeId);
+            $stmt->execute();
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($students)) {
+                $this->conn->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => 'មិនមានសិស្សក្នុងថ្នាក់នេះទេ'
+                ];
+            }
+
+            // Get available classes in the new grade
+            $classStmt = $this->conn->prepare("
+                SELECT class_id, num_students_in_class, 
+                       (SELECT COUNT(*) FROM tbl_student_info 
+                        WHERE class_id = c.class_id AND isDeleted = 0) as current_students
+                FROM tbl_classroom c
+                WHERE grade_id = :new_grade_id
+                AND isDeleted = 0
+                HAVING num_students_in_class > current_students
+                ORDER BY class_id
+            ");
+            $classStmt->bindParam(':new_grade_id', $newGradeId);
+            $classStmt->execute();
+            $availableClasses = $classStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($availableClasses)) {
+                $this->conn->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => 'មិនមានថ្នាក់ទទួលសិស្សទេ'
+                ];
+            }
+
+            // Update each student's class
+            $updateStmt = $this->conn->prepare("
+                UPDATE tbl_student_info 
+                SET class_id = :new_class_id
+                WHERE student_id = :student_id
+            ");
+
+            $currentClassIndex = 0;
+            foreach ($students as $student) {
+                // Find next available class with space
+                while (
+                    $currentClassIndex < count($availableClasses) && 
+                    $availableClasses[$currentClassIndex]['current_students'] >= $availableClasses[$currentClassIndex]['num_students_in_class']
+                ) {
+                    $currentClassIndex++;
+                }
+
+                if ($currentClassIndex >= count($availableClasses)) {
+                    $this->conn->rollBack();
+                    return [
+                        'status' => 'error',
+                        'message' => 'មិនមានកន្លែងគ្រប់គ្រាន់សម្រាប់សិស្សទាំងអស់'
+                    ];
+                }
+
+                $updateStmt->bindValue(':new_class_id', $availableClasses[$currentClassIndex]['class_id']);
+                $updateStmt->bindValue(':student_id', $student['student_id']);
+                $updateStmt->execute();
+
+                // Update the count for the current class
+                $availableClasses[$currentClassIndex]['current_students']++;
+            }
+
+            $this->conn->commit();
+            return [
+                'status' => 'success',
+                'message' => 'សិស្សត្រូវបានឡើងថ្នាក់ដោយជោគជ័យ',
+                'data' => [
+                    'promoted_count' => count($students),
+                    'students' => $students
+                ]
+            ];
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Error promoting students: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការឡើងថ្នាក់សិស្ស: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function fetchByGradeId($grade_id) {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT s.*, c.class_name, c.grade_id, g.grade_name 
+                FROM tbl_student_info s
+                JOIN tbl_classroom c ON s.class_id = c.class_id
+                JOIN tbl_grade g ON c.grade_id = g.grade_id
+                WHERE c.grade_id = :grade_id AND s.isDeleted = 0
+                ORDER BY s.student_name ASC
+            ");
+            
+            $stmt->bindParam(':grade_id', $grade_id);
+            $stmt->execute();
+            
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error in fetchByGradeId: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch students by grade'
+            ];
+        }
+    }
+
 }

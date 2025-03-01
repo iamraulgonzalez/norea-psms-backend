@@ -94,6 +94,10 @@ function route($uri, $method) {
                     }
                 }
 
+                if ($method === 'GET' && $action === 'getStudentsByGrade' && isset($uriParts[2])) {
+                    $controller->getStudentsByGradeId($uriParts[2]);
+                }
+
                 if ($method === 'GET' && $action === 'count') {
                     $controller->getStudentCount();
                     return;
@@ -101,6 +105,19 @@ function route($uri, $method) {
 
                 if ($method === "POST" && $action === "promote" && isset($uriParts[2])) {
                     $controller->promoteStudent($uriParts[2]);
+                }
+
+                // Add route for promoting students by grade
+                if ($method === "POST" && $action === "promoteByGrade") {
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    if ($data && isset($data['current_grade_id']) && isset($data['new_grade_id'])) {
+                        $controller->promoteStudentsByGrade($data['current_grade_id'], $data['new_grade_id']);
+                    } else {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Missing required grade IDs'
+                        ]);
+                    }
                 }
                 break;
 
