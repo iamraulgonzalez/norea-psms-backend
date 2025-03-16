@@ -178,4 +178,49 @@ class StudentMonthlyScoreController {
             ]);
         }
     }
+
+    public function getStudentScoresByClassSubjectMonthlyScore($classroom_subject_monthly_score_id) {
+        try {
+            $result = $this->monthlyScore->getStudentScoresByClassSubjectMonthlyScore($classroom_subject_monthly_score_id);
+            
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getStudentScoresByClassSubjectMonthlyScore: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
+
+    public function getStudentScoresByClassAndMonth() {
+        try {
+            $class_id = $_GET['class_id'] ?? null;
+            $monthly_id = $_GET['monthly_id'] ?? null;
+
+            if (!$class_id || !$monthly_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Missing required parameters: class_id and monthly_id'
+                ]);
+                return;
+            }
+
+            $result = $this->monthlyScore->getStudentScoresByClassAndMonth($class_id, $monthly_id);
+            
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getStudentScoresByClassAndMonth: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
 }

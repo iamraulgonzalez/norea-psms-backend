@@ -491,6 +491,10 @@ function route($uri, $method) {
                                 }
                             }
                             
+                            if ($method === "GET" && $action === "getStudentScoresByClassAndMonth") {
+                                $controller->getStudentScoresByClassAndMonth();
+                            }
+                            
                             if ($method === "DELETE" && $action === "deleteMonthlyScore") {
                                 if (isset($uriParts[2])) {
                                     $controller->deleteMonthlyScore($uriParts[2]);
@@ -527,6 +531,14 @@ function route($uri, $method) {
                                         'status' => 'error',
                                         'message' => 'Student ID is required'
                                     ]);
+                                }
+                            }
+
+                            if ($method === "GET" && $action === "getStudentScoresByClassSubjectMonthlyScore") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudentScoresByClassSubjectMonthlyScore($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Classroom Subject Monthly Score ID not provided']);
                                 }
                             }
                         break;
@@ -693,6 +705,84 @@ function route($uri, $method) {
                                 $controller->getTopStudents();
                             }
                             break;
+
+                        case 'classroom_subject_monthly_score':
+                            require_once dirname(__DIR__) . '/controllers/ClassroomSubjectMonthlyScoreController.php';
+                            $controller = new ClassroomSubjectMonthlyScoreController();
+                            if($method === "GET" && $action === "getAllClassroomSubjectMonthlyScores"){
+                                $controller->getAllClassroomSubjectMonthlyScores();
+                            }
+                            if($method === "GET" && $action === "getClassroomSubjectMonthlyScoreById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getClassroomSubjectMonthlyScoreById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'ClassroomSubjectMonthlyScore ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getByClassSubjectMonthly"){
+                                $controller->getByClassSubjectMonthly();
+                            }
+                            if($method === "GET" && $action === "getClassroomSubjectMonthlyScoresByClassId"){
+                                if(isset($uriParts[2])){
+                                    $controller->getClassroomSubjectMonthlyScoresByClassId($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Class ID not provided']);
+                                }
+                            }
+                            if($method === "POST" && $action === "addClassroomSubjectMonthlyScore"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addClassroomSubjectMonthlyScore($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+
+                            if($method === "POST" && $action === "updateClassroomSubjectMonthlyScore"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateClassroomSubjectMonthlyScore($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }else{
+                                    echo json_encode(['message' => 'ClassroomSubjectMonthlyScore ID not provided']);
+                                }
+                            }
+
+                            if($method === "DELETE" && $action === "deleteClassroomSubjectMonthlyScore"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteClassroomSubjectMonthlyScore($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'ClassroomSubjectMonthlyScore ID not provided']);
+                                }
+                            }
+
+                            if($method === "GET" && $action === "getClassroomSubjectMonthlyScoresByClassId"){
+                                if(isset($uriParts[2])){
+                                    $controller->getClassroomSubjectMonthlyScoresByClassId($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Class ID not provided']);
+                                }
+                            }
+
+                            if($method === "GET" && $action === "getClassroomSubjectMonthlyScoresByClassAndMonth"){
+                                if(isset($uriParts[2]) && isset($uriParts[3])){
+                                    $controller->getClassroomSubjectMonthlyScoresByClassAndMonth($uriParts[2], $uriParts[3]);
+                                }else{
+                                    echo json_encode(['message' => 'Class ID or Monthly ID not provided']);
+                                }
+                            }
+
+                            if($method === "GET" && $action === "getClassroomSubjectMonthlyScoresbyMonthlyIdandClassId"){
+                                if(isset($uriParts[2]) && isset($uriParts[3])){
+                                    $controller->getClassroomSubjectMonthlyScoresbyMonthlyIdandClassId($uriParts[2], $uriParts[3]);
+                                }else{
+                                    echo json_encode(['message' => 'Monthly ID or Class ID not provided']);
+                                }
+                            }
 
                         default:
                             echo json_encode(['message' => 'Route not found']);
