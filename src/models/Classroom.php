@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 
 class Classroom {
     private $conn;
+
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
@@ -10,7 +11,7 @@ class Classroom {
 
     public function fetchAll() {
         $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
-                  num_students_in_class, c.create_date
+                  c.year_study_id, c.status, c.num_students_in_class, c.create_date
                   FROM tbl_classroom c 
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
@@ -21,14 +22,15 @@ class Classroom {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    
     public function create($data) {
         try {
-            $class_name = isset($data['class_name']) ? $data['class_name'] : null;
-            $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
-            $session_id = isset($data['session_id']) ? $data['session_id'] : null;
-            $teacher_id = isset($data['teacher_id']) ? $data['teacher_id'] : null;
-            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : 45;
+            $class_name = $data['class_name'] ?? null;
+            $grade_id = $data['grade_id'] ?? null;
+            $session_id = $data['session_id'] ?? null;
+            $teacher_id = $data['teacher_id'] ?? null;
+            $num_students_in_class = $data['num_students_in_class'] ?? 45;
+            $year_study_id = $data['year_study_id'] ?? null;
+            $status = $data['status'] ?? 'active';
 
             // Validate required fields
             if ($class_name === null || $grade_id === null || $session_id === null) {
@@ -60,8 +62,8 @@ class Classroom {
             }
 
             // Insert new class
-            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, teacher_id, num_students_in_class) 
-                           VALUES (:class_name, :grade_id, :session_id, :teacher_id, :num_students_in_class)";
+            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, teacher_id, num_students_in_class, year_study_id, status) 
+                           VALUES (:class_name, :grade_id, :session_id, :teacher_id, :num_students_in_class, :year_study_id, :status)";
             $stmt = $this->conn->prepare($insertQuery);
 
             $stmt->bindParam(':class_name', $class_name);
@@ -69,6 +71,8 @@ class Classroom {
             $stmt->bindParam(':session_id', $session_id);
             $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
+            $stmt->bindParam(':year_study_id', $year_study_id);
+            $stmt->bindParam(':status', $status);
 
             if ($stmt->execute()) {
                 return [
@@ -91,15 +95,16 @@ class Classroom {
             ];
         }
     }
-    
-    
+
     public function update($id, $data) {
         try {
-            $class_name = isset($data['class_name']) ? $data['class_name'] : null;
-            $grade_id = isset($data['grade_id']) ? $data['grade_id'] : null;
-            $session_id = isset($data['session_id']) ? $data['session_id'] : null;
-            $teacher_id = isset($data['teacher_id']) ? $data['teacher_id'] : null;
-            $num_students_in_class = isset($data['num_students_in_class']) ? intval($data['num_students_in_class']) : null;
+            $class_name = $data['class_name'] ?? null;
+            $grade_id = $data['grade_id'] ?? null;
+            $session_id = $data['session_id'] ?? null;
+            $teacher_id = $data['teacher_id'] ?? null;
+            $num_students_in_class = $data['num_students_in_class'] ?? null;
+            $year_study_id = $data['year_study_id'] ?? null;
+            $status = $data['status'] ?? null;
 
             if ($class_name === null || $grade_id === null || $session_id === null || $num_students_in_class === null) {
                 return [
@@ -155,7 +160,9 @@ class Classroom {
                                grade_id = :grade_id, 
                                session_id = :session_id,
                                teacher_id = :teacher_id,
-                               num_students_in_class = :num_students_in_class
+                               num_students_in_class = :num_students_in_class,
+                               year_study_id = :year_study_id,
+                               status = :status
                            WHERE class_id = :class_id 
                            AND isDeleted = 0";
 
@@ -166,6 +173,8 @@ class Classroom {
             $stmt->bindParam(':session_id', $session_id);
             $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
+            $stmt->bindParam(':year_study_id', $year_study_id);
+            $stmt->bindParam(':status', $status);
 
             if ($stmt->execute()) {
                 return [
@@ -209,7 +218,6 @@ class Classroom {
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
 
     public function getClassesByGrade($gradeId) {
         try {
