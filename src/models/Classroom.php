@@ -11,11 +11,12 @@ class Classroom {
 
     public function fetchAll() {
         $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
-                  c.year_study_id, c.status, c.num_students_in_class, c.create_date
-                  FROM tbl_classroom c 
+                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date
+                  FROM tbl_classroom c
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
                   LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
+                  LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
                   WHERE c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -206,7 +207,7 @@ class Classroom {
     
     public function fetchById($id) {
         $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
-                  num_students_in_class, c.create_date  
+                  num_students_in_class,c.create_date
                   FROM tbl_classroom c 
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
@@ -227,12 +228,14 @@ class Classroom {
                         s.session_name,
                         t.teacher_name,
                         t.teacher_id,
+                        ys.year_study,
                         num_students_in_class,
                         c.create_date
                       FROM tbl_classroom c
                       LEFT JOIN tbl_grade g ON c.grade_id = g.grade_id
                       LEFT JOIN tbl_school_session s ON c.session_id = s.session_id
                       LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
+                      LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
                       WHERE c.grade_id = :grade_id 
                       AND c.isDeleted = 0
                       AND s.isDeleted = 0

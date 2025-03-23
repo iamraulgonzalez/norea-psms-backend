@@ -36,7 +36,8 @@ class StudentMonthlyScore {
                 sub.subject_code,
                 sub.subject_name
             FROM tbl_student_info s
-            INNER JOIN tbl_classroom c ON s.class_id = c.class_id
+            INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_classroom c ON st.class_id = c.class_id
             INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
             LEFT JOIN tbl_student_monthly_score sms ON s.student_id = sms.student_id
             LEFT JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
@@ -331,7 +332,8 @@ class StudentMonthlyScore {
                     FROM tbl_student_monthly_score sms
                     LEFT JOIN tbl_student_info s ON sms.student_id = s.student_id
                     LEFT JOIN tbl_teacher t ON sms.teacher_id = t.teacher_id
-                    LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
+                    LEFT JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+                    LEFT JOIN tbl_classroom c ON st.class_id = c.class_id
                     LEFT JOIN tbl_monthly m ON sms.monthly_id = m.monthly_id
                     LEFT JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
                     LEFT JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -379,7 +381,8 @@ class StudentMonthlyScore {
                 sms.create_date
             FROM tbl_student_monthly_score sms
             INNER JOIN tbl_student_info s ON sms.student_id = s.student_id
-            INNER JOIN tbl_classroom c ON s.class_id = c.class_id
+            INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_classroom c ON st.class_id = c.class_id
             INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
             INNER JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -433,7 +436,8 @@ class StudentMonthlyScore {
                 sms.create_date
             FROM tbl_student_monthly_score sms
             INNER JOIN tbl_student_info s ON sms.student_id = s.student_id
-            INNER JOIN tbl_classroom c ON s.class_id = c.class_id
+            INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_classroom c ON st.class_id = c.class_id
             INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
             INNER JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -476,7 +480,8 @@ class StudentMonthlyScore {
                     FROM tbl_student_monthly_score sms
                     LEFT JOIN tbl_student_info s ON sms.student_id = s.student_id
                     LEFT JOIN tbl_teacher t ON sms.teacher_id = t.teacher_id
-                    LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
+                    LEFT JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+                    LEFT JOIN tbl_classroom c ON st.class_id = c.class_id
                     LEFT JOIN tbl_monthly m ON sms.monthly_id = m.monthly_id
                     LEFT JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
                     LEFT JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -643,7 +648,8 @@ class StudentMonthlyScore {
                 COALESCE(sms.score, NULL) as score,
                 sms.create_date
             FROM tbl_student_info s
-            INNER JOIN tbl_classroom c ON s.class_id = c.class_id
+            INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_classroom c ON st.class_id = c.class_id
             INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
             INNER JOIN classroom_subject_monthly_score csms ON c.class_id = csms.class_id
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -725,7 +731,8 @@ class StudentMonthlyScore {
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
             INNER JOIN tbl_subject sub ON asg.subject_code = sub.subject_code
             INNER JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
-            INNER JOIN tbl_student_info s ON s.class_id = c.class_id 
+            INNER JOIN tbl_study st ON st.class_id = c.class_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_student_info s ON s.student_id = st.student_id
             LEFT JOIN tbl_student_monthly_score sms ON (
                 s.student_id = sms.student_id 
                 AND sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
@@ -807,7 +814,8 @@ class StudentMonthlyScore {
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
             INNER JOIN tbl_subject sub ON asg.subject_code = sub.subject_code
             INNER JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
-            INNER JOIN tbl_student_info s ON s.class_id = c.class_id 
+            INNER JOIN tbl_study st ON st.class_id = c.class_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_student_info s ON s.student_id = st.student_id
             LEFT JOIN tbl_student_monthly_score sms ON (
                 s.student_id = sms.student_id 
                 AND sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
@@ -943,7 +951,8 @@ class StudentMonthlyScore {
                 COALESCE(sms.score, NULL) as score,
                 sms.create_date
             FROM tbl_student_info s
-            INNER JOIN tbl_classroom c ON s.class_id = c.class_id
+            INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            INNER JOIN tbl_classroom c ON st.class_id = c.class_id
             INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
             INNER JOIN classroom_subject_monthly_score csms ON c.class_id = csms.class_id
             INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
@@ -1001,6 +1010,121 @@ class StudentMonthlyScore {
 
         } catch (PDOException $e) {
             error_log("Error in getStudentScoresByClassAndMonth: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
+        }
+    }
+
+    public function getStudentMonthlyRankings($filters = []) {
+        try {
+            $query = "SELECT 
+                r.student_id,
+                r.student_name,
+                r.class_id,
+                r.class_name, 
+                r.monthly_id,
+                r.month_name,
+                r.subjects_count,
+                r.total_score,
+                r.average_score,
+                r.rank_in_class,
+                r.class_size
+            FROM view_student_monthly_rankings r
+            WHERE 1=1";
+
+            $params = [];
+            
+            // Add filters
+            if (!empty($filters['class_id'])) {
+                $query .= " AND r.class_id = :class_id";
+                $params[':class_id'] = $filters['class_id'];
+            }
+            if (!empty($filters['monthly_id'])) {
+                $query .= " AND r.monthly_id = :monthly_id";
+                $params[':monthly_id'] = $filters['monthly_id'];
+            }
+            if (!empty($filters['student_id'])) {
+                $query .= " AND r.student_id = :student_id";
+                $params[':student_id'] = $filters['student_id'];
+            }
+
+            // Add ordering
+            $query .= " ORDER BY r.class_id, r.monthly_id, r.rank_in_class";
+
+            $stmt = $this->conn->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error in getStudentMonthlyRankings: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
+        }
+    }
+
+    public function getStudentMonthlyScoreSummary($filters = []) {
+        try {
+            $query = "SELECT 
+                s.student_id,
+                s.student_name,
+                s.class_id,
+                s.class_name, 
+                s.monthly_id,
+                s.month_name,
+                s.subjects_count,
+                s.total_score,
+                s.avg_score,
+                s.rank_in_class
+            FROM view_student_monthly_score_summary s
+            WHERE 1=1";
+
+            $params = [];
+            
+            // Add filters
+            if (!empty($filters['class_id'])) {
+                $query .= " AND s.class_id = :class_id";
+                $params[':class_id'] = $filters['class_id'];
+            }
+            if (!empty($filters['monthly_id'])) {
+                $query .= " AND s.monthly_id = :monthly_id";
+                $params[':monthly_id'] = $filters['monthly_id'];
+            }
+            if (!empty($filters['student_id'])) {
+                $query .= " AND s.student_id = :student_id";
+                $params[':student_id'] = $filters['student_id'];
+            }
+
+            // Add ordering
+            $query .= " ORDER BY s.class_id, s.monthly_id, s.rank_in_class";
+
+            $stmt = $this->conn->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error in getStudentMonthlyScoreSummary: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Database error occurred'

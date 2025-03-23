@@ -541,6 +541,18 @@ function route($uri, $method) {
                                     echo jsonResponse(400, ['message' => 'Classroom Subject Monthly Score ID not provided']);
                                 }
                             }
+                            
+                            if ($method === "GET" && $action === "getMonthlyScoresByFilters") {
+                                $controller->getMonthlyScoresByFilters();
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudentMonthlyRankings") {
+                                $controller->getStudentMonthlyRankings();
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudentMonthlyScoreSummary") {
+                                $controller->getStudentMonthlyScoreSummary();
+                            }
                         break;
 
                         // Monthly Routes
@@ -783,14 +795,294 @@ function route($uri, $method) {
                                     echo json_encode(['message' => 'Monthly ID or Class ID not provided']);
                                 }
                             }
+                            break;
+                        case 'semester_exam_subjects':
+                            require_once dirname(__DIR__) . '/controllers/SemesterExamSubjectsController.php';
+                            $controller = new SemesterExamSubjectsController();
+                            if($method === "GET" && $action === "getAllSemesterExamSubjects"){
+                                $controller->getAllSemesterExamSubjects();
+                            }
+                            if($method === "GET" && $action === "getSemesterExamSubjectById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getSemesterExamSubjectById($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'SemesterExamSubject ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getSemesterExamSubjectsByClassAndSemester"){
+                                if(isset($uriParts[2]) && isset($uriParts[3])){
+                                    $controller->getSemesterExamSubjectsByClassAndSemester($uriParts[2], $uriParts[3]);
+                                }else{
+                                    echo json_encode(['message' => 'Class ID or Semester ID not provided']);
+                                }
+                            }
+                            if($method === "POST" && $action === "addSemesterExamSubject"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addSemesterExamSubject($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "POST" && $action === "updateSemesterExamSubject"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateSemesterExamSubject($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }else{
+                                    echo json_encode(['message' => 'SemesterExamSubject ID not provided']);
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteSemesterExamSubject"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteSemesterExamSubject($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'SemesterExamSubject ID not provided']);
+                                }
+                            }
+                            break;
+                        case 'student_semester_exam_scores':
+                            require_once dirname(__DIR__) . '/controllers/StudentSemesterExamScoresController.php';
+                            $controller = new StudentSemesterExamScoresController();
+                            if($method === "GET" && $action === "getStudentSemesterExamScores"){
+                                if(isset($uriParts[2])){
+                                    $controller->getStudentSemesterExamScores($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Student ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "recalculateSemesterScores"){
+                                $controller->recalculateSemesterScores();
+                            }
+                            if($method === "GET" && $action === "getClassSemesterExamScores"){
+                                if(isset($uriParts[2])){
+                                    $controller->getClassSemesterExamScores($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getMonthlyScoresForSubject"){
+                                $controller->getMonthlyScoresForSubject();
+                            }
+                            if($method === "POST" && $action === "addSemesterExamScore"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addSemesterExamScore($data);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+                            if($method === "PUT" && $action === "updateSemesterExamScore"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateSemesterExamScore($id, $data);
+                                    }else{
+                                        echo json_encode(['message' => 'Invalid input data']);
+                                    }
+                                }else{
+                                    echo json_encode(['message' => 'SemesterExamScore ID not provided']);
+                                }
+                            }
+                            if($method === "DELETE" && $action === "deleteSemesterExamScore"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteSemesterExamScore($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'SemesterExamScore ID not provided']);
+                                }
+                            }
+                            if($method === "GET" && $action === "getAvailableMonthsForClass"){
+                                if(isset($uriParts[2])){
+                                    $controller->getAvailableMonthsForClass($uriParts[2]);
+                                }else{
+                                    echo json_encode(['message' => 'Class ID not provided']);
+                                }
+                            }
+                            break;
+                        case 'student_semester_score':
+                            require_once dirname(__DIR__) . '/controllers/StudentSemesterScoreController.php';
+                            $controller = new SemesterScoreController();
+                            
+                            if($method === "GET" && $action === "getAllStudentSemesterScore"){
+                                $controller->getAllStudentSemesterScore();
+                            }
+                            
+                            if($method === "GET" && $action === "getSemesterScoreById"){
+                                if(isset($uriParts[2])){
+                                    $controller->getSemesterScoreById($uriParts[2]);
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Semester Score ID not provided']);
+                                }
+                            }
+                            
+                            if($method === "GET" && $action === "getClassSemesterScores"){
+                                if(isset($uriParts[2]) && isset($uriParts[3])){
+                                    $controller->getClassSemesterScores($uriParts[2], $uriParts[3]);
+                                }else if(isset($uriParts[2])){
+                                    $controller->getClassSemesterScores($uriParts[2]);
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Class ID not provided']);
+                                }
+                            }
+                            
+                            if($method === "GET" && $action === "getClassSemesterExamScoresWithMonthly"){
+                                if(isset($uriParts[2])){
+                                    $controller->getClassSemesterExamScoresWithMonthly($uriParts[2]);
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Class ID not provided']);
+                                }
+                            }
+                            
+                            if($method === "POST" && $action === "AddSemesterScore"){
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->AddSemesterScore($data);
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Invalid input data']);
+                                }
+                            }
+                            
+                            if($method === "PUT" && $action === "updateSemesterScore"){
+                                if(isset($uriParts[2])){
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    if($data){
+                                        $controller->updateSemesterScore($id, $data);
+                                    }else{
+                                        echo jsonResponse(400, ['status' => 'error', 'message' => 'Invalid input data']);
+                                    }
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Semester Score ID not provided']);
+                                }
+                            }
+                            
+                            if($method === "DELETE" && $action === "deleteSemesterScore"){
+                                if(isset($uriParts[2])){
+                                    $controller->deleteSemesterScore($uriParts[2]);
+                                }else{
+                                    echo jsonResponse(400, ['status' => 'error', 'message' => 'Semester Score ID not provided']);
+                                }
+                            }
+                            break;
+                        case 'study':
+                            require_once dirname(__DIR__) . '/controllers/StudyController.php';
+                            $controller = new StudyController();
+                            
+                            if ($method === "GET" && $action === "getAllStudies") {
+                                $controller->getAllStudies();
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudiesByStudentId") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudiesByStudentId($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Student ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudiesByClassId") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudiesByClassId($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudiesByYearId") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudiesByYearId($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Year ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "POST" && $action === "addStudy") {
+                                $controller->addStudy();
+                            }
+                            
+                            if ($method === "PUT" && $action === "updateStudy") {
+                                if (isset($uriParts[2])) {
+                                    $controller->updateStudy($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Study ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "DELETE" && $action === "deleteStudy") {
+                                if (isset($uriParts[2])) {
+                                    $controller->deleteStudy($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Study ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "GET" && $action === "getStudyById") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudyById($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Study ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "GET" && $action === "getCurrentClassForStudent") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getCurrentClassForStudent($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Student ID not provided']);
+                                }
+                            }
 
-                        default:
-                            echo json_encode(['message' => 'Route not found']);
+                            if ($method === "GET" && $action === "getCurrentEnrollment") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getCurrentEnrollment($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID not provided']);
+                                }
+                            }
+                            
+                            if ($method === "POST" && $action === "promoteByClass") {
+                                $controller->promoteByClass();
+                            }
+                            
+                            if ($method === "POST" && $action === "promoteStudent") {
+                                $controller->promoteStudent();
+                            }
+                            break;
+                        case 'studies':
+                            require_once dirname(__DIR__) . '/controllers/StudyController.php';
+                            $controller = new StudyController();
 
+                            if ($method === 'GET' && $action === 'getAllStudies') {
+                                $controller->getAllStudies();
+                            }
+
+                            if ($method === 'GET' && $action === 'getStudiesByStudentId') {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudiesByStudentId($uriParts[2]);
+                                } else {
+                                    echo json_encode(['message' => 'Student ID not provided']);
+                                }
+                            }
+
+                            if ($method === 'GET' && $action === 'getStudiesByClassId') {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudiesByClassId($uriParts[2]);
+                                } else {
+                                    echo json_encode(['message' => 'Class ID not provided']);
+                                }
+                            }
 
                             break;
-                    }
-        
+
+                default:
+                    echo json_encode(['message' => 'Route not found']);
+                    break;
+        }
     } else {
         echo json_encode(['message' => 'Route not found']);
     }

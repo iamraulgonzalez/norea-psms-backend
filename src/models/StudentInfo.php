@@ -18,8 +18,7 @@ class Student {
                         s.gender, 
                         s.dob, 
                         s.pob_address, 
-                        s.current_address, 
-                        s.class_id,
+                        s.current_address,
                         s.father_name,
                         s.father_job,
                         s.father_phone,
@@ -30,7 +29,13 @@ class Student {
                         s.status,
                         c.class_name
                       FROM tbl_student_info s
-                      LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
+                      LEFT JOIN (
+                          SELECT st.student_id, st.class_id, MAX(st.study_id) as latest_study
+                          FROM tbl_study st
+                          WHERE st.isDeleted = 0 AND st.status = 'active'
+                          GROUP BY st.student_id
+                      ) latest ON s.student_id = latest.student_id
+                      LEFT JOIN tbl_classroom c ON latest.class_id = c.class_id
                       WHERE s.isDeleted = 0
                       ORDER BY s.student_id";
             $stmt = $this->conn->prepare($query);
@@ -56,10 +61,9 @@ class Student {
             $student_name = $data['student_name'] ?? null;
             $gender = $data['gender'] ?? null;
             $dob = $data['dob'] ?? null;
-            $class_id = $data['class_id'] ?? null;
 
             // Validate required fields
-            if (!$student_name || !$gender || !$dob || !$class_id) {
+            if (!$student_name || !$gender || !$dob) {
                 $this->conn->rollBack();
                 return [
                     'status' => 'error',
@@ -68,12 +72,12 @@ class Student {
             }
 
             $query = "INSERT INTO tbl_student_info (
-                student_id, student_name, gender, dob, class_id,
+                student_id, student_name, gender, dob,
                 pob_address, current_address, father_name, father_job, 
                 father_phone, mother_name, mother_job, mother_phone, 
                 family_status, status
             ) VALUES (
-                :student_id, :student_name, :gender, :dob, :class_id,
+                :student_id, :student_name, :gender, :dob,
                 :pob_address, :current_address, :father_name, :father_job,
                 :father_phone, :mother_name, :mother_job, :mother_phone,
                 :family_status, :status
@@ -87,7 +91,6 @@ class Student {
                 'student_name' => $student_name,
                 'gender' => $gender,
                 'dob' => $dob,
-                'class_id' => $class_id,
                 'pob_address' => $data['pob_address'] ?? null,
                 'current_address' => $data['current_address'] ?? null,
                 'father_name' => $data['father_name'] ?? null,
@@ -149,7 +152,6 @@ class Student {
                      SET student_name = :student_name, 
                          gender = :gender, 
                          dob = :dob, 
-                         class_id = :class_id,
                          pob_address = :pob_address, 
                          current_address = :current_address, 
                          father_name = :father_name, 
@@ -170,7 +172,6 @@ class Student {
             $dob = $data['dob'] ?? null;
             $pob_address = $data['pob_address'] ?? null;
             $current_address = $data['current_address'] ?? null;
-            $class_id = $data['class_id'] ?? null;
             $father_name = $data['father_name'] ?? null;
             $father_job = $data['father_job'] ?? null;
             $father_phone = $data['father_phone'] ?? null;
@@ -185,7 +186,6 @@ class Student {
             $stmt->bindParam(':student_name', $student_name);
             $stmt->bindParam(':gender', $gender);
             $stmt->bindParam(':dob', $dob);
-            $stmt->bindParam(':class_id', $class_id);
             $stmt->bindParam(':pob_address', $pob_address);
             $stmt->bindParam(':current_address', $current_address);
             $stmt->bindParam(':father_name', $father_name);
@@ -283,11 +283,14 @@ class Student {
                 s.gender, 
                 s.dob, 
                 s.status,
-                c.class_name 
+                c.class_name
             FROM tbl_student_info s
-            LEFT JOIN tbl_classroom c ON s.class_id = c.class_id
-            WHERE s.class_id = :class_id 
-            AND s.isDeleted = 0";
+            JOIN tbl_study st ON s.student_id = st.student_id
+            JOIN tbl_classroom c ON st.class_id = c.class_id
+            WHERE st.class_id = :class_id
+            AND st.status = 'active'
+            AND s.isDeleted = 0
+            AND st.isDeleted = 0";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':class_id', $class_id);
