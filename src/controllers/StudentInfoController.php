@@ -123,6 +123,22 @@ class StudentInfoController extends BaseController {
             ], JSON_UNESCAPED_UNICODE);
         }
     }
+
+    public function getUnenrolledStudents() {
+        try {
+            $students = $this->studentModel->getUnenrolledStudents();
+            echo json_encode($students, JSON_UNESCAPED_UNICODE);
+            exit();
+        } catch (Exception $e) {
+            error_log("Error in getUnenrolledStudents: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to get unenrolled students'
+            ]);
+        }
+    }
+
     public function deleteStudent($id) {
         try {
             error_log("Attempting to delete student ID: " . $id);

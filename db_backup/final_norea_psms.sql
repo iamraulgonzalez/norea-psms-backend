@@ -34,11 +34,11 @@ CREATE TABLE `classroom_subject_monthly_score` (
   CONSTRAINT `fk_classroom_subject_monthly_class` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_monthly` FOREIGN KEY (`monthly_id`) REFERENCES `tbl_monthly` (`monthly_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_subject` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `classroom_subject_monthly_score` */
 
-insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (47,1,74,1,'2025-03-22 15:23:26',0),(48,1,81,1,'2025-03-22 15:23:26',0),(49,1,76,1,'2025-03-22 15:23:26',0);
+insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (47,1,74,1,'2025-03-22 15:23:26',0),(48,1,81,1,'2025-03-22 15:23:26',0),(49,1,76,1,'2025-03-22 15:23:26',0),(50,1,85,1,'2025-03-24 18:08:33',0),(51,1,82,1,'2025-03-24 18:08:33',0),(52,1,77,1,'2025-03-24 18:08:33',0),(53,1,75,1,'2025-03-24 18:08:33',0),(54,1,79,1,'2025-03-24 18:08:33',0),(55,1,71,1,'2025-03-24 18:08:33',0),(56,1,73,1,'2025-03-24 18:08:33',0),(57,1,70,1,'2025-03-24 18:08:33',0);
 
 /*Table structure for table `tbl_assign_subject_grade` */
 
@@ -500,6 +500,141 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/* Procedure structure for procedure `create_dynamic_score_pivot_view` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `create_dynamic_score_pivot_view` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `create_dynamic_score_pivot_view`()
+BEGIN
+    -- Create the basic view without dynamic columns first
+    SET @sql = 'DROP VIEW IF EXISTS view_student_monthly_score_pivot;
+    CREATE VIEW view_student_monthly_score_pivot AS
+    WITH student_data AS (
+        SELECT 
+            s.student_id,
+            s.student_name,
+            c.class_id,
+            c.class_name,
+            m.monthly_id,
+            m.month_name,
+            COUNT(DISTINCT sub.subject_id) AS subjects_count,
+            SUM(IFNULL(sms.score, 0)) AS total_score,
+            AVG(sms.score) AS average_score,
+            sub.subject_id,
+            sub.subject_name,
+            sms.score
+        FROM tbl_student_info s
+        INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = "active" AND st.isDeleted = 0
+        INNER JOIN tbl_classroom c ON st.class_id = c.class_id
+        INNER JOIN classroom_subject_monthly_score csms ON c.class_id = csms.class_id
+        INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
+        INNER JOIN tbl_subject sub ON asg.subject_code = sub.subject_code
+        INNER JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
+        LEFT JOIN tbl_student_monthly_score sms ON (
+            s.student_id = sms.student_id 
+            AND sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            AND sms.isDeleted = 0
+        )
+        WHERE s.isDeleted = 0
+        AND csms.isDeleted = 0
+        GROUP BY 
+            s.student_id,
+            s.student_name,
+            c.class_id,
+            c.class_name,
+            m.monthly_id,
+            m.month_name,
+            sub.subject_id,
+            sub.subject_name,
+            sms.score
+    ),
+    student_summary AS (
+        SELECT 
+            student_id,
+            student_name,
+            class_id,
+            class_name,
+            monthly_id,
+            month_name,
+            MAX(subjects_count) AS subjects_count,
+            MAX(total_score) AS total_score,
+            MAX(average_score) AS average_score
+        FROM student_data
+        GROUP BY 
+            student_id,
+            student_name,
+            class_id,
+            class_name,
+            monthly_id,
+            month_name
+    ),
+    ranked_students AS (
+        SELECT 
+            s.*,
+            RANK() OVER (PARTITION BY class_id, monthly_id ORDER BY average_score DESC) AS rank_in_class,
+            COUNT(*) OVER (PARTITION BY class_id, monthly_id) AS class_size
+        FROM student_summary s
+    )
+    SELECT 
+        r.student_id,
+        r.student_name,
+        r.class_id,
+        r.class_name,
+        r.monthly_id,
+        r.month_name,
+        r.subjects_count,
+        r.total_score,
+        r.average_score,
+        r.rank_in_class,
+        r.class_size,
+        MAX(CASE WHEN d.subject_name = "គណិតវិទ្យា" THEN d.score END) AS "គណិតវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "ភាសាខ្មែរ" THEN d.score END) AS "ភាសាខ្មែរ",
+        MAX(CASE WHEN d.subject_name = "វិទ្យាសាស្ត្រ" THEN d.score END) AS "វិទ្យាសាស្ត្រ",
+        MAX(CASE WHEN d.subject_name = "សិក្សាសង្គម" THEN d.score END) AS "សិក្សាសង្គម",
+        MAX(CASE WHEN d.subject_name = "អប់រំកាយ-សុខភាពកីឡា" THEN d.score END) AS "អប់រំកាយ-សុខភាពកីឡា",
+        MAX(CASE WHEN d.subject_name = "អប់រំបំណិនជីវិត" THEN d.score END) AS "អប់រំបំណិនជីវិត",
+        MAX(CASE WHEN d.subject_name = "ភាសាបរទេស" THEN d.score END) AS "ភាសាបរទេស",
+        MAX(CASE WHEN d.subject_name = "ចំនួន" THEN d.score END) AS "ចំនួន",
+        MAX(CASE WHEN d.subject_name = "រង្វាស់រង្វាល់" THEN d.score END) AS "រង្វាស់រង្វាល់",
+        MAX(CASE WHEN d.subject_name = "ធរណីមាត្រ" THEN d.score END) AS "ធរណីមាត្រ",
+        MAX(CASE WHEN d.subject_name = "ពីជគណិត" THEN d.score END) AS "ពីជគណិត",
+        MAX(CASE WHEN d.subject_name = "ស្ថិតិ" THEN d.score END) AS "ស្ថិតិ",
+        MAX(CASE WHEN d.subject_name = "រូបវិទ្យា" THEN d.score END) AS "រូបវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "គីមីវិទ្យា" THEN d.score END) AS "គីមីវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "ជីវវិទ្យា" THEN d.score END) AS "ជីវវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "ផែនដី-បរិស្ថានវិទ្យា" THEN d.score END) AS "ផែនដី-បរិស្ថានវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "សីលធម៌-ពលរដ្ឋវិទ្យា" THEN d.score END) AS "សីលធម៌-ពលរដ្ឋវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "ភូមិវិទ្យា" THEN d.score END) AS "ភូមិវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "ប្រវត្តិវិទ្យា" THEN d.score END) AS "ប្រវត្តិវិទ្យា",
+        MAX(CASE WHEN d.subject_name = "គេហវិទ្យា-អប់រំសិល្បៈ" THEN d.score END) AS "គេហវិទ្យា-អប់រំសិល្បៈ",
+        MAX(CASE WHEN d.subject_name = "អប់រំកាយ-កីឡា" THEN d.score END) AS "អប់រំកាយ-កីឡា",
+        MAX(CASE WHEN d.subject_name = "សុខភាព-អនាម័យ" THEN d.score END) AS "សុខភាព-អនាម័យ"
+    FROM ranked_students r
+    LEFT JOIN student_data d ON 
+        r.student_id = d.student_id 
+        AND r.class_id = d.class_id 
+        AND r.monthly_id = d.monthly_id
+    GROUP BY 
+        r.student_id,
+        r.student_name,
+        r.class_id,
+        r.class_name,
+        r.monthly_id,
+        r.month_name,
+        r.subjects_count,
+        r.total_score,
+        r.average_score,
+        r.rank_in_class,
+        r.class_size';
+    
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END */$$
+DELIMITER ;
+
 /*Table structure for table `view_student_monthly_rankings` */
 
 DROP TABLE IF EXISTS `view_student_monthly_rankings`;
@@ -560,6 +695,42 @@ DROP TABLE IF EXISTS `view_student_monthly_summary`;
  `average_score` double 
 )*/;
 
+/*Table structure for table `vstudentmonthlyscorereport` */
+
+DROP TABLE IF EXISTS `vstudentmonthlyscorereport`;
+
+/*!50001 DROP VIEW IF EXISTS `vstudentmonthlyscorereport` */;
+/*!50001 DROP TABLE IF EXISTS `vstudentmonthlyscorereport` */;
+
+/*!50001 CREATE TABLE  `vstudentmonthlyscorereport`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `monthly_id` int(10) unsigned ,
+ `month_name` varchar(255) ,
+ `subject_scores` mediumtext 
+)*/;
+
+/*Table structure for table `vstudentmonthlyscorereportv2` */
+
+DROP TABLE IF EXISTS `vstudentmonthlyscorereportv2`;
+
+/*!50001 DROP VIEW IF EXISTS `vstudentmonthlyscorereportv2` */;
+/*!50001 DROP TABLE IF EXISTS `vstudentmonthlyscorereportv2` */;
+
+/*!50001 CREATE TABLE  `vstudentmonthlyscorereportv2`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `monthly_id` int(10) unsigned ,
+ `month_name` varchar(255) ,
+ `subject_code` int(10) unsigned ,
+ `subject_name` varchar(255) ,
+ `score` float 
+)*/;
+
 /*View structure for view view_student_monthly_rankings */
 
 /*!50001 DROP TABLE IF EXISTS `view_student_monthly_rankings` */;
@@ -580,6 +751,20 @@ DROP TABLE IF EXISTS `view_student_monthly_summary`;
 /*!50001 DROP VIEW IF EXISTS `view_student_monthly_summary` */;
 
 /*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_summary` AS select `sms`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`csms`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,count(distinct `asg`.`assign_subject_grade_id`) AS `subjects_count`,sum(`sms`.`score`) AS `total_score`,avg(`sms`.`score`) AS `average_score` from (((((`tbl_student_monthly_score` `sms` join `tbl_student_info` `si` on(`sms`.`student_id` = `si`.`student_id`)) join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_classroom` `c` on(`csms`.`class_id` = `c`.`class_id`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`isDeleted` = 0 group by `sms`.`student_id`,`si`.`student_name`,`c`.`class_id`,`c`.`class_name`,`csms`.`monthly_id`,`m`.`month_name` */;
+
+/*View structure for view vstudentmonthlyscorereport */
+
+/*!50001 DROP TABLE IF EXISTS `vstudentmonthlyscorereport` */;
+/*!50001 DROP VIEW IF EXISTS `vstudentmonthlyscorereport` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vstudentmonthlyscorereport` AS select `si`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`m`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,group_concat(concat(`sub`.`subject_name`,': ',`sms`.`score`) order by `sub`.`subject_name` ASC separator ', ') AS `subject_scores` from (((((((`tbl_student_info` `si` join `tbl_study` `st` on(`si`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_student_monthly_score` `sms` on(`si`.`student_id` = `sms`.`student_id`)) join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) where `si`.`isDeleted` = 0 and `sms`.`isDeleted` = 0 group by `si`.`student_id`,`si`.`student_name`,`c`.`class_id`,`c`.`class_name`,`m`.`monthly_id`,`m`.`month_name` order by `si`.`student_name`,`m`.`monthly_id` */;
+
+/*View structure for view vstudentmonthlyscorereportv2 */
+
+/*!50001 DROP TABLE IF EXISTS `vstudentmonthlyscorereportv2` */;
+/*!50001 DROP VIEW IF EXISTS `vstudentmonthlyscorereportv2` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vstudentmonthlyscorereportv2` AS select `si`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`m`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,`sub`.`subject_code` AS `subject_code`,`sub`.`subject_name` AS `subject_name`,coalesce(`sms`.`score`,NULL) AS `score` from (((((((`tbl_student_info` `si` join `tbl_study` `st` on(`si`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `classroom_subject_monthly_score` `csms` on(`c`.`class_id` = `csms`.`class_id`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) left join `tbl_student_monthly_score` `sms` on(`si`.`student_id` = `sms`.`student_id` and `sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) where `si`.`isDeleted` = 0 and `csms`.`isDeleted` = 0 order by `si`.`student_name`,`m`.`monthly_id`,`sub`.`subject_name` */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

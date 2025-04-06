@@ -17,9 +17,10 @@ class User {
                         user_name,
                         full_name,
                         phone,
-                        user_type
+                        user_type,
+                        status
                     FROM tbl_user 
-                    WHERE isDeleted = 0 
+                    WHERE isDeleted = 0 AND status = 1
                     ORDER BY user_id DESC";
             
             $stmt = $this->conn->prepare($query);
@@ -36,7 +37,7 @@ class User {
             error_log("Starting user registration in model");
 
             // Check if username already exists
-            $checkStmt = $this->conn->prepare("SELECT COUNT(*) FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0");
+            $checkStmt = $this->conn->prepare("SELECT COUNT(*) FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0 AND status = 1");
             $checkStmt->bindParam(':user_name', $data['user_name']);
             $checkStmt->execute();
             
@@ -52,14 +53,16 @@ class User {
                 full_name, 
                 phone, 
                 user_type,
-                isDeleted
+                isDeleted,
+                status
             ) VALUES (
                 :user_name,
                 :password,
                 :full_name,
                 :phone,
                 :user_type,
-                0
+                0,
+                1
             )";
 
             $stmt = $this->conn->prepare($query);
@@ -95,7 +98,7 @@ class User {
             $query = "SELECT user_id, full_name, user_name, password, user_type, phone 
                      FROM tbl_user 
                      WHERE user_name = :user_name 
-                     AND isDeleted = 0";
+                     AND isDeleted = 0 AND status = 1";
             
             error_log("Executing query: " . $query);
             
@@ -165,7 +168,7 @@ class User {
             }
 
             $query = "UPDATE tbl_user SET " . implode(", ", $updateFields) . " 
-                     WHERE user_id = :user_id AND isDeleted = 0";
+                     WHERE user_id = :user_id AND isDeleted = 0 AND status = 1";
             
             $stmt = $this->conn->prepare($query);
             foreach ($params as $key => &$val) {
@@ -182,7 +185,7 @@ class User {
     public function delete($userId) {
         try {
             // Soft delete - update isDeleted flag
-            $query = "UPDATE tbl_user SET isDeleted = 1 WHERE user_id = :user_id";
+            $query = "UPDATE tbl_user SET isDeleted = 1, status = 0 WHERE user_id = :user_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':user_id', $userId);
             return $stmt->execute();
@@ -213,7 +216,7 @@ class User {
             $query = "SELECT user_id, full_name, user_name, phone, user_type, create_date 
                      FROM tbl_user 
                      WHERE user_id = :user_id 
-                     AND isDeleted = 0";
+                     AND isDeleted = 0 AND status = 1";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':user_id', $userId);
@@ -226,9 +229,27 @@ class User {
         }
     }
 
+    public function updateStatus($userId, $status) {
+        try {
+            $query = "UPDATE tbl_user SET status = :status WHERE user_id = :user_id AND isDeleted = 0";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':status', $status);
+            $stmt->bindParam(':user_id', $userId);
+            
+            if ($stmt->execute()) {
+                return true;
+            } else {
+                return ["error" => "Failed to update user status"];
+            }
+        } catch (PDOException $e) {
+            error_log("Database Error in updateStatus: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public function authenticate($username, $password) {
         try {
-            $query = "SELECT * FROM tbl_user WHERE user_name = :username AND isDeleted = 0";
+            $query = "SELECT * FROM tbl_user WHERE user_name = :username AND isDeleted = 0 AND status = 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':username', $username);
             $stmt->execute();

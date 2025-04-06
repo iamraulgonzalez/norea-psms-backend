@@ -39,7 +39,8 @@ class UserController {
                         'user_name' => $user['user_name'],
                         'full_name' => $user['full_name'],
                         'phone' => $user['phone'],
-                        'user_type' => $user['user_type']
+                        'user_type' => $user['user_type'],
+                        'status' => $user['status']
                     ];
                 }, $users)
             ]);
@@ -48,6 +49,54 @@ class UserController {
             return jsonResponse(500, [
                 'status' => 'error',
                 'message' => 'Failed to fetch users'
+            ]);
+        }
+    }
+
+    public function updateStatus($userId) {
+        try {
+            $auth = AuthMiddleware::verifyAuth();
+            if (!$auth) {
+                return jsonResponse(401, [
+                    'status' => 'error',
+                    'message' => 'Authentication required'
+                ]);
+            }
+
+            if (!isset($auth['user_type']) || 
+                ($auth['user_type'] !== 'admin' && $auth['user_type'] !== 'super_admin')) {
+                return jsonResponse(403, [
+                    'status' => 'error',
+                    'message' => 'Admin privileges required'
+                ]);
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!isset($data['status'])) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Status is required'
+                ]);
+            }
+
+            $result = $this->user->updateStatus($userId, $data['status']);
+            
+            if (isset($result['error'])) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => $result['error']
+                ]);
+            }
+
+            return jsonResponse(200, [
+                'status' => 'success',
+                'message' => 'User status updated successfully'
+            ]);
+        } catch (Exception $e) {
+            error_log("Error updating user status: " . $e->getMessage());
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to update user status'
             ]);
         }
     }

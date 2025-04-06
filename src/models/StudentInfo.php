@@ -133,6 +133,36 @@ class Student {
         }
     }
 
+    public function getUnenrolledStudents() {
+        try {
+            $query = "SELECT s.* 
+                     FROM tbl_student_info s 
+                     WHERE NOT EXISTS (
+                         SELECT 1 
+                         FROM tbl_study st 
+                         WHERE st.student_id = s.student_id 
+                         AND st.status = 'active'
+                     )
+                     AND s.status = 'active'
+                     ORDER BY s.student_name ASC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return [
+                'status' => 'success',
+                'data' => $students
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error in getUnenrolledStudents: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការទទួលបានសិស្សមិនបានបង្កើតប្រើប្រាស់',
+                'debug' => $e->getMessage()
+            ];
+        }
+    }
+    
     public function update($id, $data) {
         try {
             // Check if student exists

@@ -64,6 +64,11 @@ function route($uri, $method) {
                     }
                 }
 
+                if ($method === 'GET' && $action === 'getUnenrolledStudents'){
+                    $controller->getUnenrolledStudents();
+                    return;
+                }
+
                 if ($method === 'POST' && $action === 'updateStudent') {
                     if (isset($uriParts[2])) {
                         $id = $uriParts[2];
@@ -649,6 +654,15 @@ function route($uri, $method) {
                             if ($method === 'POST' && $action === 'login') {
                                 return $controller->login();
                             }
+
+                            if ($method === 'GET' && $action === 'getAllUsers') {
+                                $controller->getAllUsers();
+                                return;
+                            }
+                            if ($method === 'POST' && $action === 'updateStatus' && isset($uriParts[2])) {
+                                $controller->updateStatus($uriParts[2]);
+                                return;
+                            }
                             
                             if ($method === 'POST' && $action === 'register') {
                                 return $controller->register();
@@ -660,8 +674,6 @@ function route($uri, $method) {
                             }
                             
                             switch ($action) {
-                                case 'getAllUsers':
-                                    return $controller->getAllUsers();
                                 case 'update':
                                     if (isset($uriParts[2])) {
                                         return $controller->update($uriParts[2]);
@@ -1076,7 +1088,14 @@ function route($uri, $method) {
                                     echo json_encode(['message' => 'Class ID not provided']);
                                 }
                             }
+                            break;
+                        case 'reports':
+                            require_once dirname(__DIR__) . '/controllers/ReportController.php';
+                            $controller = new ReportController();
 
+                            if ($method === 'GET' && $action === 'getStudentMonthlyScoreReport') {
+                                $controller->getStudentMonthlyScoreReport();
+                            }
                             break;
 
                 default:
