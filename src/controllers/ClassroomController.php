@@ -71,4 +71,10 @@ class ClassroomController {
         $classes = $classroom->getClassesByGradeAndSession($gradeId, $sessionId);
         echo jsonResponse(200, $classes);
     }
+
+    public function getUsersByClassId($classId) {
+        $classroom = new Classroom();
+        $users = $classroom->getUsersByClassId($classId);
+        echo jsonResponse(200, $users);
+    }
 }

@@ -555,4 +555,60 @@ class Student {
         }
     }
 
+    public function fetchByMonth($month_id, $year_study_id) {
+        try {
+            $sql = "SELECT DISTINCT s.student_id, s.student_name, st.enrollment_date, st.status,
+                    c.class_name, g.grade_name
+                    FROM tbl_student_info s
+                    INNER JOIN tbl_study st ON s.student_id = st.student_id
+                    LEFT JOIN tbl_classroom c ON st.class_id = c.class_id
+                    LEFT JOIN tbl_grade g ON c.grade_id = g.grade_id
+                    WHERE st.month_id = ?
+                    AND st.year_study_id = ?
+                    AND s.isDeleted = 0
+                    AND st.isDeleted = 0
+                    AND st.status = 'active'
+                    ORDER BY st.enrollment_date DESC";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(1, $month, PDO::PARAM_INT);
+            $stmt->bindParam(2, $year, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error in fetchByMonth: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getEnrollmentCountsByMonth($year_study_id) {
+        try {
+            $sql = "SELECT 
+                    tm.monthly_id,
+                    tm.month_name,
+                    COUNT(DISTINCT s.student_id) as student_count
+                FROM tbl_monthly tm
+                LEFT JOIN (
+                    SELECT student_id, MONTH(enrollment_date) as month_num
+                    FROM tbl_study 
+                    WHERE year_study_id = ?
+                    AND isDeleted = 0
+                    AND status = 'active'
+                ) st ON tm.monthly_id = st.month_num
+                LEFT JOIN tbl_student_info s ON st.student_id = s.student_id
+                    AND s.isDeleted = 0
+                GROUP BY tm.monthly_id, tm.month_name
+                ORDER BY tm.monthly_id";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(1, $year_study_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error in getEnrollmentCountsByMonth: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }

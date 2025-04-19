@@ -83,28 +83,14 @@ class StudyController {
     
     public function addStudy() {
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
+            $data = json_decode(file_get_contents("php://input"), true);
             
-            if (!isset($data['student_id']) || !isset($data['class_id']) || !isset($data['year_study_id'])) {
+            if (empty($data['student_id']) || empty($data['class_id']) || empty($data['year_study_id'])) {
                 echo jsonResponse(400, [
                     'status' => 'error',
-                    'message' => 'Required fields missing'
+                    'message' => 'Missing required fields'
                 ]);
                 return;
-            }
-            
-            // Check if student is already enrolled in an active class for the same academic year
-            $stmt = $this->studyModel->getStudiesByStudentId($data['student_id']);
-            $existingStudies = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($existingStudies as $study) {
-                if ($study['year_study_id'] == $data['year_study_id'] && $study['status'] == 'active') {
-                    echo jsonResponse(400, [
-                        'status' => 'error',
-                        'message' => 'Student is already enrolled in an active class for this academic year'
-                    ]);
-                    return;
-                }
             }
             
             $studyId = $this->studyModel->addStudy($data);
@@ -112,20 +98,64 @@ class StudyController {
             if ($studyId) {
                 echo jsonResponse(201, [
                     'status' => 'success',
-                    'message' => 'Study record created successfully',
-                    'study_id' => $studyId
+                    'message' => 'Study added successfully',
+                    'data' => ['study_id' => $studyId]
                 ]);
             } else {
-                echo jsonResponse(500, [
-                    'status' => 'error',
-                    'message' => 'Failed to create study record'
-                ]);
+                throw new Exception("Failed to add study");
             }
         } catch (Exception $e) {
-            error_log("Error adding study: " . $e->getMessage());
+            if ($e->getMessage() === "Student not found") {
+                echo jsonResponse(404, [
+                    'status' => 'error',
+                    'message' => 'សិស្សមិនត្រូវបានរកឃើញ'
+                ]);
+            } else {
+                error_log("Error adding study: " . $e->getMessage());
+                echo jsonResponse(500, [
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+    
+    public function addMultipleStudies() {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['student_ids']) || empty($data['class_id']) || empty($data['year_study_id'])) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Missing required fields'
+                ]);
+                return;
+            }
+            
+            $result = $this->studyModel->addMultipleStudies($data);
+            
+            if ($result['success']) {
+                $message = "បានចុះឈ្មោះសិស្សដោយជោគជ័យ";
+                if (!empty($result['failed_students'])) {
+                    $message .= " (មិនអាចចុះឈ្មោះសិស្ស " . count($result['failed_students']) . " នាក់)";
+                }
+                
+                echo jsonResponse(201, [
+                    'status' => 'success',
+                    'message' => $message,
+                    'data' => [
+                        'success_count' => $result['success_count'],
+                        'failed_students' => $result['failed_students']
+                    ]
+                ]);
+            } else {
+                throw new Exception($result['message']);
+            }
+        } catch (Exception $e) {
+            error_log("Error adding multiple studies: " . $e->getMessage());
             echo jsonResponse(500, [
                 'status' => 'error',
-                'message' => 'Failed to create study record'
+                'message' => $e->getMessage()
             ]);
         }
     }
@@ -383,6 +413,15 @@ class StudyController {
                 'message' => 'Failed to retrieve current enrollment'
             ]);
         }
+    }
+
+    private function sendJsonResponse($success, $message, $data = null, $statusCode = 200) {
+        http_response_code($statusCode);
+        echo json_encode([
+            'status' => $success ? 'success' : 'error',
+            'message' => $message,
+            'data' => $data
+        ]);
     }
 }
 

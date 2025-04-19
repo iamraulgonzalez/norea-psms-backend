@@ -16,7 +16,21 @@ require_once __DIR__ . '/../config/database.php';
     
         public function create($data) {
             $semester_name = isset($data['semester_name']) ? $data['semester_name'] : null;
-    
+
+            //check existing semester
+            $checkExiting = "SELECT * FROM tbl_semester WHERE semester_name = :semester_name AND isDeleted = 0";
+            $stmt = $this->conn->prepare($checkExiting);
+            $stmt->bindParam(':semester_name', $semester_name);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Semester already exists',
+                    'code' => 'DUPLICATE_SEMESTER'
+                ];
+            }
             if ($semester_name === null) {
                 return false;
             }
@@ -30,6 +44,26 @@ require_once __DIR__ . '/../config/database.php';
         }
     
         public function update($id, $data) {
+            $semester_name = isset($data['semester_name']) ? $data['semester_name'] : null;
+
+            //check existing semester
+            $checkExiting = "SELECT * FROM tbl_semester WHERE semester_name = :semester_name AND isDeleted = 0";
+            $stmt = $this->conn->prepare($checkExiting);
+            $stmt->bindParam(':semester_name', $semester_name);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Semester already exists',
+                    'code' => 'DUPLICATE_SEMESTER'
+                ];
+            }
+            if ($semester_name === null) {
+                return false;
+            }
+            
             $query = "UPDATE tbl_semester SET semester_name = :semester_name WHERE semester_id = :semester_id AND isDeleted = 0";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':semester_id', $id);

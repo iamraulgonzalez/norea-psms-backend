@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../src/routers/api.php';
+require_once dirname(__DIR__) . '/src/routers/api.php';
 
 // Get the request URI and remove query parameters
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -31,8 +31,12 @@ if (strpos($uri, $basePath) === 0) {
     $uri = substr($uri, strlen($basePath));
 }
 
+// Initialize Request and Response objects
+$req = new Request();
+$res = new Response();
+
 try {
-    route($uri, $method);
+    route($uri, $method, $req, $res);
 } catch (Exception $e) {
     error_log("API Error: " . $e->getMessage());
     http_response_code(500);

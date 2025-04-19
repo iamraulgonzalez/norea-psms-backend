@@ -272,4 +272,57 @@ class StudentInfoController extends BaseController {
         }
     }
 
+    public function getStudentsByMonth() {
+        try {
+            if (ob_get_level()) ob_end_clean();
+            
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $month = isset($_GET['month']) ? $_GET['month'] : date('m');
+            $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+            
+            $students = $this->studentModel->fetchByMonth($month, $year);
+            
+            echo json_encode([
+                'status' => 'success',
+                'data' => $students
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+            
+        } catch (Exception $e) {
+            error_log("Error getting students by month: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to get students by month'
+            ]);
+            exit();
+        }
+    }
+
+    public function getEnrollmentCountsByMonth($year_study_id) {
+        try {
+            if (ob_get_level()) ob_end_clean();
+            
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $counts = $this->studentModel->getEnrollmentCountsByMonth($year_study_id);
+            
+            echo json_encode([
+                'status' => 'success',
+                'data' => $counts
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+            
+        } catch (Exception $e) {
+            error_log("Error getting enrollment counts by month: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to get enrollment counts'
+            ]);
+            exit();
+        }
+    }
+
 }

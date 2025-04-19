@@ -10,12 +10,13 @@ class Classroom {
     }
 
     public function fetchAll() {
-        $query = "SELECT c.*, s.session_name, g.grade_name, t.teacher_name, t.teacher_id,
-                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date
+        $query = "SELECT c.*, s.session_name, g.grade_name, u.full_name as teacher_name, u.user_id as teacher_id,
+                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date,
+                  (SELECT COUNT(*) FROM tbl_study st WHERE st.class_id = c.class_id AND st.status = 'active' AND st.isDeleted = 0) as actual_student_count
                   FROM tbl_classroom c
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
-                  LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
+                  LEFT JOIN tbl_user u ON c.teacher_id = u.user_id
                   LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
                   WHERE c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
@@ -103,9 +104,9 @@ class Classroom {
             $grade_id = $data['grade_id'] ?? null;
             $session_id = $data['session_id'] ?? null;
             $teacher_id = $data['teacher_id'] ?? null;
-            $num_students_in_class = $data['num_students_in_class'] ?? null;
+            $num_students_in_class = $data['num_students_in_class'] ?? 45;
             $year_study_id = $data['year_study_id'] ?? null;
-            $status = $data['status'] ?? null;
+            $status = $data['status'] ?? 'active';
 
             if ($class_name === null || $grade_id === null || $session_id === null || $num_students_in_class === null) {
                 return [
@@ -116,11 +117,12 @@ class Classroom {
 
             // Check current student count
             $currentStudentsQuery = "SELECT COUNT(*) as count 
-                                   FROM tbl_student_info 
-                                   WHERE class_id = :class_id 
+                                   FROM tbl_study
+                                   WHERE class_id = :id 
+                                   AND status = 'active'
                                    AND isDeleted = 0";
             $stmt = $this->conn->prepare($currentStudentsQuery);
-            $stmt->bindParam(':class_id', $id);
+            $stmt->bindParam(':id', $id);
             $stmt->execute();
             $currentCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
@@ -138,14 +140,14 @@ class Classroom {
                                  JOIN tbl_school_session s ON c.session_id = s.session_id
                                  WHERE c.class_name = :class_name 
                                  AND c.grade_id = :grade_id 
-                                 AND c.class_id != :class_id
+                                 AND c.class_id != :id
                                  AND c.isDeleted = 0
                                  LIMIT 1";
             
             $stmt = $this->conn->prepare($checkExistingClass);
             $stmt->bindParam(':class_name', $class_name);
             $stmt->bindParam(':grade_id', $grade_id);
-            $stmt->bindParam(':class_id', $id);
+            $stmt->bindParam(':id', $id);
             $stmt->execute();
             
             if ($existingClass = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -221,41 +223,18 @@ class Classroom {
     }
 
     public function getClassesByGrade($gradeId) {
-        try {
-            $query = "SELECT 
-                        c.*,
-                        g.grade_name,
-                        s.session_name,
-                        t.teacher_name,
-                        t.teacher_id,
-                        ys.year_study,
-                        num_students_in_class,
-                        c.create_date
-                      FROM tbl_classroom c
-                      LEFT JOIN tbl_grade g ON c.grade_id = g.grade_id
-                      LEFT JOIN tbl_school_session s ON c.session_id = s.session_id
-                      LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
-                      LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
-                      WHERE c.grade_id = :grade_id 
-                      AND c.isDeleted = 0
-                      AND s.isDeleted = 0
-                      ORDER BY c.class_name";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':grade_id', $gradeId);
-            $stmt->execute();
-            
-            return [
-                'status' => 'success',
-                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-            ];
-        } catch (PDOException $e) {
-            error_log("Error fetching classes by grade: " . $e->getMessage());
-            return [
-                'status' => 'error',
-                'message' => 'Failed to fetch classes'
-            ];
-        }
+        $query = "SELECT c.*, s.session_name, g.grade_name, u.full_name as teacher_name, u.user_id as teacher_id,
+                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date
+                  FROM tbl_classroom c
+                  INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
+                  INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
+                  LEFT JOIN tbl_user u ON c.teacher_id = u.user_id
+                  LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
+                  WHERE c.grade_id = :grade_id AND c.isDeleted = 0";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':grade_id', $gradeId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getCount() {
@@ -279,14 +258,14 @@ class Classroom {
                         c.*,
                         g.grade_name,
                         s.session_name,
-                        t.teacher_name,
-                        t.teacher_id,
+                        u.full_name,
+                        u.user_id,
                         num_students_in_class,
                         c.create_date
                       FROM tbl_classroom c
                       INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
                       INNER JOIN tbl_school_session s ON c.session_id = s.session_id
-                      LEFT JOIN tbl_teacher t ON c.teacher_id = t.teacher_id
+                      LEFT JOIN tbl_user u ON c.user_id = u.user_id
                       WHERE c.grade_id = :grade_id 
                       AND c.session_id = :session_id
                       AND c.isDeleted = 0
@@ -309,4 +288,27 @@ class Classroom {
             ];
         }
     }
+
+    public function getUsersByClassId($classId) {
+        try {
+            $query = "SELECT 
+                        u.full_name
+                      FROM tbl_user u
+                      INNER JOIN tbl_classroom c ON u.user_id = c.teacher_id
+                      WHERE c.class_id = :class_id
+                      AND c.isDeleted = 0
+                      AND u.isDeleted = 0";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching users: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch users'
+            ];
+        }
+    } 
+    
 }

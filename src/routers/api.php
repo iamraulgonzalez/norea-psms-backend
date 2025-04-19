@@ -4,11 +4,17 @@ require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/controllers/UserController.php';
 require_once dirname(__DIR__) . '/utils/response.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
+require_once dirname(__DIR__) . '/utils/Request.php';
+require_once dirname(__DIR__) . '/utils/Response.php';
 
 // Get the request URI and remove any query strings
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-function route($uri, $method) {
+// Initialize Request and Response objects
+$req = new Request();
+$res = new Response();
+
+function route($uri, $method, $req, $res) {
     $uri = str_replace('/api', '', $uri);
     $uriParts = explode('/', trim($uri, '/'));
 
@@ -48,6 +54,15 @@ function route($uri, $method) {
                     $controller->getAllStudents();
                     return;
                 }
+
+                if ($method === 'GET' && $action === 'getStudentsByMonth') {
+                    if (isset($uriParts[2])) {
+                        $controller->getStudentsByMonth($uriParts[2]);
+                    } else {
+                        echo json_encode(['message' => 'Month not provided']);
+                    }
+                }
+
                 if ($method === 'GET' && $action === 'getStudentsByClassId') {
                     if (isset($uriParts[2])) {
                         $controller->getStudentsByClassId($uriParts[2]);
@@ -105,6 +120,11 @@ function route($uri, $method) {
 
                 if ($method === 'GET' && $action === 'count') {
                     $controller->getStudentCount();
+                    return;
+                }
+
+                if ($method === 'GET' && $action === 'enrollmentByMonth' && isset($uriParts[2])) {
+                    $controller->getEnrollmentCountsByMonth($uriParts[2]);
                     return;
                 }
 
@@ -196,6 +216,14 @@ function route($uri, $method) {
                         echo json_encode(['message' => 'Grade ID not provided']);
                     }
                 }
+
+                if ($method === 'GET' && $action === 'getUsersByClassId') {
+                    if (isset($uriParts[2])) {
+                        $controller->getUsersByClassId($uriParts[2]);
+                    } else {
+                        echo json_encode(['message' => 'Class ID not provided']);
+                    }
+                }
                 if ($method === 'POST' && $action === 'addClassroom') {
                     $data = json_decode(file_get_contents('php://input'), true);
                     if ($data) {
@@ -236,6 +264,7 @@ function route($uri, $method) {
                 if ($method === 'GET' && $action === 'count') {
                     $controller->getClassroomCount();
                 }
+
                 break;
 
                 // Assign Subject Grade Routes
@@ -655,6 +684,26 @@ function route($uri, $method) {
                                 return $controller->login();
                             }
 
+                            if ($method === 'GET' && $action === 'getUserById' && isset($uriParts[2])) {
+                                $controller->getUserById($uriParts[2]);
+                                return;
+                            }
+
+                            if ($method === 'GET' && $action === 'count') {
+                                $controller->count();
+                                return;
+                            }
+
+                            if($method === 'GET' && $action === 'searchUser' && isset($uriParts[2])){
+                                $controller->searchUser($uriParts[2]);
+                                return;
+                            }
+
+                            if($method === 'GET' && $action === 'getUser'){
+                                $controller->getUser();
+                                return;
+                            }
+
                             if ($method === 'GET' && $action === 'getAllUsers') {
                                 $controller->getAllUsers();
                                 return;
@@ -1014,7 +1063,21 @@ function route($uri, $method) {
                             }
                             
                             if ($method === "POST" && $action === "addStudy") {
-                                $controller->addStudy();
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if ($data) {
+                                    $controller->addStudy($data);
+                                } else {
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+
+                            if ($method === "POST" && $action === "addMultipleStudies") {
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if ($data) {
+                                    $controller->addMultipleStudies($data);
+                                } else {
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
                             }
                             
                             if ($method === "PUT" && $action === "updateStudy") {
@@ -1097,7 +1160,6 @@ function route($uri, $method) {
                                 $controller->getStudentMonthlyScoreReport();
                             }
                             break;
-
                 default:
                     echo json_encode(['message' => 'Route not found']);
                     break;
@@ -1108,4 +1170,4 @@ function route($uri, $method) {
 }
 
 // Execute routing
-route($uri, $_SERVER['REQUEST_METHOD']);
+route($uri, $_SERVER['REQUEST_METHOD'], $req, $res);

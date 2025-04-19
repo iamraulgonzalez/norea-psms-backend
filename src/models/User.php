@@ -18,9 +18,10 @@ class User {
                         full_name,
                         phone,
                         user_type,
-                        status
+                        status,
+                        created_date
                     FROM tbl_user 
-                    WHERE isDeleted = 0 AND status = 1
+                    WHERE isDeleted = 0
                     ORDER BY user_id DESC";
             
             $stmt = $this->conn->prepare($query);
@@ -36,15 +37,22 @@ class User {
         try {
             error_log("Starting user registration in model");
 
-            // Check if username already exists
-            $checkStmt = $this->conn->prepare("SELECT COUNT(*) FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0 AND status = 1");
-            $checkStmt->bindParam(':user_name', $data['user_name']);
-            $checkStmt->execute();
+            //check existing username
+            $checkExiting = "SELECT * FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($checkExiting);
+            $stmt->bindParam(':user_name', $data['user_name']);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($checkStmt->fetchColumn() > 0) {
+            if ($result) {
                 error_log("Username already exists: " . $data['user_name']);
-                return false;
+                return [
+                    'status' => 'error',
+                    'message' => 'Username already exists',
+                    'code' => 'DUPLICATE_USERNAME'
+                ];
             }
+            
 
             // Insert new user
             $query = "INSERT INTO tbl_user (
@@ -133,9 +141,21 @@ class User {
 
     public function update($userId, $data) {
         try {
-            // Check if username exists for other users
-            if (isset($data['user_name']) && $this->isUsernameExists($data['user_name'], $userId)) {
-                return ["error" => "Username already exists"];
+            
+            //check existing username
+            $checkExiting = "SELECT * FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($checkExiting);
+            $stmt->bindParam(':user_name', $data['user_name']);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                error_log("Username already exists: " . $data['user_name']);
+                return [
+                    'status' => 'error',
+                    'message' => 'Username already exists',
+                    'code' => 'DUPLICATE_USERNAME'
+                ];
             }
 
             $updateFields = [];
@@ -146,14 +166,6 @@ class User {
                 $updateFields[] = "full_name = :full_name";
                 $params[':full_name'] = $data['full_name'];
             }
-            if (isset($data['user_name'])) {
-                $updateFields[] = "user_name = :user_name";
-                $params[':user_name'] = $data['user_name'];
-            }
-            if (isset($data['password'])) {
-                $updateFields[] = "password = :password";
-                $params[':password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-            }
             if (isset($data['phone'])) {
                 $updateFields[] = "phone = :phone";
                 $params[':phone'] = $data['phone'];
@@ -162,13 +174,16 @@ class User {
                 $updateFields[] = "user_type = :user_type";
                 $params[':user_type'] = $data['user_type'];
             }
-
+            if (isset($data['status'])) {
+                $updateFields[] = "status = :status";
+                $params[':status'] = $data['status'];
+            }
             if (empty($updateFields)) {
                 return ["error" => "No fields to update"];
             }
 
             $query = "UPDATE tbl_user SET " . implode(", ", $updateFields) . " 
-                     WHERE user_id = :user_id AND isDeleted = 0 AND status = 1";
+                     WHERE user_id = :user_id AND isDeleted = 0";
             
             $stmt = $this->conn->prepare($query);
             foreach ($params as $key => &$val) {
@@ -196,24 +211,31 @@ class User {
     }
 
     private function isUsernameExists($username, $excludeUserId = null) {
-        $query = "SELECT COUNT(*) FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0";
-        if ($excludeUserId) {
-            $query .= " AND user_id != :user_id";
+        try {
+            $query = "SELECT COUNT(*) as count FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0";
+            if ($excludeUserId) {
+                $query .= " AND user_id != :user_id";
+            }
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':user_name', $username);
+            if ($excludeUserId) {
+                $stmt->bindParam(':user_id', $excludeUserId);
+            }
+            $stmt->execute();
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] > 0;
+            
+        } catch (PDOException $e) {
+            error_log("Error checking username existence: " . $e->getMessage());
+            throw $e;
         }
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':user_name', $username);
-        if ($excludeUserId) {
-            $stmt->bindParam(':user_id', $excludeUserId);
-        }
-        $stmt->execute();
-        
-        return $stmt->fetchColumn() > 0;
     }
 
     public function fetchById($userId) {
         try {
-            $query = "SELECT user_id, full_name, user_name, phone, user_type, create_date 
+            $query = "SELECT user_id, full_name, user_name, phone, user_type, created_date 
                      FROM tbl_user 
                      WHERE user_id = :user_id 
                      AND isDeleted = 0 AND status = 1";
@@ -272,4 +294,44 @@ class User {
             throw $e;
         }
     }
+
+    public function searchUser($searchQuery) {
+        try {
+            $query = "SELECT * FROM tbl_user WHERE user_id LIKE :searchQuery OR user_name LIKE :searchQuery OR full_name LIKE :searchQuery OR phone LIKE :searchQuery AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':searchQuery', $searchQuery);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Database Error in searchUser: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getUser() {
+        try {
+
+            $query = "SELECT * FROM tbl_user WHERE user_type = 'user' AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            $user = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $user;
+        } catch (PDOException $e) {
+            error_log("Database Error in getUser: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function count() {
+        try {
+            $query = "SELECT COUNT(*) as count FROM tbl_user WHERE user_type != 'admin' AND user_type != 'super_admin' AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+        } catch (PDOException $e) {
+            error_log("Database Error in count: " . $e->getMessage());
+            throw $e;
+        }
+    }  
 }

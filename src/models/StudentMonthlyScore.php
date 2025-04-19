@@ -596,15 +596,16 @@ class StudentMonthlyScore {
                 s.subject_name,
                 sms.score,
                 sms.create_date
-            FROM tbl_student_monthly_score sms
-            JOIN tbl_student_info si ON sms.student_id = si.student_id
-            JOIN tbl_classroom c ON si.class_id = c.class_id
-            JOIN tbl_monthly m ON sms.monthly_id = m.monthly_id
+            FROM tbl_student_info si
+            JOIN tbl_study st ON si.student_id = st.student_id AND st.status = 'active' AND st.isDeleted = 0
+            JOIN tbl_classroom c ON st.class_id = c.class_id
+            JOIN tbl_student_monthly_score sms ON si.student_id = sms.student_id AND sms.isDeleted = 0
             JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
             JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
             JOIN tbl_subject s ON asg.subject_code = s.subject_code
-            WHERE sms.student_id = :student_id 
-            AND sms.isDeleted = 0
+            WHERE si.student_id = :student_id 
+            AND si.isDeleted = 0
             ORDER BY m.month_name ASC, s.subject_name ASC";
 
             $stmt = $this->conn->prepare($query);

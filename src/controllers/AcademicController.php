@@ -7,31 +7,51 @@ class AcademicController {
 
     public function getAllAcademics() {
         $academic = new Academic();
-        $academics = $academic->fetchAll();
-        echo jsonResponse(200, $academics);
+        $result = $academic->fetchAll();
+        echo jsonResponse(200, $result);
     }
     
     public function AddAcademic($data) {
         $academic = new Academic();
         $result = $academic->create($data);
-        echo jsonResponse(201, ['message' => 'Academic created successfully']);
+        
+        if ($result['status'] === 'success') {
+            echo jsonResponse(201, $result);
+        } else {
+            echo jsonResponse(400, $result);
+        }
     }
 
     public function updateAcademic($id, $data) {
         $academic = new Academic();
         $result = $academic->update($id, $data);
-        echo jsonResponse(200, ['message' => 'Academic updated successfully']);
+        
+        if ($result['status'] === 'success') {
+            echo jsonResponse(200, $result);
+        } else {
+            echo jsonResponse(400, $result);
+        }
     }
 
     public function deleteAcademic($id) {
         $academic = new Academic();
         $result = $academic->delete($id);
-        echo jsonResponse(200, ['message' => 'Academic deleted successfully']);
+        
+        if ($result['status'] === 'success') {
+            echo jsonResponse(200, $result);
+        } else {
+            echo jsonResponse(400, $result);
+        }
     }
     
     public function getAcademicById($id) {
         $academic = new Academic();
-        $academics = $academic->fetchById($id);
-        echo jsonResponse(200, $academics);
+        $result = $academic->fetchById($id);
+        
+        if ($result['status'] === 'success') {
+            echo jsonResponse(200, $result);
+        } else {
+            echo jsonResponse(404, $result);
+        }
     }
 }

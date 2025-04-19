@@ -69,6 +69,16 @@ class StudyModel {
     }
     
     public function addStudy($data) {
+        // First check if student exists
+        $checkQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        $checkStmt->bindParam(1, $data['student_id']);
+        $checkStmt->execute();
+        
+        if (!$checkStmt->fetch(PDO::FETCH_ASSOC)) {
+            throw new Exception("Student not found");
+        }
+        
         $query = "INSERT INTO tbl_study 
                   (student_id, class_id, year_study_id, enrollment_date, status) 
                   VALUES (?, ?, ?, ?, ?)";
@@ -271,5 +281,78 @@ class StudyModel {
         $stmt->execute();
         
         return $stmt;
+    }
+    
+    public function addMultipleStudies($data) {
+        try {
+            // Begin transaction
+            $this->conn->beginTransaction();
+            
+            $successCount = 0;
+            $failedStudents = [];
+            
+            foreach ($data['student_ids'] as $studentId) {
+                try {
+                    // Check if student exists
+                    $checkQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+                    $checkStmt = $this->conn->prepare($checkQuery);
+                    $checkStmt->bindParam(1, $studentId);
+                    $checkStmt->execute();
+                    
+                    if (!$checkStmt->fetch(PDO::FETCH_ASSOC)) {
+                        $failedStudents[] = $studentId;
+                        continue;
+                    }
+                    
+                    // Insert study record
+                    $query = "INSERT INTO tbl_study 
+                              (student_id, class_id, year_study_id, enrollment_date, status) 
+                              VALUES (?, ?, ?, ?, ?)";
+                    
+                    $stmt = $this->conn->prepare($query);
+                    
+                    $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
+                    $status = !empty($data['status']) ? $data['status'] : 'active';
+                    
+                    $stmt->bindParam(1, $studentId);
+                    $stmt->bindParam(2, $data['class_id']);
+                    $stmt->bindParam(3, $data['year_study_id']);
+                    $stmt->bindParam(4, $enrollmentDate);
+                    $stmt->bindParam(5, $status);
+                    
+                    if ($stmt->execute()) {
+                        $successCount++;
+                    } else {
+                        $failedStudents[] = $studentId;
+                    }
+                } catch (Exception $e) {
+                    $failedStudents[] = $studentId;
+                    error_log("Error enrolling student $studentId: " . $e->getMessage());
+                }
+            }
+            
+            if ($successCount > 0) {
+                $this->conn->commit();
+                return [
+                    'success' => true,
+                    'success_count' => $successCount,
+                    'failed_students' => $failedStudents,
+                    'message' => 'បានចុះឈ្មោះសិស្សដោយជោគជ័យ'
+                ];
+            } else {
+                $this->conn->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'មិនអាចចុះឈ្មោះសិស្សបានទេ'
+                ];
+            }
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error in addMultipleStudies: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'មានបញ្ហាក្នុងការចុះឈ្មោះសិស្ស'
+            ];
+        }
     }
 }
