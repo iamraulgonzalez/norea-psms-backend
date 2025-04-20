@@ -265,7 +265,7 @@ class StudyModel {
     }
     
     public function getCurrentEnrollment($classId) {
-        $query = "SELECT s.*, si.student_name, si.gender, si.dob,
+        $query = "SELECT s.*, si.student_name, si.gender, si.dob, si.father_name, si.mother_name, si.pob_address,
                   c.class_name, c.grade_id, y.year_study 
                   FROM tbl_study s
                   JOIN tbl_student_info si ON s.student_id = si.student_id
