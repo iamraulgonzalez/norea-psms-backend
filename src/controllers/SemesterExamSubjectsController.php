@@ -22,47 +22,10 @@ class SemesterExamSubjectsController {
         }
     }
 
-    public function getSemesterExamSubjectById($id) {
+    public function addSemesterExamSubject($data) {
         try {
-            $result = $this->semesterExamSubjects->getById($id);
-            echo jsonResponse(
-                $result['status'] === 'success' ? 200 : 404,
-                $result
-            );
-        } catch (Exception $e) {
-            error_log("Error in getSemesterExamSubjectById: " . $e->getMessage());
-            echo jsonResponse(500, [
-                'status' => 'error',
-                'message' => 'Server error occurred'
-            ]);
-        }
-    }
-
-    public function getSemesterExamSubjectsByClassAndSemester($class_id, $semester_id) {
-        try {
-            $result = $this->semesterExamSubjects->getByClassAndSemester($class_id, $semester_id);
-            echo jsonResponse(
-                $result['status'] === 'success' ? 200 : 404,
-                $result
-            );
-        } catch (Exception $e) {
-            error_log("Error in getSemesterExamSubjectsByClassAndSemester: " . $e->getMessage());
-            echo jsonResponse(500, [
-                'status' => 'error',
-                'message' => 'Server error occurred'
-            ]);
-        }
-    }
-
-    public function addSemesterExamSubject() {
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
             $result = $this->semesterExamSubjects->create($data);
-            
-            echo jsonResponse(
-                $result['status'] === 'success' ? 201 : 400,
-                $result
-            );
+            echo jsonResponse(200, $result);
         } catch (Exception $e) {
             error_log("Error in addSemesterExamSubject: " . $e->getMessage());
             echo jsonResponse(500, [
@@ -71,16 +34,44 @@ class SemesterExamSubjectsController {
             ]);
         }
     }
-
+    
     public function updateSemesterExamSubject($id) {
         try {
+            // Get data from request body
             $data = json_decode(file_get_contents('php://input'), true);
-            $result = $this->semesterExamSubjects->update($id, $data);
             
-            echo jsonResponse(
-                $result['status'] === 'success' ? 200 : 400,
-                $result
-            );
+            if (!$data) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Invalid or missing request data'
+                ]);
+                return;
+            }
+            
+            // If updating monthly_ids for all subjects in a class/semester
+            if (isset($data['update_all']) && $data['update_all'] === true) {
+                $class_id = $data['class_id'] ?? null;
+                $semester_id = $data['semester_id'] ?? null;
+                
+                if (!$class_id || !$semester_id) {
+                    echo jsonResponse(400, [
+                        'status' => 'error',
+                        'message' => 'Missing class_id or semester_id for batch update'
+                    ]);
+                    return;
+                }
+                
+                $result = $this->semesterExamSubjects->updateAllForClassAndSemester(
+                    $class_id, 
+                    $semester_id, 
+                    $data
+                );
+            } else {
+                // Regular single record update
+                $result = $this->semesterExamSubjects->updatee($id, $data);
+            }
+            
+            echo jsonResponse(200, $result);
         } catch (Exception $e) {
             error_log("Error in updateSemesterExamSubject: " . $e->getMessage());
             echo jsonResponse(500, [
@@ -89,7 +80,7 @@ class SemesterExamSubjectsController {
             ]);
         }
     }
-
+    
     public function deleteSemesterExamSubject($id) {
         try {
             $result = $this->semesterExamSubjects->delete($id);
@@ -106,4 +97,59 @@ class SemesterExamSubjectsController {
             ]);
         }
     }
+
+    public function getSemesterExamSubjectByClassId($classId) {
+        $result = $this->semesterExamSubjects->getSemesterExamSubjectsByClassId($classId);
+        echo jsonResponse(200, $result);
+    }
+    
+    public function getAvailableMonthlyScores($classId) {
+        try {
+            $result = $this->semesterExamSubjects->getAvailableMonthlyScores($classId);
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getAvailableMonthlyScores: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
+    
+    public function getByClassSubjectSemester() {
+        try {
+            $class_id = $_GET['class_id'] ?? null;
+            $assign_subject_grade_id = $_GET['assign_subject_grade_id'] ?? null;
+            $semester_id = $_GET['semester_id'] ?? null;
+
+            if (!$class_id || !$assign_subject_grade_id || !$semester_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Missing required parameters'
+                ]);
+                return;
+            }
+
+            $result = $this->semesterExamSubjects->getByClassSubjectSemester(
+                $class_id,
+                $assign_subject_grade_id,
+                $semester_id
+            );
+
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getByClassSubjectSemester: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
 }
+

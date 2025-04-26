@@ -526,35 +526,6 @@ class Student {
             ];
         }
     }
-
-    public function fetchByGradeId($grade_id) {
-        try {
-            $stmt = $this->conn->prepare("
-                SELECT s.*, c.class_name, c.grade_id, g.grade_name 
-                FROM tbl_student_info s
-                JOIN tbl_classroom c ON s.class_id = c.class_id
-                JOIN tbl_grade g ON c.grade_id = g.grade_id
-                WHERE c.grade_id = :grade_id AND s.isDeleted = 0
-                ORDER BY s.student_name ASC
-            ");
-            
-            $stmt->bindParam(':grade_id', $grade_id);
-            $stmt->execute();
-            
-            return [
-                'status' => 'success',
-                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-            ];
-            
-        } catch (PDOException $e) {
-            error_log("Error in fetchByGradeId: " . $e->getMessage());
-            return [
-                'status' => 'error',
-                'message' => 'Failed to fetch students by grade'
-            ];
-        }
-    }
-
     public function fetchByMonth($month_id, $year_study_id) {
         try {
             $sql = "SELECT DISTINCT s.student_id, s.student_name, st.enrollment_date, st.status,

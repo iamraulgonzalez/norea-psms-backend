@@ -122,9 +122,9 @@ class StudyController {
     
     public function addMultipleStudies() {
         try {
-            $data = json_decode(file_get_contents("php://input"), true);
+            $data = json_decode(file_get_contents('php://input'), true);
             
-            if (empty($data['student_ids']) || empty($data['class_id']) || empty($data['year_study_id'])) {
+            if (!$data || !isset($data['student_ids']) || !isset($data['class_id']) || !isset($data['year_study_id'])) {
                 echo jsonResponse(400, [
                     'status' => 'error',
                     'message' => 'Missing required fields'
@@ -134,23 +134,15 @@ class StudyController {
             
             $result = $this->studyModel->addMultipleStudies($data);
             
-            if ($result['success']) {
-                $message = "បានចុះឈ្មោះសិស្សដោយជោគជ័យ";
-                if (!empty($result['failed_students'])) {
-                    $message .= " (មិនអាចចុះឈ្មោះសិស្ស " . count($result['failed_students']) . " នាក់)";
-                }
-                
-                echo jsonResponse(201, [
-                    'status' => 'success',
-                    'message' => $message,
-                    'data' => [
-                        'success_count' => $result['success_count'],
-                        'failed_students' => $result['failed_students']
-                    ]
-                ]);
-            } else {
-                throw new Exception($result['message']);
-            }
+            echo jsonResponse(201, [
+                'status' => 'success',
+                'message' => $result['message'],
+                'data' => [
+                    'success_count' => $result['success_count'],
+                    'failed_students' => $result['failed_students']
+                ]
+            ]);
+            
         } catch (Exception $e) {
             error_log("Error adding multiple studies: " . $e->getMessage());
             echo jsonResponse(500, [
@@ -291,64 +283,139 @@ class StudyController {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
             
-            if (!isset($data['current_class_id']) || !isset($data['new_class_id']) || !isset($data['year_study_id'])) {
+            if (!isset($data['current_class_id']) || !isset($data['new_class_id'])) {
                 echo jsonResponse(400, [
                     'status' => 'error',
-                    'message' => 'Required fields missing'
+                    'message' => 'Missing required parameters: current_class_id and new_class_id'
                 ]);
                 return;
             }
-            
-            // Check if any active students exist in the class before promotion
-            $studiesResult = $this->studyModel->getStudiesByClassAndYear(
-                $data['current_class_id'],
-                $data['year_study_id'],
-                'active'
-            );
-            
-            $students = $studiesResult->fetchAll(PDO::FETCH_ASSOC);
-            
-            if (empty($students)) {
-                echo jsonResponse(404, [
+
+            $currentClassId = $data['current_class_id'];
+            $newClassId = $data['new_class_id'];
+
+            // Get current year study
+            $currentYear = $this->studyModel->getCurrentYearStudy();
+            if (!$currentYear) {
+                echo jsonResponse(400, [
                     'status' => 'error',
-                    'message' => 'No active students found in this class'
+                    'message' => 'No active academic year found'
                 ]);
                 return;
             }
+            $yearStudyId = $currentYear['year_study_id'];
+
+            // Log the parameters
+            error_log("Promoting students from class $currentClassId to $newClassId in year $yearStudyId");
+
+            // Check if both classes exist
+            $classes = $this->studyModel->checkClassesExist([$currentClassId, $newClassId]);
             
-            $count = 0;
-            foreach ($students as $student) {
-                // Set current study to inactive and create new study
-                $success = $this->studyModel->promoteStudent(
-                    $student['student_id'],
-                    $data['current_class_id'],
-                    $data['new_class_id'],
-                    $data['year_study_id']
-                );
+            if (count($classes) !== 2) {
+                $foundClassIds = array_column($classes, 'class_id');
+                if (!in_array($currentClassId, $foundClassIds)) {
+                    echo jsonResponse(404, [
+                        'status' => 'error',
+                        'message' => 'Current class not found'
+                    ]);
+                    return;
+                }
+                if (!in_array($newClassId, $foundClassIds)) {
+                    echo jsonResponse(404, [
+                        'status' => 'error',
+                        'message' => 'Target class not found'
+                    ]);
+                    return;
+                }
+            }
+
+            // Get all active students in the current class
+            $stmt = $this->studyModel->getStudiesByClassAndYear($currentClassId, $yearStudyId, 'active');
+            $studies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log the number of students found
+            error_log("Found " . count($studies) . " active students in class $currentClassId");
+            
+            if (empty($studies)) {
+                // Check if there are any students in the class (active or inactive)
+                $allStudentsStmt = $this->studyModel->getStudiesByClassAndYear($currentClassId, $yearStudyId);
+                $allStudents = $allStudentsStmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                if ($success) {
-                    $count++;
+                if (empty($allStudents)) {
+                    echo jsonResponse(404, [
+                        'status' => 'error',
+                        'message' => 'No students found in the current class'
+                    ]);
+                    return;
+                } else {
+                    echo jsonResponse(404, [
+                        'status' => 'error',
+                        'message' => 'No active students found in the current class. There are ' . count($allStudents) . ' inactive students.'
+                    ]);
+                    return;
                 }
             }
             
-            if ($count > 0) {
-                echo jsonResponse(200, [
-                    'status' => 'success',
-                    'message' => 'Students promoted successfully',
-                    'count' => $count
-                ]);
-            } else {
-                echo jsonResponse(500, [
-                    'status' => 'error',
-                    'message' => 'Failed to promote students'
-                ]);
+            $successCount = 0;
+            $failedStudents = [];
+            
+            foreach ($studies as $study) {
+                // Get student's semester score
+                $scoreData = $this->studyModel->getStudentSemesterScore($study['student_id']);
+                
+                if (!$scoreData || !isset($scoreData['final_semester_average'])) {
+                    $failedStudents[] = [
+                        'student_id' => $study['student_id'],
+                        'student_name' => $study['student_name'],
+                        'reason' => 'No semester score available'
+                    ];
+                    continue;
+                }
+                
+                // Check if student passed (score >= 8.0)
+                if ($scoreData['final_semester_average'] < 8.0) {
+                    $failedStudents[] = [
+                        'student_id' => $study['student_id'],
+                        'student_name' => $study['student_name'],
+                        'reason' => 'Score below passing grade (8.0)',
+                        'score' => $scoreData['final_semester_average']
+                    ];
+                    continue;
+                }
+                
+                // Promote student to new class
+                $result = $this->studyModel->promoteStudent(
+                    $study['student_id'],
+                    $currentClassId,
+                    $newClassId,
+                    $yearStudyId
+                );
+
+                if ($result) {
+                    $successCount++;
+                } else {
+                    $failedStudents[] = [
+                        'student_id' => $study['student_id'],
+                        'student_name' => $study['student_name'],
+                        'reason' => 'Failed to promote to new class'
+                    ];
+                }
             }
             
+            echo jsonResponse(200, [
+                'status' => 'success',
+                'message' => "Successfully promoted $successCount students to the new class",
+                'data' => [
+                    'promoted_count' => $successCount,
+                    'failed_students' => $failedStudents
+                ]
+            ]);
+            
         } catch (Exception $e) {
-            error_log("Error promoting students by class: " . $e->getMessage());
+            error_log("Error in promoteByClass: " . $e->getMessage());
             echo jsonResponse(500, [
                 'status' => 'error',
-                'message' => 'Failed to promote students'
+                'message' => 'Failed to promote students: ' . $e->getMessage()
             ]);
         }
     }
@@ -423,5 +490,63 @@ class StudyController {
             'data' => $data
         ]);
     }
+
+    //can this get student by grade id and final semester average score > 8.0
+    public function getStudentsByGradeId($grade_id) {
+        try {
+            if (!$grade_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Grade ID is required'
+                ]);
+                return;
+            }
+
+            $result = $this->studyModel->fetchStudentByGradeId($grade_id);
+            
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+
+            echo jsonResponse(200, $result);
+            
+        } catch (Exception $e) {
+            error_log("Error in getStudentsByGradeId: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to fetch students by grade: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getStudentRankingsByGradeId($grade_id) {
+        try {
+            if (!$grade_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Grade ID is required'
+                ]);
+                return;
+            }
+    
+            $result = $this->studyModel->fetchStudentRankingAndAverages($grade_id); // ✅ right method now
+    
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+    
+            echo jsonResponse(200, $result);
+    
+        } catch (Exception $e) {
+            error_log("Error in getStudentRankingsByGradeId: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to fetch student rankings: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
 }
 

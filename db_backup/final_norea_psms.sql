@@ -34,11 +34,11 @@ CREATE TABLE `classroom_subject_monthly_score` (
   CONSTRAINT `fk_classroom_subject_monthly_class` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_monthly` FOREIGN KEY (`monthly_id`) REFERENCES `tbl_monthly` (`monthly_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_subject` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `classroom_subject_monthly_score` */
 
-insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (60,10,91,1,'2025-04-05 17:29:45',0),(61,10,95,1,'2025-04-05 17:29:45',0),(62,10,100,1,'2025-04-05 17:29:45',0),(63,10,98,1,'2025-04-05 17:29:45',0),(64,10,103,1,'2025-04-05 17:29:45',0),(65,10,104,1,'2025-04-05 17:29:45',0),(66,10,91,2,'2025-04-08 17:11:27',0),(67,10,95,2,'2025-04-08 17:11:27',0),(68,10,100,2,'2025-04-08 17:11:27',0),(69,10,98,2,'2025-04-08 17:11:27',0),(70,10,101,2,'2025-04-08 17:11:27',0),(71,10,92,2,'2025-04-08 17:11:27',0),(72,10,99,2,'2025-04-08 17:11:28',0),(73,10,103,2,'2025-04-08 17:11:28',0);
+insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (60,10,91,1,'2025-04-05 17:29:45',0),(61,10,95,1,'2025-04-05 17:29:45',0),(62,10,100,1,'2025-04-05 17:29:45',0),(63,10,98,1,'2025-04-05 17:29:45',0),(64,10,103,1,'2025-04-05 17:29:45',0),(65,10,104,1,'2025-04-05 17:29:45',0),(66,10,91,2,'2025-04-08 17:11:27',0),(67,10,95,2,'2025-04-08 17:11:27',0),(68,10,100,2,'2025-04-08 17:11:27',0),(69,10,98,2,'2025-04-08 17:11:27',0),(70,10,101,2,'2025-04-08 17:11:27',0),(71,10,92,2,'2025-04-08 17:11:27',0),(72,10,99,2,'2025-04-08 17:11:28',0),(73,10,103,2,'2025-04-08 17:11:28',0),(74,10,100,3,'2025-04-23 15:02:05',0),(75,10,98,3,'2025-04-23 15:02:05',0),(76,10,98,4,'2025-04-23 19:14:28',0),(77,10,101,4,'2025-04-23 19:14:28',0);
 
 /*Table structure for table `tbl_activity_log` */
 
@@ -191,6 +191,7 @@ CREATE TABLE `tbl_semester_exam_subjects` (
   `class_id` int(10) unsigned NOT NULL,
   `semester_id` int(10) unsigned NOT NULL,
   `assign_subject_grade_id` int(10) unsigned NOT NULL,
+  `monthly_ids` varchar(255) DEFAULT NULL,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
   PRIMARY KEY (`id`),
@@ -200,9 +201,11 @@ CREATE TABLE `tbl_semester_exam_subjects` (
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`),
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_2` FOREIGN KEY (`semester_id`) REFERENCES `tbl_semester` (`semester_id`),
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_3` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_semester_exam_subjects` */
+
+insert  into `tbl_semester_exam_subjects`(`id`,`class_id`,`semester_id`,`assign_subject_grade_id`,`monthly_ids`,`create_date`,`isDeleted`) values (49,10,1,99,'1,2,3','2025-04-26 01:37:04',0),(50,10,1,103,'1,2,3','2025-04-26 01:37:05',0);
 
 /*Table structure for table `tbl_student_info` */
 
@@ -248,45 +251,11 @@ CREATE TABLE `tbl_student_monthly_score` (
   CONSTRAINT `fk_monthly_score_student` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
   CONSTRAINT `fk_student_monthly_classroom_subject` FOREIGN KEY (`classroom_subject_monthly_score_id`) REFERENCES `classroom_subject_monthly_score` (`classroom_subject_monthly_score_id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_student_monthly_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1070 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1093 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_student_monthly_score` */
 
-insert  into `tbl_student_monthly_score`(`student_monthly_score_id`,`student_id`,`classroom_subject_monthly_score_id`,`score`,`create_date`,`isDeleted`) values (1061,1001,60,10,'2025-04-08 16:45:59',0),(1062,1001,61,8,'2025-04-08 16:46:14',0),(1063,1001,62,9,'2025-04-08 16:46:16',0),(1064,1001,63,10,'2025-04-08 16:46:17',0),(1065,1001,64,8,'2025-04-08 16:46:22',0),(1066,1001,65,9,'2025-04-08 16:46:24',0),(1067,1003,60,8,'2025-04-17 20:54:02',0),(1068,1003,61,10,'2025-04-17 20:54:07',0),(1069,1003,62,9,'2025-04-17 20:54:09',0);
-
-/*Table structure for table `tbl_student_semester_exam_scores` */
-
-DROP TABLE IF EXISTS `tbl_student_semester_exam_scores`;
-
-CREATE TABLE `tbl_student_semester_exam_scores` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `student_id` int(10) unsigned NOT NULL,
-  `class_id` int(10) unsigned NOT NULL,
-  `semester_id` int(10) unsigned NOT NULL,
-  `semester_exam_subject_id` int(11) DEFAULT NULL,
-  `assign_subject_grade_id` int(10) unsigned NOT NULL,
-  `score` float NOT NULL,
-  `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `isDeleted` int(2) DEFAULT 0,
-  `monthly_average` float DEFAULT NULL COMMENT 'មធ្យមភាគពិន្ទុប្រចាំខែ',
-  `months_calculated` varchar(255) DEFAULT NULL COMMENT 'បញ្ជីខែដែលយកមកគណនា (ID ជា comma separated)',
-  `months_count` int(11) DEFAULT 0 COMMENT 'ចំនួនខែដែលបានយកមកគណនា',
-  PRIMARY KEY (`id`),
-  KEY `class_id` (`class_id`),
-  KEY `semester_id` (`semester_id`),
-  KEY `assign_subject_grade_id` (`assign_subject_grade_id`),
-  KEY `fk_semester_exam_scores_student` (`student_id`),
-  KEY `fk_semester_exam_scores_semester_exam_subject` (`semester_exam_subject_id`),
-  CONSTRAINT `fk_semester_exam_scores_semester_exam_subject` FOREIGN KEY (`semester_exam_subject_id`) REFERENCES `tbl_semester_exam_subjects` (`id`),
-  CONSTRAINT `fk_semester_exam_scores_student` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
-  CONSTRAINT `fk_semester_exam_subject` FOREIGN KEY (`semester_exam_subject_id`) REFERENCES `tbl_semester_exam_subjects` (`id`),
-  CONSTRAINT `tbl_student_semester_exam_scores_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
-  CONSTRAINT `tbl_student_semester_exam_scores_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`),
-  CONSTRAINT `tbl_student_semester_exam_scores_ibfk_3` FOREIGN KEY (`semester_id`) REFERENCES `tbl_semester` (`semester_id`),
-  CONSTRAINT `tbl_student_semester_exam_scores_ibfk_4` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-/*Data for the table `tbl_student_semester_exam_scores` */
+insert  into `tbl_student_monthly_score`(`student_monthly_score_id`,`student_id`,`classroom_subject_monthly_score_id`,`score`,`create_date`,`isDeleted`) values (1061,1001,60,10,'2025-04-08 16:45:59',0),(1062,1001,61,8,'2025-04-08 16:46:14',0),(1063,1001,62,9,'2025-04-08 16:46:16',0),(1064,1001,63,10,'2025-04-08 16:46:17',0),(1065,1001,64,8,'2025-04-08 16:46:22',0),(1066,1001,65,9,'2025-04-08 16:46:24',0),(1067,1003,60,8,'2025-04-17 20:54:02',0),(1068,1003,61,10,'2025-04-17 20:54:07',0),(1069,1003,62,9,'2025-04-17 20:54:09',0),(1070,1001,66,8,'2025-04-22 15:47:27',0),(1071,1001,67,8,'2025-04-22 15:47:28',0),(1072,1001,68,9,'2025-04-22 15:47:30',0),(1073,1001,69,7,'2025-04-22 15:47:31',0),(1074,1001,70,6,'2025-04-22 15:47:32',0),(1075,1001,71,7,'2025-04-22 15:47:37',0),(1076,1001,72,8,'2025-04-22 15:47:38',0),(1077,1001,73,6,'2025-04-22 15:47:39',0),(1078,1003,66,8,'2025-04-22 16:34:43',0),(1079,1003,67,7,'2025-04-22 16:34:45',0),(1080,1003,68,8,'2025-04-22 16:34:45',0),(1081,1003,69,9,'2025-04-22 16:34:46',0),(1082,1003,70,5,'2025-04-22 16:34:47',0),(1083,1003,71,6,'2025-04-22 16:34:49',0),(1084,1003,72,7,'2025-04-22 16:34:50',0),(1085,1003,73,6,'2025-04-22 16:34:52',0),(1086,1001,74,8,'2025-04-23 15:02:12',0),(1087,1001,75,5,'2025-04-23 15:02:14',0),(1088,1001,76,9,'2025-04-23 19:14:35',0),(1089,1001,77,8,'2025-04-23 19:14:36',0),(1090,1003,63,8,'2025-04-25 17:33:00',0),(1091,1003,64,7,'2025-04-25 17:33:02',0),(1092,1003,65,8,'2025-04-25 17:33:03',0);
 
 /*Table structure for table `tbl_student_semester_score` */
 
@@ -295,26 +264,20 @@ DROP TABLE IF EXISTS `tbl_student_semester_score`;
 CREATE TABLE `tbl_student_semester_score` (
   `student_semester_score_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `student_id` int(10) unsigned NOT NULL,
-  `class_id` int(11) DEFAULT NULL,
-  `semester_id` int(10) unsigned NOT NULL,
-  `semester_exam_subject_id` int(11) DEFAULT NULL,
+  `semester_exam_subject_id` int(11) NOT NULL,
   `score` float NOT NULL,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
-  `monthly_average` float DEFAULT NULL COMMENT 'មធ្យមភាគសរុបប្រចាំខែ',
-  `semester_exam_score` float DEFAULT NULL COMMENT 'មធ្យមភាគប្រឡងឆមាស',
-  `final_score` float DEFAULT NULL COMMENT 'ពិន្ទុសរុប (monthly_average + semester_exam_score)/2',
-  `months_counted` int(11) DEFAULT NULL COMMENT 'ចំនួនខែដែលបានរៀន',
-  `exam_subjects_count` int(11) DEFAULT NULL COMMENT 'ចំនួនមុខវិជ្ជាប្រឡងឆមាស',
-  `calculation_note` text DEFAULT NULL COMMENT 'កត់ត្រាពីរបៀបគណនា',
   PRIMARY KEY (`student_semester_score_id`),
   KEY `student_id` (`student_id`),
-  KEY `semester_id` (`semester_id`),
-  CONSTRAINT `tbl_student_semester_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE,
-  CONSTRAINT `tbl_student_semester_score_ibfk_3` FOREIGN KEY (`semester_id`) REFERENCES `tbl_semester` (`semester_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=125 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `semester_exam_subject_id` (`semester_exam_subject_id`),
+  CONSTRAINT `semester_exam_subject_id` FOREIGN KEY (`semester_exam_subject_id`) REFERENCES `tbl_semester_exam_subjects` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tbl_student_semester_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_student_semester_score` */
+
+insert  into `tbl_student_semester_score`(`student_semester_score_id`,`student_id`,`semester_exam_subject_id`,`score`,`create_date`,`isDeleted`) values (32,1001,49,7,'2025-04-26 01:37:41',0),(33,1001,50,8,'2025-04-26 01:37:42',0),(34,1003,49,9,'2025-04-26 01:37:47',0),(35,1003,50,10,'2025-04-26 01:37:48',0);
 
 /*Table structure for table `tbl_study` */
 
@@ -398,258 +361,250 @@ CREATE TABLE `tbl_year_study` (
 
 insert  into `tbl_year_study`(`year_study_id`,`year_study`,`create_date`,`isDeleted`) values (1,'2025-2026','2025-02-02 09:49:37',0),(2,'2026-2027','2025-02-02 09:49:37',0),(3,'2027-2028','2025-02-02 09:49:37',0),(4,'2028-2029','2025-04-08 17:37:54',0),(5,'2029-2030','2025-04-08 17:43:17',0);
 
-/* Procedure structure for procedure `calculate_semester_scores` */
+/* Procedure structure for procedure `CalculateFinalSemesterAverage` */
 
-/*!50003 DROP PROCEDURE IF EXISTS  `calculate_semester_scores` */;
-
-DELIMITER $$
-
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `calculate_semester_scores`()
-BEGIN
-    -- Clear existing semester scores
-    TRUNCATE TABLE tbl_student_semester_score;
-    
-    -- Insert new semester scores based on monthly averages
-    INSERT INTO tbl_student_semester_score (
-        student_id,
-        assign_subject_grade_id,
-        semester_id,
-        score,
-        create_date,
-        isDeleted
-    )
-    SELECT 
-        sms.student_id,
-        sms.assign_subject_grade_id,
-        CASE 
-            WHEN m.monthly_id BETWEEN 1 AND 6 THEN 1
-            WHEN m.monthly_id BETWEEN 7 AND 12 THEN 2
-        END AS semester_id,
-        AVG(sms.score) AS score,
-        NOW() AS create_date,
-        0 AS isDeleted
-    FROM tbl_student_monthly_score sms
-    JOIN tbl_monthly m ON sms.monthly_id = m.monthly_id
-    WHERE sms.isDeleted = 0
-    GROUP BY 
-        sms.student_id,
-        sms.assign_subject_grade_id,
-        CASE 
-            WHEN m.monthly_id BETWEEN 1 AND 6 THEN 1
-            WHEN m.monthly_id BETWEEN 7 AND 12 THEN 2
-        END;
-END */$$
-DELIMITER ;
-
-/* Procedure structure for procedure `calculate_semester_scores_v2` */
-
-/*!50003 DROP PROCEDURE IF EXISTS  `calculate_semester_scores_v2` */;
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateFinalSemesterAverage` */;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `calculate_semester_scores_v2`()
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateFinalSemesterAverage`(
+    IN p_student_id INT,
+    IN p_semester_id INT,
+    IN p_class_id INT,
+    IN p_monthly_ids VARCHAR(255)
+)
 BEGIN
-    -- Delete old semester scores first
-    DELETE FROM tbl_student_semester_score;
+    DECLARE v_monthly_avg DECIMAL(5,2);
+    DECLARE v_semester_exam_avg DECIMAL(5,2);
     
-    -- Create temporary table for exam scores with monthly data
-    DROP TEMPORARY TABLE IF EXISTS temp_exam_scores;
-    CREATE TEMPORARY TABLE temp_exam_scores (
-        student_id INT,
-        class_id INT,
-        semester_id INT,
-        exam_average DECIMAL(10,2),
-        subjects_count INT,
-        monthly_average DECIMAL(10,2),
-        months_count INT
-    );
-    
-    -- Insert exam scores into temporary table
-    INSERT INTO temp_exam_scores (
-        student_id, class_id, semester_id, exam_average, subjects_count, 
-        monthly_average, months_count
-    )
-    SELECT 
-        sses.student_id,
-        sses.class_id,
-        sses.semester_id,
-        AVG(sses.score) AS exam_average,
-        COUNT(DISTINCT sses.semester_exam_subject_id) AS subjects_count,
-        AVG(sses.monthly_average) AS monthly_average,
-        MAX(sses.months_count) AS months_count
-    FROM tbl_student_semester_exam_scores sses
-    WHERE sses.isDeleted = 0
-    GROUP BY sses.student_id, sses.class_id, sses.semester_id;
-    
-    -- Insert into final table
-    INSERT INTO tbl_student_semester_score (
-        student_id, 
-        class_id, 
-        semester_id, 
-        monthly_average,
-        months_counted,
-        semester_exam_score,
-        exam_subjects_count,
-        final_score,
-        calculation_note
-    )
-    SELECT 
-        es.student_id,
-        es.class_id,
-        es.semester_id,
-        es.monthly_average,
-        es.months_count,
-        es.exam_average AS semester_exam_score,
-        es.subjects_count AS exam_subjects_count,
-        CASE 
-            WHEN es.monthly_average IS NULL OR es.monthly_average = 0 THEN es.exam_average
-            ELSE (es.monthly_average + es.exam_average) / 2
-        END AS final_score,
-        CASE 
-            WHEN es.monthly_average IS NULL OR es.monthly_average = 0 THEN CONCAT('ពិន្ទុសរុប = ពិន្ទុប្រឡង (', ROUND(es.exam_average, 2), ')')
-            ELSE CONCAT('ពិន្ទុសរុប = (ពិន្ទុប្រចាំខែ + ពិន្ទុប្រឡងឆមាស) / 2 = (', 
-                         ROUND(es.monthly_average, 2), ' + ', ROUND(es.exam_average, 2), ') / 2 = ', 
-                         ROUND((es.monthly_average + es.exam_average) / 2, 2))
-        END AS calculation_note
-    FROM temp_exam_scores es;
-    
-    -- Clean up temporary tables
-    DROP TEMPORARY TABLE IF EXISTS temp_exam_scores;
-END */$$
-DELIMITER ;
-
-/* Procedure structure for procedure `create_dynamic_score_pivot_view` */
-
-/*!50003 DROP PROCEDURE IF EXISTS  `create_dynamic_score_pivot_view` */;
-
-DELIMITER $$
-
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `create_dynamic_score_pivot_view`()
-BEGIN
-    -- Create the basic view without dynamic columns first
-    SET @sql = 'DROP VIEW IF EXISTS view_student_monthly_score_pivot;
-    CREATE VIEW view_student_monthly_score_pivot AS
-    WITH student_data AS (
+    -- Calculate monthly average using the exact same method as CalculateStudentMonthlyAverage
+    WITH monthly_scores AS (
         SELECT 
-            s.student_id,
-            s.student_name,
-            c.class_id,
-            c.class_name,
-            m.monthly_id,
+            sms.student_id,
+            csms.monthly_id,
+            AVG(sms.score) as monthly_average
+        FROM tbl_student_monthly_score sms
+        JOIN classroom_subject_monthly_score csms 
+            ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        WHERE sms.student_id = p_student_id
+        AND csms.class_id = p_class_id
+        AND FIND_IN_SET(csms.monthly_id, p_monthly_ids)
+        AND sms.isDeleted = 0
+        GROUP BY sms.student_id, csms.monthly_id
+    )
+    SELECT AVG(monthly_average) INTO v_monthly_avg
+    FROM monthly_scores;
+    
+    -- Calculate semester exam average
+    SELECT 
+        AVG(sss.score) INTO v_semester_exam_avg
+    FROM tbl_student_semester_score sss
+    JOIN tbl_semester_exam_subjects ses 
+        ON sss.semester_exam_subject_id = ses.id
+    WHERE sss.student_id = p_student_id
+    AND ses.semester_id = p_semester_id
+    AND ses.class_id = p_class_id
+    AND sss.isDeleted = 0;
+    
+    -- Calculate final average
+    SELECT 
+        p_student_id as student_id,
+        v_monthly_avg as monthly_average,
+        v_semester_exam_avg as semester_exam_average,
+        (v_monthly_avg + v_semester_exam_avg) / 2 as final_semester_average;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateMonthlyAverage` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateMonthlyAverage` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateMonthlyAverage`(
+    IN p_student_id INT,
+    IN p_monthly_ids VARCHAR(255)  -- Comma-separated list of selected month IDs
+)
+BEGIN
+    -- First, calculate average for each month separately
+    WITH monthly_averages AS (
+        SELECT 
+            csms.monthly_id,
             m.month_name,
-            COUNT(DISTINCT sub.subject_id) AS subjects_count,
-            SUM(IFNULL(sms.score, 0)) AS total_score,
-            AVG(sms.score) AS average_score,
-            sub.subject_id,
-            sub.subject_name,
-            sms.score
-        FROM tbl_student_info s
-        INNER JOIN tbl_study st ON s.student_id = st.student_id AND st.status = "active" AND st.isDeleted = 0
-        INNER JOIN tbl_classroom c ON st.class_id = c.class_id
-        INNER JOIN classroom_subject_monthly_score csms ON c.class_id = csms.class_id
-        INNER JOIN tbl_assign_subject_grade asg ON csms.assign_subject_grade_id = asg.assign_subject_grade_id
-        INNER JOIN tbl_subject sub ON asg.subject_code = sub.subject_code
-        INNER JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
-        LEFT JOIN tbl_student_monthly_score sms ON (
-            s.student_id = sms.student_id 
-            AND sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
-            AND sms.isDeleted = 0
-        )
-        WHERE s.isDeleted = 0
+            COUNT(DISTINCT csms.assign_subject_grade_id) as subjects_in_month,
+            AVG(sms.score) as month_average,
+            SUM(sms.score) as month_total
+        FROM tbl_student_monthly_score sms
+        JOIN classroom_subject_monthly_score csms 
+            ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
+        WHERE sms.student_id = p_student_id
+        AND FIND_IN_SET(csms.monthly_id, p_monthly_ids)
+        AND sms.isDeleted = 0
         AND csms.isDeleted = 0
-        GROUP BY 
-            s.student_id,
-            s.student_name,
-            c.class_id,
-            c.class_name,
-            m.monthly_id,
-            m.month_name,
-            sub.subject_id,
-            sub.subject_name,
-            sms.score
-    ),
-    student_summary AS (
+        GROUP BY csms.monthly_id, m.month_name
+    )
+    -- Then calculate the overall average
+    SELECT 
+        AVG(month_average) as overall_average,
+        COUNT(DISTINCT monthly_id) as months_counted,
+        SUM(subjects_in_month) as total_subjects,
+        GROUP_CONCAT(
+            CONCAT(month_name, ' (', subjects_in_month, ' subjects, avg: ', ROUND(month_average, 2), ')')
+            ORDER BY monthly_id
+        ) as monthly_details,
+        SUM(month_total) as total_score
+    FROM monthly_averages;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateSemesterScore` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateSemesterScore` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateSemesterScore`(
+    IN p_student_id INT,
+    IN p_class_id INT,
+    IN p_semester_id INT,
+    IN p_monthly_ids VARCHAR(255)
+)
+BEGIN
+    SELECT 
+        sms.student_id,
+        si.student_name,
+        AVG(sms.score) as monthly_average,
+        COUNT(DISTINCT csms.monthly_id) as months_counted,
+        (
+            SELECT AVG(score) 
+            FROM tbl_student_semester_exam_scores 
+            WHERE student_id = sms.student_id 
+            AND class_id = p_class_id 
+            AND semester_id = p_semester_id 
+            AND isDeleted = 0
+        ) as semester_exam_score,
+        (
+            SELECT COUNT(DISTINCT semester_exam_subject_id) 
+            FROM tbl_student_semester_exam_scores 
+            WHERE student_id = sms.student_id 
+            AND class_id = p_class_id 
+            AND semester_id = p_semester_id 
+            AND isDeleted = 0
+        ) as exam_subjects_count,
+        (
+            (AVG(sms.score) + (
+                SELECT AVG(score) 
+                FROM tbl_student_semester_exam_scores 
+                WHERE student_id = sms.student_id 
+                AND class_id = p_class_id 
+                AND semester_id = p_semester_id 
+                AND isDeleted = 0
+            )) / 2
+        ) as final_score
+    FROM tbl_student_monthly_score sms
+    JOIN classroom_subject_monthly_score csms 
+        ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+    JOIN tbl_student_info si 
+        ON sms.student_id = si.student_id
+    WHERE sms.student_id = p_student_id
+    AND csms.class_id = p_class_id
+    AND FIND_IN_SET(csms.monthly_id, p_monthly_ids)
+    AND sms.isDeleted = 0
+    GROUP BY sms.student_id, si.student_name;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateStudentMonthlyAverage` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateStudentMonthlyAverage` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateStudentMonthlyAverage`(
+    IN p_student_id INT,
+    IN p_class_id INT,
+    IN p_monthly_ids VARCHAR(255)
+)
+BEGIN
+    WITH monthly_scores AS (
         SELECT 
-            student_id,
-            student_name,
-            class_id,
-            class_name,
-            monthly_id,
-            month_name,
-            MAX(subjects_count) AS subjects_count,
-            MAX(total_score) AS total_score,
-            MAX(average_score) AS average_score
-        FROM student_data
-        GROUP BY 
-            student_id,
-            student_name,
-            class_id,
-            class_name,
-            monthly_id,
-            month_name
-    ),
-    ranked_students AS (
-        SELECT 
-            s.*,
-            RANK() OVER (PARTITION BY class_id, monthly_id ORDER BY average_score DESC) AS rank_in_class,
-            COUNT(*) OVER (PARTITION BY class_id, monthly_id) AS class_size
-        FROM student_summary s
+            sms.student_id,
+            csms.monthly_id,
+            ROUND(AVG(sms.score), 2) as monthly_average
+        FROM tbl_student_monthly_score sms
+        JOIN classroom_subject_monthly_score csms 
+            ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        WHERE sms.student_id = p_student_id
+        AND csms.class_id = p_class_id
+        AND FIND_IN_SET(csms.monthly_id, p_monthly_ids)
+        AND sms.isDeleted = 0
+        GROUP BY sms.student_id, csms.monthly_id
     )
     SELECT 
-        r.student_id,
-        r.student_name,
-        r.class_id,
-        r.class_name,
-        r.monthly_id,
-        r.month_name,
-        r.subjects_count,
-        r.total_score,
-        r.average_score,
-        r.rank_in_class,
-        r.class_size,
-        MAX(CASE WHEN d.subject_name = "គណិតវិទ្យា" THEN d.score END) AS "គណិតវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "ភាសាខ្មែរ" THEN d.score END) AS "ភាសាខ្មែរ",
-        MAX(CASE WHEN d.subject_name = "វិទ្យាសាស្ត្រ" THEN d.score END) AS "វិទ្យាសាស្ត្រ",
-        MAX(CASE WHEN d.subject_name = "សិក្សាសង្គម" THEN d.score END) AS "សិក្សាសង្គម",
-        MAX(CASE WHEN d.subject_name = "អប់រំកាយ-សុខភាពកីឡា" THEN d.score END) AS "អប់រំកាយ-សុខភាពកីឡា",
-        MAX(CASE WHEN d.subject_name = "អប់រំបំណិនជីវិត" THEN d.score END) AS "អប់រំបំណិនជីវិត",
-        MAX(CASE WHEN d.subject_name = "ភាសាបរទេស" THEN d.score END) AS "ភាសាបរទេស",
-        MAX(CASE WHEN d.subject_name = "ចំនួន" THEN d.score END) AS "ចំនួន",
-        MAX(CASE WHEN d.subject_name = "រង្វាស់រង្វាល់" THEN d.score END) AS "រង្វាស់រង្វាល់",
-        MAX(CASE WHEN d.subject_name = "ធរណីមាត្រ" THEN d.score END) AS "ធរណីមាត្រ",
-        MAX(CASE WHEN d.subject_name = "ពីជគណិត" THEN d.score END) AS "ពីជគណិត",
-        MAX(CASE WHEN d.subject_name = "ស្ថិតិ" THEN d.score END) AS "ស្ថិតិ",
-        MAX(CASE WHEN d.subject_name = "រូបវិទ្យា" THEN d.score END) AS "រូបវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "គីមីវិទ្យា" THEN d.score END) AS "គីមីវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "ជីវវិទ្យា" THEN d.score END) AS "ជីវវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "ផែនដី-បរិស្ថានវិទ្យា" THEN d.score END) AS "ផែនដី-បរិស្ថានវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "សីលធម៌-ពលរដ្ឋវិទ្យា" THEN d.score END) AS "សីលធម៌-ពលរដ្ឋវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "ភូមិវិទ្យា" THEN d.score END) AS "ភូមិវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "ប្រវត្តិវិទ្យា" THEN d.score END) AS "ប្រវត្តិវិទ្យា",
-        MAX(CASE WHEN d.subject_name = "គេហវិទ្យា-អប់រំសិល្បៈ" THEN d.score END) AS "គេហវិទ្យា-អប់រំសិល្បៈ",
-        MAX(CASE WHEN d.subject_name = "អប់រំកាយ-កីឡា" THEN d.score END) AS "អប់រំកាយ-កីឡា",
-        MAX(CASE WHEN d.subject_name = "សុខភាព-អនាម័យ" THEN d.score END) AS "សុខភាព-អនាម័យ"
-    FROM ranked_students r
-    LEFT JOIN student_data d ON 
-        r.student_id = d.student_id 
-        AND r.class_id = d.class_id 
-        AND r.monthly_id = d.monthly_id
-    GROUP BY 
-        r.student_id,
-        r.student_name,
-        r.class_id,
-        r.class_name,
-        r.monthly_id,
-        r.month_name,
-        r.subjects_count,
-        r.total_score,
-        r.average_score,
-        r.rank_in_class,
-        r.class_size';
-    
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
+        student_id,
+        ROUND(AVG(monthly_average), 2) as final_monthly_average,
+        COUNT(DISTINCT monthly_id) as months_counted
+    FROM monthly_scores
+    GROUP BY student_id;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateStudentSemesterExamAverage` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateStudentSemesterExamAverage` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateStudentSemesterExamAverage`(
+    IN p_student_id INT,
+    IN p_semester_id INT,
+    IN p_class_id INT
+)
+BEGIN
+    SELECT 
+        sss.student_id,
+        AVG(sss.score) as semester_exam_average,
+        COUNT(DISTINCT ses.id) as subjects_counted
+    FROM tbl_student_semester_score sss
+    JOIN tbl_semester_exam_subjects ses 
+        ON sss.semester_exam_subject_id = ses.id
+    WHERE sss.student_id = p_student_id
+    AND ses.semester_id = p_semester_id
+    AND ses.class_id = p_class_id
+    AND sss.isDeleted = 0
+    GROUP BY sss.student_id;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `GetAvailableMonthsForSemester` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `GetAvailableMonthsForSemester` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAvailableMonthsForSemester`(
+    IN p_class_id INT,
+    IN p_semester_id INT,
+    IN p_assign_subject_grade_id INT
+)
+BEGIN
+    -- ជ្រើសខែដែលមានពិន្ទុសិស្សរួចហើយ
+    SELECT DISTINCT 
+        m.monthly_id,
+        m.month_name,
+        COUNT(DISTINCT sms.student_id) as student_count,
+        COUNT(DISTINCT csms.assign_subject_grade_id) as subject_count
+    FROM tbl_monthly m
+    JOIN classroom_subject_monthly_score csms ON m.monthly_id = csms.monthly_id
+    JOIN tbl_student_monthly_score sms ON csms.classroom_subject_monthly_score_id = sms.classroom_subject_monthly_score_id
+    WHERE csms.class_id = p_class_id
+    AND csms.assign_subject_grade_id = p_assign_subject_grade_id
+    AND sms.isDeleted = 0
+    AND csms.isDeleted = 0
+    GROUP BY m.monthly_id, m.month_name
+    HAVING student_count > 0 AND subject_count > 0
+    ORDER BY m.monthly_id;
 END */$$
 DELIMITER ;
 

@@ -97,6 +97,7 @@ class StudentMonthlyScore {
         try {
             error_log("Creating score with data: " . json_encode($data));
 
+            //classroom_subject_monthly_score_id
             // Validate required fields
             $requiredFields = ['student_id', 'classroom_subject_monthly_score_id', 'monthly_id', 'score'];
             foreach ($requiredFields as $field) {
@@ -1011,64 +1012,6 @@ class StudentMonthlyScore {
 
         } catch (PDOException $e) {
             error_log("Error in getStudentScoresByClassAndMonth: " . $e->getMessage());
-            return [
-                'status' => 'error',
-                'message' => 'Database error occurred'
-            ];
-        }
-    }
-
-    public function getStudentMonthlyRankings($filters = []) {
-        try {
-            $query = "SELECT 
-                r.student_id,
-                r.student_name,
-                r.class_id,
-                r.class_name, 
-                r.monthly_id,
-                r.month_name,
-                r.subjects_count,
-                r.total_score,
-                r.average_score,
-                r.rank_in_class,
-                r.class_size
-            FROM view_student_monthly_rankings r
-            WHERE 1=1";
-
-            $params = [];
-            
-            // Add filters
-            if (!empty($filters['class_id'])) {
-                $query .= " AND r.class_id = :class_id";
-                $params[':class_id'] = $filters['class_id'];
-            }
-            if (!empty($filters['monthly_id'])) {
-                $query .= " AND r.monthly_id = :monthly_id";
-                $params[':monthly_id'] = $filters['monthly_id'];
-            }
-            if (!empty($filters['student_id'])) {
-                $query .= " AND r.student_id = :student_id";
-                $params[':student_id'] = $filters['student_id'];
-            }
-
-            // Add ordering
-            $query .= " ORDER BY r.class_id, r.monthly_id, r.rank_in_class";
-
-            $stmt = $this->conn->prepare($query);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->execute();
-
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            return [
-                'status' => 'success',
-                'data' => $results
-            ];
-
-        } catch (PDOException $e) {
-            error_log("Error in getStudentMonthlyRankings: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Database error occurred'

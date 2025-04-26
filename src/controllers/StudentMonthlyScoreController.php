@@ -254,35 +254,7 @@ class StudentMonthlyScoreController {
         }
     }
 
-    public function getStudentMonthlyRankings() {
-        try {
-            $filters = [];
-            
-            if (isset($_GET['class_id'])) {
-                $filters['class_id'] = $_GET['class_id'];
-            }
-            if (isset($_GET['monthly_id'])) {
-                $filters['monthly_id'] = $_GET['monthly_id'];
-            }
-            if (isset($_GET['student_id'])) {
-                $filters['student_id'] = $_GET['student_id'];
-            }
-            
-            $result = $this->monthlyScore->getStudentMonthlyRankings($filters);
-            
-            if ($result['status'] === 'success') {
-                echo jsonResponse(200, $result);
-            } else {
-                echo jsonResponse(500, $result);
-            }
-        } catch (Exception $e) {
-            error_log("Error in getStudentMonthlyRankings: " . $e->getMessage());
-            echo jsonResponse(500, [
-                'status' => 'error',
-                'message' => 'An error occurred while fetching student rankings'
-            ]);
-        }
-    }
+ 
 
     public function getStudentMonthlyScoreSummary() {
         try {
