@@ -2,7 +2,8 @@
 SQLyog Enterprise - MySQL GUI v8.18 
 MySQL - 5.5.5-10.4.32-MariaDB : Database - norea_psms
 *********************************************************************
-*/
+*/
+
 
 /*!40101 SET NAMES utf8 */;
 
@@ -34,11 +35,11 @@ CREATE TABLE `classroom_subject_monthly_score` (
   CONSTRAINT `fk_classroom_subject_monthly_class` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_monthly` FOREIGN KEY (`monthly_id`) REFERENCES `tbl_monthly` (`monthly_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_classroom_subject_monthly_subject` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `classroom_subject_monthly_score` */
 
-insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (60,10,91,1,'2025-04-05 17:29:45',0),(61,10,95,1,'2025-04-05 17:29:45',0),(62,10,100,1,'2025-04-05 17:29:45',0),(63,10,98,1,'2025-04-05 17:29:45',0),(64,10,103,1,'2025-04-05 17:29:45',0),(65,10,104,1,'2025-04-05 17:29:45',0),(66,10,91,2,'2025-04-08 17:11:27',0),(67,10,95,2,'2025-04-08 17:11:27',0),(68,10,100,2,'2025-04-08 17:11:27',0),(69,10,98,2,'2025-04-08 17:11:27',0),(70,10,101,2,'2025-04-08 17:11:27',0),(71,10,92,2,'2025-04-08 17:11:27',0),(72,10,99,2,'2025-04-08 17:11:28',0),(73,10,103,2,'2025-04-08 17:11:28',0),(74,10,100,3,'2025-04-23 15:02:05',0),(75,10,98,3,'2025-04-23 15:02:05',0),(76,10,98,4,'2025-04-23 19:14:28',0),(77,10,101,4,'2025-04-23 19:14:28',0);
+insert  into `classroom_subject_monthly_score`(`classroom_subject_monthly_score_id`,`class_id`,`assign_subject_grade_id`,`monthly_id`,`create_date`,`isDeleted`) values (60,10,91,1,'2025-04-05 17:29:45',0),(61,10,95,1,'2025-04-05 17:29:45',0),(62,10,100,1,'2025-04-05 17:29:45',0),(63,10,98,1,'2025-04-05 17:29:45',0),(64,10,103,1,'2025-04-05 17:29:45',0),(65,10,104,1,'2025-04-05 17:29:45',0),(66,10,91,2,'2025-04-08 17:11:27',0),(67,10,95,2,'2025-04-08 17:11:27',0),(68,10,100,2,'2025-04-08 17:11:27',0),(69,10,98,2,'2025-04-08 17:11:27',0),(70,10,101,2,'2025-04-08 17:11:27',0),(71,10,92,2,'2025-04-08 17:11:27',0),(72,10,99,2,'2025-04-08 17:11:28',0),(73,10,103,2,'2025-04-08 17:11:28',0),(74,10,100,3,'2025-04-23 15:02:05',0),(75,10,98,3,'2025-04-23 15:02:05',0),(76,10,98,4,'2025-04-23 19:14:28',0),(77,10,101,4,'2025-04-23 19:14:28',0),(78,11,108,1,'2025-04-27 12:48:02',0),(79,11,110,1,'2025-04-27 12:48:02',0),(80,11,110,3,'2025-04-27 13:11:50',0),(81,11,109,3,'2025-04-27 13:11:50',0);
 
 /*Table structure for table `tbl_activity_log` */
 
@@ -80,11 +81,11 @@ CREATE TABLE `tbl_assign_subject_grade` (
   KEY `fk_assign_subject_grade_subject` (`subject_code`),
   CONSTRAINT `fk_assign_subject_grade_grade` FOREIGN KEY (`grade_id`) REFERENCES `tbl_grade` (`grade_id`),
   CONSTRAINT `fk_assign_subject_grade_subject` FOREIGN KEY (`subject_code`) REFERENCES `tbl_subject` (`subject_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_assign_subject_grade` */
 
-insert  into `tbl_assign_subject_grade`(`assign_subject_grade_id`,`grade_id`,`subject_code`,`create_date`,`isDeleted`) values (91,1,1,'2025-04-05 17:29:23',0),(92,1,2,'2025-04-05 17:29:23',0),(93,1,26,'2025-04-05 17:29:23',0),(94,1,25,'2025-04-05 17:29:23',0),(95,1,24,'2025-04-05 17:29:23',0),(96,1,21,'2025-04-05 17:29:23',0),(97,1,16,'2025-04-05 17:29:23',0),(98,1,14,'2025-04-05 17:29:23',0),(99,1,13,'2025-04-05 17:29:23',0),(100,1,12,'2025-04-05 17:29:23',0),(101,1,15,'2025-04-05 17:29:23',0),(102,1,10,'2025-04-05 17:29:23',0),(103,1,11,'2025-04-05 17:29:23',0),(104,1,9,'2025-04-05 17:29:23',0),(105,1,8,'2025-04-05 17:29:23',0),(106,1,6,'2025-04-05 17:29:23',0),(107,1,5,'2025-04-05 17:29:23',0);
+insert  into `tbl_assign_subject_grade`(`assign_subject_grade_id`,`grade_id`,`subject_code`,`create_date`,`isDeleted`) values (91,1,1,'2025-04-05 17:29:23',0),(92,1,2,'2025-04-05 17:29:23',0),(93,1,26,'2025-04-05 17:29:23',0),(94,1,25,'2025-04-05 17:29:23',0),(95,1,24,'2025-04-05 17:29:23',0),(96,1,21,'2025-04-05 17:29:23',0),(97,1,16,'2025-04-05 17:29:23',0),(98,1,14,'2025-04-05 17:29:23',0),(99,1,13,'2025-04-05 17:29:23',0),(100,1,12,'2025-04-05 17:29:23',0),(101,1,15,'2025-04-05 17:29:23',0),(102,1,10,'2025-04-05 17:29:23',0),(103,1,11,'2025-04-05 17:29:23',0),(104,1,9,'2025-04-05 17:29:23',0),(105,1,8,'2025-04-05 17:29:23',0),(106,1,6,'2025-04-05 17:29:23',0),(107,1,5,'2025-04-05 17:29:23',0),(108,2,1,'2025-04-27 12:47:49',0),(109,2,8,'2025-04-27 12:47:49',0),(110,2,7,'2025-04-27 12:47:49',0),(111,2,6,'2025-04-27 12:47:49',0);
 
 /*Table structure for table `tbl_classroom` */
 
@@ -201,11 +202,11 @@ CREATE TABLE `tbl_semester_exam_subjects` (
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`),
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_2` FOREIGN KEY (`semester_id`) REFERENCES `tbl_semester` (`semester_id`),
   CONSTRAINT `tbl_semester_exam_subjects_ibfk_3` FOREIGN KEY (`assign_subject_grade_id`) REFERENCES `tbl_assign_subject_grade` (`assign_subject_grade_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_semester_exam_subjects` */
 
-insert  into `tbl_semester_exam_subjects`(`id`,`class_id`,`semester_id`,`assign_subject_grade_id`,`monthly_ids`,`create_date`,`isDeleted`) values (49,10,1,99,'1,2,3','2025-04-26 01:37:04',0),(50,10,1,103,'1,2,3','2025-04-26 01:37:05',0);
+insert  into `tbl_semester_exam_subjects`(`id`,`class_id`,`semester_id`,`assign_subject_grade_id`,`monthly_ids`,`create_date`,`isDeleted`) values (49,10,1,99,'1,2,3','2025-04-26 01:37:04',0),(50,10,1,103,'1,2,3','2025-04-26 01:37:05',0),(51,11,1,108,'1','2025-04-27 12:48:28',0),(52,11,1,110,'1','2025-04-27 12:48:28',0),(53,11,2,110,'3','2025-04-27 13:12:35',0),(54,11,2,111,'3','2025-04-27 13:12:35',0);
 
 /*Table structure for table `tbl_student_info` */
 
@@ -251,11 +252,11 @@ CREATE TABLE `tbl_student_monthly_score` (
   CONSTRAINT `fk_monthly_score_student` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
   CONSTRAINT `fk_student_monthly_classroom_subject` FOREIGN KEY (`classroom_subject_monthly_score_id`) REFERENCES `classroom_subject_monthly_score` (`classroom_subject_monthly_score_id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_student_monthly_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1093 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1188 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_student_monthly_score` */
 
-insert  into `tbl_student_monthly_score`(`student_monthly_score_id`,`student_id`,`classroom_subject_monthly_score_id`,`score`,`create_date`,`isDeleted`) values (1061,1001,60,10,'2025-04-08 16:45:59',0),(1062,1001,61,8,'2025-04-08 16:46:14',0),(1063,1001,62,9,'2025-04-08 16:46:16',0),(1064,1001,63,10,'2025-04-08 16:46:17',0),(1065,1001,64,8,'2025-04-08 16:46:22',0),(1066,1001,65,9,'2025-04-08 16:46:24',0),(1067,1003,60,8,'2025-04-17 20:54:02',0),(1068,1003,61,10,'2025-04-17 20:54:07',0),(1069,1003,62,9,'2025-04-17 20:54:09',0),(1070,1001,66,8,'2025-04-22 15:47:27',0),(1071,1001,67,8,'2025-04-22 15:47:28',0),(1072,1001,68,9,'2025-04-22 15:47:30',0),(1073,1001,69,7,'2025-04-22 15:47:31',0),(1074,1001,70,6,'2025-04-22 15:47:32',0),(1075,1001,71,7,'2025-04-22 15:47:37',0),(1076,1001,72,8,'2025-04-22 15:47:38',0),(1077,1001,73,6,'2025-04-22 15:47:39',0),(1078,1003,66,8,'2025-04-22 16:34:43',0),(1079,1003,67,7,'2025-04-22 16:34:45',0),(1080,1003,68,8,'2025-04-22 16:34:45',0),(1081,1003,69,9,'2025-04-22 16:34:46',0),(1082,1003,70,5,'2025-04-22 16:34:47',0),(1083,1003,71,6,'2025-04-22 16:34:49',0),(1084,1003,72,7,'2025-04-22 16:34:50',0),(1085,1003,73,6,'2025-04-22 16:34:52',0),(1086,1001,74,8,'2025-04-23 15:02:12',0),(1087,1001,75,5,'2025-04-23 15:02:14',0),(1088,1001,76,9,'2025-04-23 19:14:35',0),(1089,1001,77,8,'2025-04-23 19:14:36',0),(1090,1003,63,8,'2025-04-25 17:33:00',0),(1091,1003,64,7,'2025-04-25 17:33:02',0),(1092,1003,65,8,'2025-04-25 17:33:03',0);
+insert  into `tbl_student_monthly_score`(`student_monthly_score_id`,`student_id`,`classroom_subject_monthly_score_id`,`score`,`create_date`,`isDeleted`) values (1061,1001,60,10,'2025-04-08 16:45:59',0),(1062,1001,61,8,'2025-04-08 16:46:14',0),(1063,1001,62,9,'2025-04-08 16:46:16',0),(1064,1001,63,10,'2025-04-08 16:46:17',0),(1065,1001,64,8,'2025-04-08 16:46:22',0),(1066,1001,65,9,'2025-04-08 16:46:24',0),(1067,1003,60,8,'2025-04-17 20:54:02',0),(1068,1003,61,10,'2025-04-17 20:54:07',0),(1069,1003,62,9,'2025-04-17 20:54:09',0),(1070,1001,66,8,'2025-04-22 15:47:27',0),(1071,1001,67,8,'2025-04-22 15:47:28',0),(1072,1001,68,9,'2025-04-22 15:47:30',0),(1073,1001,69,7,'2025-04-22 15:47:31',0),(1074,1001,70,6,'2025-04-22 15:47:32',0),(1075,1001,71,7,'2025-04-22 15:47:37',0),(1076,1001,72,8,'2025-04-22 15:47:38',0),(1077,1001,73,6,'2025-04-22 15:47:39',0),(1078,1003,66,8,'2025-04-22 16:34:43',0),(1079,1003,67,7,'2025-04-22 16:34:45',0),(1080,1003,68,8,'2025-04-22 16:34:45',0),(1081,1003,69,9,'2025-04-22 16:34:46',0),(1082,1003,70,5,'2025-04-22 16:34:47',0),(1083,1003,71,6,'2025-04-22 16:34:49',0),(1084,1003,72,7,'2025-04-22 16:34:50',0),(1085,1003,73,6,'2025-04-22 16:34:52',0),(1086,1001,74,8,'2025-04-23 15:02:12',0),(1087,1001,75,5,'2025-04-23 15:02:14',0),(1088,1001,76,9,'2025-04-23 19:14:35',0),(1089,1001,77,8,'2025-04-23 19:14:36',0),(1090,1003,63,8,'2025-04-25 17:33:00',0),(1091,1003,64,7,'2025-04-25 17:33:02',0),(1092,1003,65,8,'2025-04-25 17:33:03',0),(1093,1015,60,5,'2025-04-26 16:47:27',0),(1094,1015,61,7,'2025-04-26 16:47:29',0),(1095,1015,62,8,'2025-04-26 16:47:30',0),(1096,1015,63,7,'2025-04-26 16:47:31',0),(1097,1015,64,9,'2025-04-26 16:47:33',0),(1098,1015,65,6,'2025-04-26 16:47:35',0),(1099,1027,60,6,'2025-04-26 16:47:39',0),(1100,1027,61,7,'2025-04-26 16:47:40',0),(1101,1027,62,8,'2025-04-26 16:47:40',0),(1102,1027,63,9,'2025-04-26 16:47:41',0),(1103,1027,64,9,'2025-04-26 16:47:43',0),(1104,1027,65,10,'2025-04-26 16:47:45',0),(1105,1043,60,6,'2025-04-26 16:47:58',0),(1106,1043,61,7,'2025-04-26 16:47:59',0),(1107,1043,62,8,'2025-04-26 16:48:00',0),(1108,1043,63,9,'2025-04-26 16:48:01',0),(1109,1043,64,9,'2025-04-26 16:48:02',0),(1110,1043,65,10,'2025-04-26 16:48:04',0),(1111,1057,60,6,'2025-04-26 16:48:08',0),(1112,1057,61,7,'2025-04-26 16:48:10',0),(1113,1057,62,8,'2025-04-26 16:48:11',0),(1114,1057,63,9,'2025-04-26 16:48:12',0),(1115,1057,64,6,'2025-04-26 16:48:13',0),(1116,1057,65,7,'2025-04-26 16:48:17',0),(1117,1015,67,6,'2025-04-26 16:48:23',0),(1118,1015,68,7,'2025-04-26 16:48:25',0),(1119,1015,69,8,'2025-04-26 16:48:26',0),(1120,1015,70,9,'2025-04-26 16:48:27',0),(1121,1015,71,6,'2025-04-26 16:48:28',0),(1122,1015,72,8,'2025-04-26 16:48:28',0),(1123,1015,73,8,'2025-04-26 16:48:31',0),(1124,1027,66,6,'2025-04-26 16:48:34',0),(1125,1027,67,7,'2025-04-26 16:48:34',0),(1126,1027,68,8,'2025-04-26 16:48:35',0),(1127,1027,69,9,'2025-04-26 16:48:36',0),(1128,1027,70,9,'2025-04-26 16:48:37',0),(1129,1027,71,8,'2025-04-26 16:48:38',0),(1130,1027,72,6,'2025-04-26 16:48:39',0),(1131,1027,73,7,'2025-04-26 16:48:40',0),(1132,1043,66,6,'2025-04-26 16:48:43',0),(1133,1043,67,7,'2025-04-26 16:48:44',0),(1134,1043,68,8,'2025-04-26 16:48:45',0),(1135,1043,69,9,'2025-04-26 16:48:45',0),(1136,1043,70,6,'2025-04-26 16:48:47',0),(1137,1043,71,7,'2025-04-26 16:48:49',0),(1138,1043,72,8,'2025-04-26 16:48:50',0),(1139,1043,73,8,'2025-04-26 16:48:51',0),(1140,1057,66,6,'2025-04-26 16:48:56',0),(1141,1057,67,7,'2025-04-26 16:48:56',0),(1142,1057,68,8,'2025-04-26 16:48:57',0),(1143,1057,69,9,'2025-04-26 16:48:57',0),(1144,1057,70,7,'2025-04-26 16:48:59',0),(1145,1057,71,8,'2025-04-26 16:49:00',0),(1146,1057,72,9,'2025-04-26 16:49:00',0),(1147,1057,73,6,'2025-04-26 16:49:02',0),(1148,1003,74,7,'2025-04-26 16:49:08',0),(1149,1003,75,8,'2025-04-26 16:49:09',0),(1150,1015,74,9,'2025-04-26 16:49:11',0),(1151,1015,75,7,'2025-04-26 16:49:12',0),(1152,1027,74,6,'2025-04-26 16:49:14',0),(1153,1027,75,7,'2025-04-26 16:49:14',0),(1154,1043,74,7,'2025-04-26 16:49:15',0),(1155,1043,75,8,'2025-04-26 16:49:16',0),(1156,1057,74,10,'2025-04-26 16:49:17',0),(1157,1057,75,9,'2025-04-26 16:49:18',0),(1158,1003,76,8,'2025-04-26 16:49:28',0),(1159,1003,77,9,'2025-04-26 16:49:28',0),(1160,1015,76,7,'2025-04-26 16:49:29',0),(1161,1015,77,6,'2025-04-26 16:49:31',0),(1162,1027,76,6,'2025-04-26 16:49:32',0),(1163,1027,77,9,'2025-04-26 16:49:33',0),(1164,1043,76,7,'2025-04-26 16:49:34',0),(1165,1043,77,6,'2025-04-26 16:49:35',0),(1166,1057,76,7,'2025-04-26 16:49:37',0),(1167,1057,77,8,'2025-04-26 16:49:37',0),(1168,1003,78,9,'2025-04-27 12:48:07',0),(1169,1003,79,10,'2025-04-27 12:48:08',0),(1170,1015,78,7,'2025-04-27 12:48:10',0),(1171,1015,79,8,'2025-04-27 12:48:10',0),(1172,1027,78,8,'2025-04-27 12:48:12',0),(1173,1027,79,7,'2025-04-27 12:48:12',0),(1174,1043,78,9,'2025-04-27 12:48:13',0),(1175,1043,79,6,'2025-04-27 12:48:14',0),(1176,1057,78,7,'2025-04-27 12:48:15',0),(1177,1057,79,5,'2025-04-27 12:48:16',0),(1178,1003,80,9,'2025-04-27 13:11:54',0),(1179,1003,81,8,'2025-04-27 13:11:55',0),(1180,1015,80,7,'2025-04-27 13:11:56',0),(1181,1015,81,8,'2025-04-27 13:11:56',0),(1182,1027,80,7,'2025-04-27 13:11:57',0),(1183,1027,81,8,'2025-04-27 13:11:58',0),(1184,1043,80,5,'2025-04-27 13:11:59',0),(1185,1043,81,6,'2025-04-27 13:12:00',0),(1186,1057,80,9,'2025-04-27 13:12:01',0),(1187,1057,81,8,'2025-04-27 13:12:01',0);
 
 /*Table structure for table `tbl_student_semester_score` */
 
@@ -273,11 +274,11 @@ CREATE TABLE `tbl_student_semester_score` (
   KEY `semester_exam_subject_id` (`semester_exam_subject_id`),
   CONSTRAINT `semester_exam_subject_id` FOREIGN KEY (`semester_exam_subject_id`) REFERENCES `tbl_semester_exam_subjects` (`id`) ON DELETE CASCADE,
   CONSTRAINT `tbl_student_semester_score_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_student_semester_score` */
 
-insert  into `tbl_student_semester_score`(`student_semester_score_id`,`student_id`,`semester_exam_subject_id`,`score`,`create_date`,`isDeleted`) values (32,1001,49,7,'2025-04-26 01:37:41',0),(33,1001,50,8,'2025-04-26 01:37:42',0),(34,1003,49,9,'2025-04-26 01:37:47',0),(35,1003,50,10,'2025-04-26 01:37:48',0);
+insert  into `tbl_student_semester_score`(`student_semester_score_id`,`student_id`,`semester_exam_subject_id`,`score`,`create_date`,`isDeleted`) values (32,1001,49,7,'2025-04-26 01:37:41',0),(33,1001,50,8,'2025-04-26 01:37:42',0),(34,1003,49,9,'2025-04-26 01:37:47',0),(35,1003,50,10,'2025-04-26 01:37:48',0),(36,1015,49,8,'2025-04-26 16:51:18',0),(37,1015,50,10,'2025-04-26 16:51:19',0),(38,1027,49,10,'2025-04-26 16:51:28',0),(39,1027,50,10,'2025-04-26 16:51:29',0),(40,1043,49,10,'2025-04-26 16:51:30',0),(41,1043,50,9,'2025-04-26 16:51:31',0),(42,1057,49,10,'2025-04-26 16:51:33',0),(43,1057,50,8,'2025-04-26 16:51:34',0),(44,1003,51,8,'2025-04-27 12:48:44',0),(45,1003,52,9,'2025-04-27 12:48:44',0),(46,1015,51,7,'2025-04-27 12:48:46',0),(47,1015,52,8,'2025-04-27 12:48:46',0),(48,1027,51,6,'2025-04-27 12:48:47',0),(49,1027,52,7,'2025-04-27 12:48:48',0),(50,1043,51,6,'2025-04-27 12:48:49',0),(51,1043,52,9,'2025-04-27 12:48:50',0),(52,1057,51,9,'2025-04-27 12:48:52',0),(53,1057,52,8,'2025-04-27 12:48:52',0),(54,1003,53,9,'2025-04-27 13:12:39',0),(55,1003,54,8,'2025-04-27 13:12:40',0),(56,1015,53,7,'2025-04-27 13:12:40',0),(57,1015,54,8,'2025-04-27 13:12:41',0),(58,1027,53,6,'2025-04-27 13:12:42',0),(59,1027,54,7,'2025-04-27 13:12:42',0),(60,1043,53,5,'2025-04-27 13:12:43',0),(61,1043,54,6,'2025-04-27 13:12:43',0),(62,1057,53,4,'2025-04-27 13:12:44',0),(63,1057,54,5,'2025-04-27 13:12:45',0);
 
 /*Table structure for table `tbl_study` */
 
@@ -299,11 +300,11 @@ CREATE TABLE `tbl_study` (
   CONSTRAINT `fk_study_class` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`),
   CONSTRAINT `fk_study_student` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
   CONSTRAINT `fk_study_year` FOREIGN KEY (`year_study_id`) REFERENCES `tbl_year_study` (`year_study_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_study` */
 
-insert  into `tbl_study`(`study_id`,`student_id`,`class_id`,`year_study_id`,`enrollment_date`,`status`,`create_date`,`isDeleted`) values (70,1001,10,1,'2025-04-08','active','2025-04-08 16:35:57',0),(74,1003,10,1,'2025-04-10','active','2025-04-10 18:52:57',0),(75,1015,10,1,'2025-04-10','active','2025-04-10 18:52:57',0),(76,1043,10,1,'2025-04-10','active','2025-04-10 18:52:57',0),(77,1057,10,1,'2025-04-17','active','2025-04-17 20:54:41',0),(78,1027,10,1,'2025-04-17','active','2025-04-17 20:54:41',0);
+insert  into `tbl_study`(`study_id`,`student_id`,`class_id`,`year_study_id`,`enrollment_date`,`status`,`create_date`,`isDeleted`) values (70,1001,10,1,'2025-04-08','active','2025-04-08 16:35:57',0),(74,1003,10,1,'2025-04-10','inactive','2025-04-10 18:52:57',0),(75,1015,10,1,'2025-04-10','inactive','2025-04-10 18:52:57',0),(76,1043,10,1,'2025-04-10','inactive','2025-04-10 18:52:57',0),(77,1057,10,1,'2025-04-17','inactive','2025-04-17 20:54:41',0),(78,1027,10,1,'2025-04-17','inactive','2025-04-17 20:54:41',0),(79,1003,11,1,'2025-04-27','active','2025-04-27 09:33:16',0),(80,1015,11,1,'2025-04-27','active','2025-04-27 09:33:16',0),(81,1043,11,1,'2025-04-27','active','2025-04-27 09:33:16',0),(82,1057,11,1,'2025-04-27','active','2025-04-27 09:33:16',0),(83,1027,11,1,'2025-04-27','active','2025-04-27 09:33:16',0);
 
 /*Table structure for table `tbl_subject` */
 
@@ -577,6 +578,137 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/* Procedure structure for procedure `CalculateYearlyAverage` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAverage` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateYearlyAverage`(
+    IN p_student_id INT,
+    IN p_class_id INT,
+    IN p_year_study_id INT
+)
+BEGIN
+    DECLARE semester1_id INT;
+    DECLARE semester2_id INT;
+    DECLARE semester1_avg DECIMAL(5,2);
+    DECLARE semester2_avg DECIMAL(5,2);
+    DECLARE yearly_avg DECIMAL(5,2);
+    
+    -- Get semester IDs
+    SELECT semester_id INTO semester1_id 
+    FROM tbl_semester 
+    WHERE semester_name = 'ឆមាសទី១' 
+    AND isDeleted = 0;
+    
+    SELECT semester_id INTO semester2_id 
+    FROM tbl_semester 
+    WHERE semester_name = 'ឆមាសទី២' 
+    AND isDeleted = 0;
+    
+    -- Calculate Semester 1 Average
+    WITH semester1_scores AS (
+        SELECT 
+            sss.student_id,
+            AVG(sss.score) as semester_avg
+        FROM tbl_student_semester_score sss
+        JOIN tbl_semester_exam_subjects ses 
+            ON sss.semester_exam_subject_id = ses.id
+        WHERE sss.student_id = p_student_id
+        AND ses.class_id = p_class_id
+        AND ses.semester_id = semester1_id
+        AND sss.isDeleted = 0
+        GROUP BY sss.student_id
+    )
+    SELECT semester_avg INTO semester1_avg
+    FROM semester1_scores;
+    
+    -- Calculate Semester 2 Average
+    WITH semester2_scores AS (
+        SELECT 
+            sss.student_id,
+            AVG(sss.score) as semester_avg
+        FROM tbl_student_semester_score sss
+        JOIN tbl_semester_exam_subjects ses 
+            ON sss.semester_exam_subject_id = ses.id
+        WHERE sss.student_id = p_student_id
+        AND ses.class_id = p_class_id
+        AND ses.semester_id = semester2_id
+        AND sss.isDeleted = 0
+        GROUP BY sss.student_id
+    )
+    SELECT semester_avg INTO semester2_avg
+    FROM semester2_scores;
+    
+    -- Calculate Yearly Average
+    SET yearly_avg = (COALESCE(semester1_avg, 0) + COALESCE(semester2_avg, 0)) / 2;
+    
+    -- Return Results
+    SELECT 
+        p_student_id as student_id,
+        semester1_avg as semester_1_average,
+        semester2_avg as semester_2_average,
+        yearly_avg as yearly_average;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateYearlyAverageWithMonthlyIds` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAverageWithMonthlyIds` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateYearlyAverageWithMonthlyIds`(
+    IN p_student_id INT,
+    IN p_class_id INT,
+    IN p_semester1_monthly_ids VARCHAR(255),
+    IN p_semester2_monthly_ids VARCHAR(255)
+)
+BEGIN
+    DECLARE semester1_avg DECIMAL(5,2);
+    DECLARE semester2_avg DECIMAL(5,2);
+    -- Semester 1
+    SELECT (
+        IFNULL((
+            SELECT AVG(sms.score)
+            FROM tbl_student_monthly_score sms
+            JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            WHERE sms.student_id = p_student_id AND csms.class_id = p_class_id AND FIND_IN_SET(csms.monthly_id, p_semester1_monthly_ids) AND sms.isDeleted = 0
+        ), 0)
+        +
+        IFNULL((
+            SELECT AVG(sss2.score)
+            FROM tbl_student_semester_score sss2
+            JOIN tbl_semester_exam_subjects ses2 ON sss2.semester_exam_subject_id = ses2.id
+            WHERE sss2.student_id = p_student_id AND ses2.semester_id = 1 AND ses2.class_id = p_class_id AND sss2.isDeleted = 0
+        ), 0)
+    ) / 2 INTO semester1_avg;
+    -- Semester 2
+    SELECT (
+        IFNULL((
+            SELECT AVG(sms.score)
+            FROM tbl_student_monthly_score sms
+            JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            WHERE sms.student_id = p_student_id AND csms.class_id = p_class_id AND FIND_IN_SET(csms.monthly_id, p_semester2_monthly_ids) AND sms.isDeleted = 0
+        ), 0)
+        +
+        IFNULL((
+            SELECT AVG(sss2.score)
+            FROM tbl_student_semester_score sss2
+            JOIN tbl_semester_exam_subjects ses2 ON sss2.semester_exam_subject_id = ses2.id
+            WHERE sss2.student_id = p_student_id AND ses2.semester_id = 2 AND ses2.class_id = p_class_id AND sss2.isDeleted = 0
+        ), 0)
+    ) / 2 INTO semester2_avg;
+    -- Yearly average
+    SELECT
+        p_student_id AS student_id,
+        semester1_avg AS semester_1_average,
+        semester2_avg AS semester_2_average,
+        ROUND((semester1_avg + semester2_avg) / 2, 2) AS yearly_average;
+END */$$
+DELIMITER ;
+
 /* Procedure structure for procedure `GetAvailableMonthsForSemester` */
 
 /*!50003 DROP PROCEDURE IF EXISTS  `GetAvailableMonthsForSemester` */;
@@ -608,6 +740,24 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/*Table structure for table `view_final_semester_averages` */
+
+DROP TABLE IF EXISTS `view_final_semester_averages`;
+
+/*!50001 DROP VIEW IF EXISTS `view_final_semester_averages` */;
+/*!50001 DROP TABLE IF EXISTS `view_final_semester_averages` */;
+
+/*!50001 CREATE TABLE  `view_final_semester_averages`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `semester_name` varchar(255) ,
+ `class_name` varchar(255) ,
+ `grade_name` varchar(255) ,
+ `monthly_average` double ,
+ `semester_exam_average` double ,
+ `final_semester_average` double 
+)*/;
+
 /*Table structure for table `view_student_monthly_rankings` */
 
 DROP TABLE IF EXISTS `view_student_monthly_rankings`;
@@ -627,6 +777,26 @@ DROP TABLE IF EXISTS `view_student_monthly_rankings`;
  `average_score` double ,
  `rank_in_class` bigint(21) ,
  `class_size` bigint(21) 
+)*/;
+
+/*Table structure for table `view_student_monthly_score_report` */
+
+DROP TABLE IF EXISTS `view_student_monthly_score_report`;
+
+/*!50001 DROP VIEW IF EXISTS `view_student_monthly_score_report` */;
+/*!50001 DROP TABLE IF EXISTS `view_student_monthly_score_report` */;
+
+/*!50001 CREATE TABLE  `view_student_monthly_score_report`(
+ `student_monthly_score_id` int(10) unsigned ,
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `grade_name` varchar(255) ,
+ `subject_name` varchar(255) ,
+ `month_name` varchar(255) ,
+ `score` float ,
+ `create_date` timestamp 
 )*/;
 
 /*Table structure for table `view_student_monthly_score_summary` */
@@ -668,6 +838,27 @@ DROP TABLE IF EXISTS `view_student_monthly_summary`;
  `average_score` double 
 )*/;
 
+/*Table structure for table `view_student_semester_report` */
+
+DROP TABLE IF EXISTS `view_student_semester_report`;
+
+/*!50001 DROP VIEW IF EXISTS `view_student_semester_report` */;
+/*!50001 DROP TABLE IF EXISTS `view_student_semester_report` */;
+
+/*!50001 CREATE TABLE  `view_student_semester_report`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `grade_id` int(11) ,
+ `grade_name` varchar(255) ,
+ `semester_id` int(10) unsigned ,
+ `semester_name` varchar(255) ,
+ `monthly_average` double ,
+ `semester_exam_average` double ,
+ `final_semester_average` double 
+)*/;
+
 /*Table structure for table `vstudentmonthlyscorereport` */
 
 DROP TABLE IF EXISTS `vstudentmonthlyscorereport`;
@@ -704,12 +895,26 @@ DROP TABLE IF EXISTS `vstudentmonthlyscorereportv2`;
  `score` float 
 )*/;
 
+/*View structure for view view_final_semester_averages */
+
+/*!50001 DROP TABLE IF EXISTS `view_final_semester_averages` */;
+/*!50001 DROP VIEW IF EXISTS `view_final_semester_averages` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_final_semester_averages` AS select `sss`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`sem`.`semester_name` AS `semester_name`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,(select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `sss`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0) AS `monthly_average`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `sss`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0) AS `semester_exam_average`,((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `sss`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0) + (select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `sss`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0)) / 2 AS `final_semester_average` from ((((((`tbl_student_semester_score` `sss` join `tbl_student_info` `si` on(`sss`.`student_id` = `si`.`student_id`)) join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) join `tbl_classroom` `c` on(`ses`.`class_id` = `c`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_grade` `g` on(`asg`.`grade_id` = `g`.`grade_id`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) where `sss`.`isDeleted` = 0 and `si`.`isDeleted` = 0 and `c`.`isDeleted` = 0 and `sem`.`isDeleted` = 0 and `asg`.`isDeleted` = 0 group by `sss`.`student_id`,`sem`.`semester_id`,`c`.`class_id` */;
+
 /*View structure for view view_student_monthly_rankings */
 
 /*!50001 DROP TABLE IF EXISTS `view_student_monthly_rankings` */;
 /*!50001 DROP VIEW IF EXISTS `view_student_monthly_rankings` */;
 
 /*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_rankings` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`s`.`class_id` AS `class_id`,`s`.`class_name` AS `class_name`,`s`.`monthly_id` AS `monthly_id`,`s`.`month_name` AS `month_name`,`s`.`subjects_count` AS `subjects_count`,`s`.`total_score` AS `total_score`,`s`.`average_score` AS `average_score`,rank() over ( partition by `s`.`class_id`,`s`.`monthly_id` order by `s`.`average_score` desc) AS `rank_in_class`,count(0) over ( partition by `s`.`class_id`,`s`.`monthly_id`) AS `class_size` from `view_student_monthly_summary` `s` */;
+
+/*View structure for view view_student_monthly_score_report */
+
+/*!50001 DROP TABLE IF EXISTS `view_student_monthly_score_report` */;
+/*!50001 DROP VIEW IF EXISTS `view_student_monthly_score_report` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_score_report` AS select `sms`.`student_monthly_score_id` AS `student_monthly_score_id`,`sms`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`csms`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,`sub`.`subject_name` AS `subject_name`,`m`.`month_name` AS `month_name`,`sms`.`score` AS `score`,`sms`.`create_date` AS `create_date` from (((((((`tbl_student_monthly_score` `sms` join `tbl_student_info` `si` on(`sms`.`student_id` = `si`.`student_id`)) join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_classroom` `c` on(`csms`.`class_id` = `c`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_grade` `g` on(`asg`.`grade_id` = `g`.`grade_id`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) where `sms`.`isDeleted` = 0 and `si`.`isDeleted` = 0 and `csms`.`isDeleted` = 0 and `c`.`isDeleted` = 0 and `sub`.`isDeleted` = 0 and `m`.`isDeleted` = 0 */;
 
 /*View structure for view view_student_monthly_score_summary */
 
@@ -724,6 +929,13 @@ DROP TABLE IF EXISTS `vstudentmonthlyscorereportv2`;
 /*!50001 DROP VIEW IF EXISTS `view_student_monthly_summary` */;
 
 /*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_summary` AS select `sms`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`csms`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,count(distinct `asg`.`assign_subject_grade_id`) AS `subjects_count`,sum(`sms`.`score`) AS `total_score`,avg(`sms`.`score`) AS `average_score` from (((((`tbl_student_monthly_score` `sms` join `tbl_student_info` `si` on(`sms`.`student_id` = `si`.`student_id`)) join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_classroom` `c` on(`csms`.`class_id` = `c`.`class_id`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`isDeleted` = 0 group by `sms`.`student_id`,`si`.`student_name`,`c`.`class_id`,`c`.`class_name`,`csms`.`monthly_id`,`m`.`month_name` */;
+
+/*View structure for view view_student_semester_report */
+
+/*!50001 DROP TABLE IF EXISTS `view_student_semester_report` */;
+/*!50001 DROP VIEW IF EXISTS `view_student_semester_report` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_semester_report` AS select `si`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_id` AS `grade_id`,`g`.`grade_name` AS `grade_name`,`sem`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,(select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `monthly_average`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `semester_exam_average`,(ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2 AS `final_semester_average` from ((((((`tbl_student_semester_score` `sss` join `tbl_student_info` `si` on(`sss`.`student_id` = `si`.`student_id`)) join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) join `tbl_classroom` `c` on(`ses`.`class_id` = `c`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_grade` `g` on(`asg`.`grade_id` = `g`.`grade_id`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) where `sss`.`isDeleted` = 0 and `si`.`isDeleted` = 0 and `c`.`isDeleted` = 0 and `sem`.`isDeleted` = 0 and `asg`.`isDeleted` = 0 group by `si`.`student_id`,`c`.`class_id`,`sem`.`semester_id` */;
 
 /*View structure for view vstudentmonthlyscorereport */
 

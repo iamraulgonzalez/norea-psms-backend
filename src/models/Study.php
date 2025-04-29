@@ -243,7 +243,7 @@ class StudyModel {
             $currentStudy = $checkStmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$currentStudy) {
-                // If student is not in current class, no need to update anything
+                error_log("Student $studentId not found in current class $currentClassId");
                 $this->conn->rollBack();
                 return false;
             }
@@ -260,7 +260,7 @@ class StudyModel {
             $targetCheckStmt->execute();
             
             if ($targetCheckStmt->fetch(PDO::FETCH_ASSOC)) {
-                // Student is already in target class
+                error_log("Student $studentId already in target class $newClassId");
                 $this->conn->rollBack();
                 return false;
             }
@@ -273,35 +273,36 @@ class StudyModel {
             $updateSuccess = $updateStmt->execute();
             
             if (!$updateSuccess) {
+                error_log("Failed to update current study status for student $studentId");
                 $this->conn->rollBack();
                 return false;
             }
             
             // Create new study record
-            $currentUser = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1;
             $insertStmt = $this->conn->prepare(
                 "INSERT INTO tbl_study 
-                 (student_id, class_id, year_study_id, enrollment_date, status, create_date, create_by)
-                 VALUES (?, ?, ?, CURRENT_DATE(), 'active', CURRENT_TIMESTAMP(), ?)"
+                 (student_id, class_id, year_study_id, enrollment_date, status, create_date)
+                 VALUES (?, ?, ?, CURRENT_DATE(), 'active', CURRENT_TIMESTAMP())"
             );
             $insertStmt->bindParam(1, $studentId);
             $insertStmt->bindParam(2, $newClassId);
             $insertStmt->bindParam(3, $yearStudyId);
-            $insertStmt->bindParam(4, $currentUser);
             $insertSuccess = $insertStmt->execute();
             
             if (!$insertSuccess) {
+                error_log("Failed to create new study record for student $studentId");
                 $this->conn->rollBack();
                 return false;
             }
             
             $this->conn->commit();
+            error_log("Successfully promoted student $studentId from class $currentClassId to $newClassId");
             return true;
         } catch (Exception $e) {
             if ($this->conn->inTransaction()) {
                 $this->conn->rollBack();
             }
-            error_log("Model Error - promoteStudent: " . $e->getMessage());
+            error_log("Error promoting student $studentId: " . $e->getMessage());
             return false;
         }
     }
@@ -566,44 +567,99 @@ class StudyModel {
     }
 
     public function getStudentSemesterScore($studentId) {
-        // First check if there's an active semester
-        $semesterQuery = "SELECT semester_id, semester_name 
-                         FROM tbl_semester 
-                         WHERE isDeleted = 0 
-                         ORDER BY semester_id DESC 
-                         LIMIT 1";
-        $semesterStmt = $this->conn->prepare($semesterQuery);
-        $semesterStmt->execute();
-        $activeSemester = $semesterStmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // First check if there's an active semester
+            $semesterQuery = "SELECT semester_id, semester_name 
+                             FROM tbl_semester 
+                             WHERE isDeleted = 0 
+                             ORDER BY semester_id DESC 
+                             LIMIT 1";
+            $semesterStmt = $this->conn->prepare($semesterQuery);
+            $semesterStmt->execute();
+            $activeSemester = $semesterStmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$activeSemester) {
-            error_log("No active semester found");
+            if (!$activeSemester) {
+                error_log("No active semester found");
+                return null;
+            }
+
+            // Get the student's current class
+            $classQuery = "SELECT class_id FROM tbl_study 
+                          WHERE student_id = ? AND status = 'active' AND isDeleted = 0 
+                          ORDER BY create_date DESC LIMIT 1";
+            $classStmt = $this->conn->prepare($classQuery);
+            $classStmt->bindParam(1, $studentId);
+            $classStmt->execute();
+            $currentClass = $classStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$currentClass) {
+                error_log("No active class found for student $studentId");
+                return null;
+            }
+
+            // Calculate scores using the same approach as fetchStudentRankingAndAverages
+            $query = "WITH monthly_scores AS (
+                        SELECT 
+                            sms.student_id,
+                            si.student_name,
+                            si.gender,
+                            c.class_name,
+                            g.grade_id,
+                            m.month_name,
+                            ROUND(AVG(sms.score), 2) AS monthly_average,
+                            COUNT(DISTINCT csms.monthly_id) AS months_counted
+                        FROM tbl_student_monthly_score sms
+                        JOIN tbl_student_info si ON sms.student_id = si.student_id
+                        JOIN classroom_subject_monthly_score csms ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                        JOIN tbl_classroom c ON csms.class_id = c.class_id
+                        JOIN tbl_grade g ON c.grade_id = g.grade_id
+                        JOIN tbl_monthly m ON csms.monthly_id = m.monthly_id
+                        WHERE sms.isDeleted = 0
+                        AND sms.student_id = ?
+                        AND csms.class_id = ?
+                        GROUP BY sms.student_id, si.student_name, c.class_name, g.grade_id, m.month_name
+                    ),
+                    semester_scores AS (
+                        SELECT 
+                            student_id,
+                            ROUND(AVG(score), 2) AS semester_exam_score
+                        FROM tbl_student_semester_score
+                        WHERE isDeleted = 0
+                        AND student_id = ?
+                        GROUP BY student_id
+                    )
+                    SELECT 
+                        ms.student_id,
+                        ms.student_name,
+                        ms.class_name,
+                        ROUND(AVG(ms.monthly_average), 2) AS monthly_average,
+                        ROUND(ss.semester_exam_score, 2) AS semester_exam_score,
+                        ROUND((ROUND(AVG(ms.monthly_average), 2) + ROUND(ss.semester_exam_score, 2)) / 2, 2) AS final_average
+                    FROM monthly_scores ms
+                    LEFT JOIN semester_scores ss ON ms.student_id = ss.student_id
+                    GROUP BY ms.student_id, ms.student_name, ms.class_name, ss.semester_exam_score";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $studentId);
+            $stmt->bindParam(2, $currentClass['class_id']);
+            $stmt->bindParam(3, $studentId);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                error_log("Student $studentId scores: " . json_encode($result));
+                return [
+                    'final_semester_average' => $result['final_average'],
+                    'semester_id' => $activeSemester['semester_id']
+                ];
+            } else {
+                error_log("No scores found for student $studentId");
+                return null;
+            }
+        } catch (Exception $e) {
+            error_log("Error calculating semester score for student $studentId: " . $e->getMessage());
             return null;
         }
-
-        // Get student's score for the active semester
-        $query = "SELECT sss.score as final_semester_average, ses.semester_id
-                 FROM tbl_student_semester_score sss
-                 JOIN tbl_semester_exam_subjects ses ON sss.semester_exam_subject_id = ses.id
-                 WHERE sss.student_id = ? 
-                 AND ses.semester_id = ?
-                 AND sss.isDeleted = 0
-                 ORDER BY sss.create_date DESC 
-                 LIMIT 1";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $studentId);
-        $stmt->bindParam(2, $activeSemester['semester_id']);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($result) {
-            error_log("Student $studentId score: " . json_encode($result));
-        } else {
-            error_log("No score found for student $studentId in semester " . $activeSemester['semester_id']);
-        }
-
-        return $result;
     }
 
     public function updateStudyStatus($studyId, $status) {

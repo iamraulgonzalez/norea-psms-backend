@@ -199,5 +199,55 @@ class StudentSemesterScoreController {
                 'message' => 'Server error occurred'
             ]);
         }
-    } 
+    }
+
+    public function calculateYearlyAverage() {
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (!isset($data['student_id']) || !isset($data['class_id'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Missing required parameters: student_id and class_id'
+                ]);
+                return;
+            }
+            
+            $student_id = $data['student_id'];
+            $class_id = $data['class_id'];
+            
+            // Log the input parameters
+            error_log("Calculating yearly average for student_id: $student_id, class_id: $class_id");
+            
+            $result = $this->model->calculateYearlyAverage($student_id, $class_id);
+            
+            if ($result['status'] === 'success') {
+                http_response_code(200);
+                echo json_encode($result);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $result['message'],
+                    'debug_info' => [
+                        'student_id' => $student_id,
+                        'class_id' => $class_id
+                    ]
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error in calculateYearlyAverage controller: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Internal server error',
+                'debug_info' => [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            ]);
+        }
+    }
 }

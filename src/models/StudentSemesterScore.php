@@ -376,4 +376,113 @@ require_once __DIR__ . '/../config/database.php';
                 ];
             }
         }
+
+    public function calculateYearlyAverage($student_id, $class_id) {
+        try {
+            // Get the current year study ID
+            $yearQuery = "SELECT year_study_id FROM tbl_year_study WHERE isDeleted = 0 ORDER BY year_study_id DESC LIMIT 1";
+            $yearStmt = $this->conn->prepare($yearQuery);
+            $yearStmt->execute();
+            $yearResult = $yearStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$yearResult) {
+                error_log("No year study found");
+                return [
+                    'status' => 'error',
+                    'message' => 'No year study found'
+                ];
+            }
+            
+            $year_study_id = $yearResult['year_study_id'];
+            error_log("Found year_study_id: $year_study_id");
+            
+            // Verify student exists
+            $studentQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = :student_id AND isDeleted = 0";
+            $studentStmt = $this->conn->prepare($studentQuery);
+            $studentStmt->bindParam(':student_id', $student_id);
+            $studentStmt->execute();
+            
+            if (!$studentStmt->fetch()) {
+                error_log("Student not found: $student_id");
+                return [
+                    'status' => 'error',
+                    'message' => "Student not found with ID: $student_id"
+                ];
+            }
+            
+            // Verify class exists
+            $classQuery = "SELECT class_id FROM tbl_classroom WHERE class_id = :class_id AND isDeleted = 0";
+            $classStmt = $this->conn->prepare($classQuery);
+            $classStmt->bindParam(':class_id', $class_id);
+            $classStmt->execute();
+            
+            if (!$classStmt->fetch()) {
+                error_log("Class not found: $class_id");
+                return [
+                    'status' => 'error',
+                    'message' => "Class not found with ID: $class_id"
+                ];
+            }
+            
+            $query = "CALL CalculateYearlyAverage(:student_id, :class_id, :year_study_id)";
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindParam(':student_id', $student_id);
+            $stmt->bindParam(':class_id', $class_id);
+            $stmt->bindParam(':year_study_id', $year_study_id);
+            
+            error_log("Executing stored procedure with params: student_id=$student_id, class_id=$class_id, year_study_id=$year_study_id");
+            
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                // Check if we have valid averages
+                $semester1_avg = isset($result['semester1_avg']) ? $result['semester1_avg'] : null;
+                $semester2_avg = isset($result['semester2_avg']) ? $result['semester2_avg'] : null;
+                $yearly_avg = isset($result['yearly_avg']) ? $result['yearly_avg'] : null;
+                
+                // If all averages are null, return an error
+                if ($semester1_avg === null && $semester2_avg === null && $yearly_avg === null) {
+                    error_log("No scores found for student $student_id in class $class_id");
+                    return [
+                        'status' => 'error',
+                        'message' => "No scores found for student $student_id in class $class_id"
+                    ];
+                }
+                
+                error_log("Successfully calculated yearly average for student $student_id");
+                return [
+                    'status' => 'success',
+                    'data' => [
+                        'student_id' => $student_id,
+                        'class_id' => $class_id,
+                        'year_study_id' => $year_study_id,
+                        'semester1_average' => $semester1_avg,
+                        'semester2_average' => $semester2_avg,
+                        'yearly_average' => $yearly_avg
+                    ]
+                ];
+            }
+            
+            error_log("No scores found for student $student_id in class $class_id");
+            return [
+                'status' => 'error',
+                'message' => "No scores found for student $student_id in class $class_id"
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Database error in calculateYearlyAverage: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error: ' . $e->getMessage()
+            ];
+        } catch (Exception $e) {
+            error_log("General error in calculateYearlyAverage: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage()
+            ];
+        }
+    }
     }

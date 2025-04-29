@@ -897,6 +897,10 @@ function route($uri, $method, $req, $res) {
                                 $controller->calculateFinalSemesterAverage($req, $res);
                             }
 
+                            if($method === "POST" && $action === "calculateYearlyAverage"){
+                                $controller->calculateYearlyAverage($req, $res);
+                            }
+
                             if($method === "GET" && $action === "getStudentScoresByClassAndSemester"){
                                 $controller->getStudentScoresByClassAndSemester();
                             }
