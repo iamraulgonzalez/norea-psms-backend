@@ -333,5 +333,35 @@ class User {
             error_log("Database Error in count: " . $e->getMessage());
             throw $e;
         }
-    }  
+    }
+
+    // function for resetting password securely
+    public function resetPassword($userId, $newPassword) {
+        try {
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT); // hash before storing
+            $query = "UPDATE tbl_user SET password = :newPassword WHERE user_id = :userId";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':newPassword', $hashedPassword);
+            $stmt->bindParam(':userId', $userId);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Database Error in resetPassword: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // function for changing password securely
+    public function changePassword($userId, $newPassword) {
+        try {
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT); // hash before storing
+            $query = "UPDATE tbl_user SET password = :newPassword WHERE user_id = :userId";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':newPassword', $hashedPassword);
+            $stmt->bindParam(':userId', $userId);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Database Error in changePassword: " . $e->getMessage());
+            throw $e;
+        }
+}
 }

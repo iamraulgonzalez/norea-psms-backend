@@ -1075,4 +1075,33 @@ class StudentMonthlyScore {
             ];
         }
     }
+
+    public function getStudentMonthlyScoreRecordbyClassIdAndMontlyId ($class_id, $monthly_id) {
+        try {
+            $query = "SELECT * FROM view_student_monthly_score_report 
+            WHERE class_id = :class_id
+            AND monthly_id = :monthly_id
+            AND isDeleted = 0
+            ORDER BY student_name, subject_name";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $class_id);
+            $stmt->bindParam(':monthly_id', $monthly_id);
+            $stmt->execute();
+
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error in getStudentMonthlyScoreRecordbyClassIdAndMontlyId: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
+        }
+    }
 }

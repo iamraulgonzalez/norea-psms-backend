@@ -563,7 +563,7 @@ DELIMITER $$
     IN p_class_id INT
 )
 BEGIN
-    SELECT 
+        SELECT 
         sss.student_id,
         AVG(sss.score) as semester_exam_average,
         COUNT(DISTINCT ses.id) as subjects_counted
@@ -653,6 +653,339 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/* Procedure structure for procedure `CalculateYearlyAverageForClass` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAverageForClass` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateYearlyAverageForClass`(
+    IN p_class_id INT
+)
+BEGIN
+    -- Create temporary table to store results
+    CREATE TEMPORARY TABLE IF NOT EXISTS temp_yearly_averages (
+        student_id INT,
+        class_id INT,
+        semester1_final_avg DECIMAL(5,2),
+        semester2_final_avg DECIMAL(5,2),
+        year_avg DECIMAL(5,2)
+    );
+    -- Get all active students in the class
+    INSERT INTO temp_yearly_averages (student_id, class_id)
+    SELECT s.student_id, p_class_id
+    FROM tbl_student_info s
+    JOIN tbl_study st ON s.student_id = st.student_id
+    WHERE st.class_id = p_class_id 
+      AND st.status = 'active'
+      AND s.isDeleted = 0
+      AND st.isDeleted = 0
+      AND s.student_name IS NOT NULL
+      AND s.student_name <> '';
+    -- Update semester 1 monthly averages (semester 1 months)
+    UPDATE temp_yearly_averages t
+    SET t.semester1_final_avg = (
+        SELECT AVG(sms.score)
+        FROM tbl_student_monthly_score sms
+        JOIN classroom_subject_monthly_score csms
+          ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        JOIN tbl_monthly m
+          ON csms.monthly_id = m.monthly_id
+        WHERE sms.student_id = t.student_id
+          AND csms.class_id = p_class_id
+          AND m.semester_id = 1
+          AND sms.isDeleted = 0
+    );
+    -- Update semester 1 exam averages
+    UPDATE temp_yearly_averages t
+    SET t.semester1_final_avg = (
+        (IFNULL(t.semester1_final_avg, 0) + 
+        IFNULL((
+            SELECT AVG(sss.score)
+            FROM tbl_student_semester_score sss
+            JOIN tbl_semester_exam_subjects ses
+              ON sss.semester_exam_subject_id = ses.id
+            WHERE sss.student_id = t.student_id
+              AND ses.class_id = p_class_id
+              AND ses.semester_id = 1
+              AND sss.isDeleted = 0
+        ), 0)) / 2
+    );
+    -- Update semester 2 monthly averages (semester 2 months)
+    UPDATE temp_yearly_averages t
+    SET t.semester2_final_avg = (
+        SELECT AVG(sms.score)
+        FROM tbl_student_monthly_score sms
+        JOIN classroom_subject_monthly_score csms
+          ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        JOIN tbl_monthly m
+          ON csms.monthly_id = m.monthly_id
+        WHERE sms.student_id = t.student_id
+          AND csms.class_id = p_class_id
+          AND m.semester_id = 2
+          AND sms.isDeleted = 0
+    );
+    -- Update semester 2 exam averages
+    UPDATE temp_yearly_averages t
+    SET t.semester2_final_avg = (
+        (IFNULL(t.semester2_final_avg, 0) + 
+        IFNULL((
+            SELECT AVG(sss.score)
+            FROM tbl_student_semester_score sss
+            JOIN tbl_semester_exam_subjects ses
+              ON sss.semester_exam_subject_id = ses.id
+            WHERE sss.student_id = t.student_id
+              AND ses.class_id = p_class_id
+              AND ses.semester_id = 2
+              AND sss.isDeleted = 0
+        ), 0)) / 2
+    );
+    -- Calculate yearly average
+    UPDATE temp_yearly_averages
+    SET year_avg = (IFNULL(semester1_final_avg, 0) + IFNULL(semester2_final_avg, 0)) / 2;
+    -- Return results with student names
+    SELECT 
+        t.student_id,
+        s.student_name,
+        t.class_id,
+        t.semester1_final_avg,
+        t.semester2_final_avg,
+        t.year_avg
+    FROM temp_yearly_averages t
+    JOIN tbl_student_info s ON t.student_id = s.student_id
+    ORDER BY s.student_name;
+    -- Clean up
+    DROP TEMPORARY TABLE IF EXISTS temp_yearly_averages;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateYearlyAverageForStudent` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAverageForStudent` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateYearlyAverageForStudent`(
+    IN p_student_id INT,
+    IN p_class_id INT
+)
+BEGIN
+    DECLARE semester1_monthly_avg DECIMAL(5,2);
+    DECLARE semester1_exam_avg DECIMAL(5,2);
+    DECLARE semester2_monthly_avg DECIMAL(5,2);
+    DECLARE semester2_exam_avg DECIMAL(5,2);
+    DECLARE semester1_final DECIMAL(5,2);
+    DECLARE semester2_final DECIMAL(5,2);
+    DECLARE year_avg DECIMAL(5,2);
+    -- Semester 1 monthly average
+    SELECT AVG(sms.score) INTO semester1_monthly_avg
+    FROM tbl_student_monthly_score sms
+    JOIN classroom_subject_monthly_score csms
+      ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+        WHERE sms.student_id = p_student_id
+      AND csms.class_id = p_class_id
+      AND csms.monthly_id IN (1) -- months for semester 1
+      AND sms.isDeleted = 0;
+    -- Semester 1 exam average
+    SELECT AVG(sss.score) INTO semester1_exam_avg
+    FROM tbl_student_semester_score sss
+    JOIN tbl_semester_exam_subjects ses
+      ON sss.semester_exam_subject_id = ses.id
+    WHERE sss.student_id = p_student_id
+      AND ses.class_id = p_class_id
+      AND ses.semester_id = 1
+      AND sss.isDeleted = 0;
+    -- Semester 2 monthly average
+    SELECT AVG(sms.score) INTO semester2_monthly_avg
+    FROM tbl_student_monthly_score sms
+    JOIN classroom_subject_monthly_score csms
+      ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+    WHERE sms.student_id = p_student_id
+      AND csms.class_id = p_class_id
+      AND csms.monthly_id IN (3) -- months for semester 2
+      AND sms.isDeleted = 0;
+    -- Semester 2 exam average
+    SELECT AVG(sss.score) INTO semester2_exam_avg
+    FROM tbl_student_semester_score sss
+    JOIN tbl_semester_exam_subjects ses
+      ON sss.semester_exam_subject_id = ses.id
+    WHERE sss.student_id = p_student_id
+      AND ses.class_id = p_class_id
+      AND ses.semester_id = 2
+      AND sss.isDeleted = 0;
+    -- Calculate final averages
+    SET semester1_final = (IFNULL(semester1_monthly_avg,0) + IFNULL(semester1_exam_avg,0)) / 2;
+    SET semester2_final = (IFNULL(semester2_monthly_avg,0) + IFNULL(semester2_exam_avg,0)) / 2;
+    SET year_avg = (semester1_final + semester2_final) / 2;
+    -- Return result
+        SELECT 
+        p_student_id AS student_id,
+        p_class_id AS class_id,
+        semester1_final AS semester1_final_avg,
+        semester2_final AS semester2_final_avg,
+        year_avg AS year_avg;
+END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `CalculateYearlyAveragesForClass` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAveragesForClass` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateYearlyAveragesForClass`(IN p_class_id INT)
+BEGIN
+    SELECT 
+        s.student_id,
+        s.student_name,
+        c.class_id,
+        c.class_name,
+        -- Semester 1 Monthly Average (dynamic)
+        (SELECT AVG(sms1.score)
+         FROM tbl_student_monthly_score sms1
+         JOIN classroom_subject_monthly_score csms1 ON sms1.classroom_subject_monthly_score_id = csms1.classroom_subject_monthly_score_id
+         JOIN tbl_monthly m1 ON csms1.monthly_id = m1.monthly_id
+         WHERE sms1.student_id = s.student_id 
+           AND csms1.class_id = c.class_id
+           AND m1.semester_id = 1
+           AND sms1.isDeleted = 0
+        ) AS semester1_monthly_avg,
+        -- Semester 1 Exam Average
+        (SELECT AVG(sss1.score)
+         FROM tbl_student_semester_score sss1
+         JOIN tbl_semester_exam_subjects ses1 ON sss1.semester_exam_subject_id = ses1.id
+         WHERE sss1.student_id = s.student_id
+           AND ses1.class_id = c.class_id
+           AND ses1.semester_id = 1
+           AND sss1.isDeleted = 0
+        ) AS semester1_exam_avg,
+        -- Semester 2 Monthly Average (dynamic)
+        (SELECT AVG(sms2.score)
+         FROM tbl_student_monthly_score sms2
+         JOIN classroom_subject_monthly_score csms2 ON sms2.classroom_subject_monthly_score_id = csms2.classroom_subject_monthly_score_id
+         JOIN tbl_monthly m2 ON csms2.monthly_id = m2.monthly_id
+         WHERE sms2.student_id = s.student_id
+           AND csms2.class_id = c.class_id
+           AND m2.semester_id = 2
+           AND sms2.isDeleted = 0
+        ) AS semester2_monthly_avg,
+        -- Semester 2 Exam Average
+        (SELECT AVG(sss2.score)
+         FROM tbl_student_semester_score sss2
+         JOIN tbl_semester_exam_subjects ses2 ON sss2.semester_exam_subject_id = ses2.id
+         WHERE sss2.student_id = s.student_id
+           AND ses2.class_id = c.class_id
+           AND ses2.semester_id = 2
+           AND sss2.isDeleted = 0
+        ) AS semester2_exam_avg,
+        -- Final Averages
+        (
+            IFNULL(
+                (SELECT AVG(sms1.score)
+                 FROM tbl_student_monthly_score sms1
+                 JOIN classroom_subject_monthly_score csms1 ON sms1.classroom_subject_monthly_score_id = csms1.classroom_subject_monthly_score_id
+                 JOIN tbl_monthly m1 ON csms1.monthly_id = m1.monthly_id
+                 WHERE sms1.student_id = s.student_id 
+                   AND csms1.class_id = c.class_id
+                   AND m1.semester_id = 1
+                   AND sms1.isDeleted = 0
+                ), 0
+            ) + 
+            IFNULL(
+                (SELECT AVG(sss1.score)
+                 FROM tbl_student_semester_score sss1
+                 JOIN tbl_semester_exam_subjects ses1 ON sss1.semester_exam_subject_id = ses1.id
+                 WHERE sss1.student_id = s.student_id
+                   AND ses1.class_id = c.class_id
+                   AND ses1.semester_id = 1
+                   AND sss1.isDeleted = 0
+                ), 0
+            )
+        ) / 2 AS semester1_final_avg,
+        (
+            IFNULL(
+                (SELECT AVG(sms2.score)
+                 FROM tbl_student_monthly_score sms2
+                 JOIN classroom_subject_monthly_score csms2 ON sms2.classroom_subject_monthly_score_id = csms2.classroom_subject_monthly_score_id
+                 JOIN tbl_monthly m2 ON csms2.monthly_id = m2.monthly_id
+                 WHERE sms2.student_id = s.student_id
+                   AND csms2.class_id = c.class_id
+                   AND m2.semester_id = 2
+                   AND sms2.isDeleted = 0
+                ), 0
+            ) + 
+            IFNULL(
+                (SELECT AVG(sss2.score)
+                 FROM tbl_student_semester_score sss2
+                 JOIN tbl_semester_exam_subjects ses2 ON sss2.semester_exam_subject_id = ses2.id
+                 WHERE sss2.student_id = s.student_id
+                   AND ses2.class_id = c.class_id
+                   AND ses2.semester_id = 2
+                   AND sss2.isDeleted = 0
+                ), 0
+            )
+        ) / 2 AS semester2_final_avg,
+        -- Yearly Average
+        (
+            (
+                IFNULL(
+                    (SELECT AVG(sms1.score)
+                     FROM tbl_student_monthly_score sms1
+                     JOIN classroom_subject_monthly_score csms1 ON sms1.classroom_subject_monthly_score_id = csms1.classroom_subject_monthly_score_id
+                     JOIN tbl_monthly m1 ON csms1.monthly_id = m1.monthly_id
+                     WHERE sms1.student_id = s.student_id 
+                       AND csms1.class_id = c.class_id
+                       AND m1.semester_id = 1
+                       AND sms1.isDeleted = 0
+                    ), 0
+                ) + 
+                IFNULL(
+                    (SELECT AVG(sss1.score)
+                     FROM tbl_student_semester_score sss1
+                     JOIN tbl_semester_exam_subjects ses1 ON sss1.semester_exam_subject_id = ses1.id
+                     WHERE sss1.student_id = s.student_id
+                       AND ses1.class_id = c.class_id
+                       AND ses1.semester_id = 1
+                       AND sss1.isDeleted = 0
+                    ), 0
+                )
+            ) / 2
+            +
+            (
+                IFNULL(
+                    (SELECT AVG(sms2.score)
+                     FROM tbl_student_monthly_score sms2
+                     JOIN classroom_subject_monthly_score csms2 ON sms2.classroom_subject_monthly_score_id = csms2.classroom_subject_monthly_score_id
+                     JOIN tbl_monthly m2 ON csms2.monthly_id = m2.monthly_id
+                     WHERE sms2.student_id = s.student_id
+                       AND csms2.class_id = c.class_id
+                       AND m2.semester_id = 2
+                       AND sms2.isDeleted = 0
+                    ), 0
+                ) + 
+                IFNULL(
+                    (SELECT AVG(sss2.score)
+                     FROM tbl_student_semester_score sss2
+                     JOIN tbl_semester_exam_subjects ses2 ON sss2.semester_exam_subject_id = ses2.id
+                     WHERE sss2.student_id = s.student_id
+                       AND ses2.class_id = c.class_id
+                       AND ses2.semester_id = 2
+                       AND sss2.isDeleted = 0
+                    ), 0
+                )
+            ) / 2
+        ) / 2 AS yearly_avg
+    FROM tbl_student_info s
+    JOIN tbl_study st ON s.student_id = st.student_id
+    JOIN tbl_classroom c ON st.class_id = c.class_id
+    WHERE c.class_id = p_class_id
+      AND st.status = 'active'
+      AND s.isDeleted = 0
+      AND st.isDeleted = 0
+    ORDER BY s.student_name;
+END */$$
+DELIMITER ;
+
 /* Procedure structure for procedure `CalculateYearlyAverageWithMonthlyIds` */
 
 /*!50003 DROP PROCEDURE IF EXISTS  `CalculateYearlyAverageWithMonthlyIds` */;
@@ -701,7 +1034,7 @@ BEGIN
         ), 0)
     ) / 2 INTO semester2_avg;
     -- Yearly average
-    SELECT
+    SELECT 
         p_student_id AS student_id,
         semester1_avg AS semester_1_average,
         semester2_avg AS semester_2_average,

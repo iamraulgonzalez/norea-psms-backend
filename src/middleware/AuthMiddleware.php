@@ -1,64 +1,48 @@
 <?php
 
 require_once __DIR__ . '/../utils/JWT.php';
+require_once __DIR__ . '/../utils/response.php';
 
 class AuthMiddleware {
     public static function verifyAuth() {
         try {
             $headers = getallheaders();
-            error_log("Auth Headers: " . json_encode($headers));
+            $authHeader = $headers['Authorization'] ?? '';
 
-            if (!isset($headers['Authorization']) && !isset($headers['authorization'])) {
-                error_log("No Authorization header found");
+            if (empty($authHeader)) {
                 return false;
             }
 
-            // Handle case-insensitive header
-            $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : $headers['authorization'];
-            $token = str_replace('Bearer ', '', $authHeader);
-            
-            if (empty($token)) {
-                error_log("Empty token");
+            // Extract token from Bearer header
+            if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                $token = $matches[1];
+            } else {
                 return false;
             }
 
-            error_log("Attempting to verify token: " . substr($token, 0, 20) . "...");
-            
+            // Initialize JWT and verify token
             JWT::init();
             $decoded = JWT::verify($token);
-            
-            error_log("Decoded token: " . json_encode($decoded));
-            
-            if (!$decoded || !isset($decoded['user_type'])) {
-                error_log("Invalid token structure or missing user_type");
+
+            if (!$decoded) {
                 return false;
             }
 
-            error_log("Token verified successfully for user: " . json_encode($decoded));
             return $decoded;
-            
         } catch (Exception $e) {
-            error_log("Auth error: " . $e->getMessage());
+            error_log("Error in AuthMiddleware: " . $e->getMessage());
             return false;
         }
     }
 
-    public static function authenticate() {
-        $headers = getallheaders();
-        if (!isset($headers['Authorization'])) {
-            jsonResponse(401, ['error' => 'No token provided']);
-            exit();
+    public static function requireAuth() {
+        $auth = self::verifyAuth();
+        if (!$auth) {
+            return jsonResponse(401, [
+                'status' => 'error',
+                'message' => 'Authentication required'
+            ]);
         }
-
-        $token = str_replace('Bearer ', '', $headers['Authorization']);
-        
-        try {
-            // Verify your JWT token here
-            // You can use Firebase JWT or your preferred JWT library
-            return true;
-        } catch (Exception $e) {
-            jsonResponse(401, ['error' => 'Invalid token']);
-            exit();
-        }
+        return $auth;
     }
 } 

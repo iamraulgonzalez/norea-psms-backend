@@ -15,7 +15,6 @@ class UserController {
 
     public function getAllUsers() {
         try {
-            RoleMiddleware::requirePermission('users.view');
             $users = $this->user->getAllUsers();
             return jsonResponse(200, [
                 'status' => 'success',
@@ -41,7 +40,6 @@ class UserController {
 
     public function getUserById($userId) {
         try {
-            RoleMiddleware::requirePermission('users.view');
             $user = $this->user->fetchById($userId);
             return jsonResponse(200, [
                 'status' => 'success',
@@ -58,7 +56,6 @@ class UserController {
 
     public function updateStatus($userId) {
         try {
-            RoleMiddleware::requirePermission('users.edit');
             $data = json_decode(file_get_contents('php://input'), true);
             if (!isset($data['status'])) {
                 return jsonResponse(400, [
@@ -91,7 +88,6 @@ class UserController {
 
     public function register() {
         try {
-            RoleMiddleware::requirePermission('users.create');
             error_log("Starting registration process");
             
             $data = json_decode(file_get_contents('php://input'), true);
@@ -169,38 +165,7 @@ class UserController {
             JWT::init();
             $token = JWT::encode($user);
 
-            // Add permissions to user data
-            $rolePermissions = [
-                'super_admin' => ['*'],
-                'admin' => [
-                    'users.*',
-                    'students.*',
-                    'teachers.*',
-                    'subjects.*',
-                    'grades.*',
-                    'classrooms.*',
-                    'reports.*',
-                ],
-                'teacher' => [
-                    'students.view',
-                    'students.edit',
-                    'subjects.view',
-                    'grades.view',
-                    'classrooms.view',
-                    'reports.view',
-                ],
-                'user' => [
-                    'students.view',
-                    'students.edit',
-                    'subjects.view',
-                    'grades.view',
-                    'classrooms.view',
-                    'reports.view',
-                ],
-            ];
-
-            $user['permissions'] = $rolePermissions[$user['user_type']] ?? [];
-
+           
             return jsonResponse(200, [
                 'status' => 'success',
                 'token' => $token,
@@ -383,4 +348,31 @@ class UserController {
             ]);
         }
     }
+
+    public function resetPassword($userId, $newPassword) {
+        try {
+            $result = $this->user->resetPassword($userId, $newPassword);
+        }
+        catch (Exception $e) {
+            error_log("Error in resetPassword: " . $e->getMessage());
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to reset password'
+            ]);
+        }
+    }
+
+    public function changePassword($userId, $newPassword) {
+        try {
+            $result = $this->user->changePassword($userId, $newPassword);
+        }
+        catch (Exception $e) {
+            error_log("Error in changePassword: " . $e->getMessage());
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to change password'
+            ]);
+        }
+    }
+
 }

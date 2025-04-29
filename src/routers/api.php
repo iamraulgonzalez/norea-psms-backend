@@ -31,7 +31,7 @@ function route($uri, $method, $req, $res) {
 
     // Verify token route
     if ($method === 'GET' && $uri === '/users/verify-token') {
-        AuthMiddleware::authenticate();
+        AuthMiddleware::requireAuth();
         $controller = new UserController();
         return $controller->verifyToken();
     }
@@ -148,13 +148,6 @@ function route($uri, $method, $req, $res) {
                 
                 if ($method === 'GET' && $action === 'getAllTeachers') {
                     $controller->getAllTeachers();
-                }
-                if ($method === 'GET' && $action === 'getTeachersByClassId') {
-                    if (isset($uriParts[2])) {
-                        $controller->getTeachersByClassId($uriParts[2]);
-                    } else {
-                        echo json_encode(['message' => 'Class ID not provided']);
-                    }
                 }
                 if ($method === 'POST' && $action === 'AddTeacher') {
                     $data = json_decode(file_get_contents('php://input'), true);
@@ -511,6 +504,14 @@ function route($uri, $method, $req, $res) {
                                     $controller->addMonthlyScore($data);
                                 }
                             }
+
+                            if ($method === "GET" && $action === "getStudentMonthlyScoreReport") {
+                                if (isset($uriParts[2]) && isset($uriParts[3])) {
+                                    $controller->getStudentMonthlyScoreReport($uriParts[2], $uriParts[3]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID and Monthly ID are required']);
+                                }
+                            }
                             
                             if ($method === "PUT" && $action === "updateMonthlyScore") {
                                 if (isset($uriParts[2])) {
@@ -685,6 +686,24 @@ function route($uri, $method, $req, $res) {
                             if ($method === 'GET' && $action === 'count') {
                                 $controller->count();
                                 return;
+                            }
+
+                            if ($method === 'POST' && $action === 'resetPassword') {
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->resetPassword($data['userId'], $data['newPassword']);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
+                            }
+
+                            if ($method === 'POST' && $action === 'changePassword') {
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->changePassword($data['userId'], $data['newPassword']);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
                             }
 
                             if($method === 'GET' && $action === 'searchUser' && isset($uriParts[2])){

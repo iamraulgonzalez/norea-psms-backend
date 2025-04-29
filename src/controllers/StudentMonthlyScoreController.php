@@ -254,8 +254,6 @@ class StudentMonthlyScoreController {
         }
     }
 
- 
-
     public function getStudentMonthlyScoreSummary() {
         try {
             $filters = [];
@@ -282,6 +280,22 @@ class StudentMonthlyScoreController {
             echo jsonResponse(500, [
                 'status' => 'error',
                 'message' => 'An error occurred while fetching student score summaries'
+            ]);
+        }
+    }
+
+    public function getStudentMonthlyScoreReport($class_id, $monthly_id) {
+        try {
+            $result = $this->monthlyScore->getStudentMonthlyScoreRecordbyClassIdAndMontlyId($class_id, $monthly_id);
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getStudentMonthlyScoreReport: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
             ]);
         }
     }
