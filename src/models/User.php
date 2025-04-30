@@ -310,8 +310,13 @@ class User {
 
     public function getUser() {
         try {
-
-            $query = "SELECT * FROM tbl_user WHERE user_type = 'user' AND isDeleted = 0 AND status = 1";
+            $query = "SELECT
+                u.user_id, 
+                u.full_name, 
+                u.user_name
+            FROM tbl_user u
+            LEFT JOIN tbl_classroom c ON u.user_id = c.teacher_id
+            WHERE u.user_type = 'user' AND u.isDeleted = 0 AND c.teacher_id IS NULL;";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             

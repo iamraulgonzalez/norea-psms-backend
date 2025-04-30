@@ -485,4 +485,60 @@ require_once __DIR__ . '/../config/database.php';
                 ];
             }
         }
+
+        public function getStudentSemesterScoreReport($class_id, $semester_id) {
+            try {
+                $query = "SELECT * FROM view_final_semester_averages 
+                          WHERE class_id = :class_id
+                          AND semester_id = :semester_id
+                          ORDER BY student_name, subject_code";
+
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':class_id', $class_id);
+                $stmt->bindParam(':semester_id', $semester_id);
+                $stmt->execute();
+                
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Group by student
+                $groupedResults = [];
+                foreach ($results as $row) {
+                    $studentId = $row['student_id'];
+                    if (!isset($groupedResults[$studentId])) {
+                        $groupedResults[$studentId] = [
+                            'student_id' => $row['student_id'],
+                            'student_name' => $row['student_name'],
+                            'gender' => $row['gender'],
+                            'class_id' => $row['class_id'],
+                            'class_name' => $row['class_name'],
+                            'grade_name' => $row['grade_name'],
+                            'semester_id' => $row['semester_id'],
+                            'semester_name' => $row['semester_name'],
+                            'monthly_average' => $row['monthly_average'],
+                            'semester_exam_average' => $row['semester_exam_average'],
+                            'final_semester_average' => $row['final_semester_average'],
+                            'subjects' => []
+                        ];
+                    }
+
+                    $groupedResults[$studentId]['subjects'][] = [
+                        'subject_code' => $row['subject_code'],
+                        'subject_name' => $row['subject_name'],
+                        'score' => isset($row['subject_score']) ? $row['subject_score'] : null
+                    ];
+                }
+
+                return [
+                    'status' => 'success',
+                    'data' => array_values($groupedResults)
+                ];
+            } catch (PDOException $e) {
+                error_log("Error in getStudentSemesterScoreReport: " . $e->getMessage());
+                return [
+                    'status' => 'error',
+                    'message' => 'Database error occurred'
+                ];
+            }
+        }
+        
     }

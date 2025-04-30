@@ -916,6 +916,14 @@ function route($uri, $method, $req, $res) {
                                 $controller->calculateFinalSemesterAverage($req, $res);
                             }
 
+                            if($method === "GET" && $action === "getStudentSemesterScoreReport"){
+                                if (isset($uriParts[2]) && isset($uriParts[3])) {
+                                    $controller->getStudentSemesterScoreReport($uriParts[2], $uriParts[3]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID and Semester ID are required']);
+                                }
+                            }
+
                             if($method === "POST" && $action === "calculateYearlyAverage"){
                                 $controller->calculateYearlyAverage($req, $res);
                             }

@@ -250,4 +250,20 @@ class StudentSemesterScoreController {
             ]);
         }
     }
+
+    public function getStudentSemesterScoreReport($class_id, $semester_id) {
+        try {
+            $result = $this->model->getStudentSemesterScoreReport($class_id, $semester_id);
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getStudentSemesterScoreReport: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
 }
