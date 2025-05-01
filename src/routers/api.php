@@ -920,6 +920,22 @@ function route($uri, $method, $req, $res) {
                                 $controller->calculateFinalSemesterAverage($req, $res);
                             }
 
+                            if($method === "POST" && $action === "getYearlyAverage"){
+                                if (isset($uriParts[2])) {
+                                    $controller->getYearlyAverage($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID is required']);
+                                }
+                            }
+
+                            if($method === "POST" && $action === "getYearlyAverageByGrade"){
+                                if (isset($uriParts[2])) {
+                                    $controller->getYearlyAverageByGrade($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Grade ID is required']);
+                                }
+                            }
+
                             if($method === "GET" && $action === "getStudentSemesterScoreReport"){
                                 if (isset($uriParts[2]) && isset($uriParts[3])) {
                                     $controller->getStudentSemesterScoreReport($uriParts[2], $uriParts[3]);

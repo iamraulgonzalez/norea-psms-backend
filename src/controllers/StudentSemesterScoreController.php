@@ -266,4 +266,36 @@ class StudentSemesterScoreController {
             ]);
         }
     }
+
+    public function getYearlyAverage($class_id) {
+        try {
+            $result = $this->model->getYearlyAverage($class_id);
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getYearlyAverage: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
+
+    public function getYearlyAverageByGrade($grade_id) {
+        try {
+            $result = $this->model->getYearlyAverageByGrade($grade_id);
+            echo jsonResponse(
+                $result['status'] === 'success' ? 200 : 404,
+                $result
+            );
+        } catch (Exception $e) {
+            error_log("Error in getYearlyAverageByGrade: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
+        }
+    }
 }

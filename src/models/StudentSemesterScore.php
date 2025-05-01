@@ -540,5 +540,51 @@ require_once __DIR__ . '/../config/database.php';
                 ];
             }
         }
-        
+
+        public function getYearlyAverage($class_id) {
+            try {
+                $query = "CALL GetYearlyAverageForClass(:class_id)";
+
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':class_id', $class_id);
+                $stmt->execute();
+                
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                return [
+                    'status' => 'success',
+                    'data' => $results
+                ];
+
+            } catch (PDOException $e) {
+                error_log("Error in getYearlyAverage: " . $e->getMessage());
+                return [
+                    'status' => 'error',
+                    'message' => 'Database error occurred'
+                ];
+            }
+        }
+
+        public function getYearlyAverageByGrade($grade_id) {
+            try {
+                $query = "CALL GetStudentYearlyAveragesWithRanking(:grade_id)";
+
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':grade_id', $grade_id);
+                $stmt->execute();
+
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                return [
+                    'status' => 'success',
+                    'data' => $results
+                ];
+            } catch (PDOException $e) {
+                error_log("Error in getYearlyAverageByGrade: " . $e->getMessage());
+                return [
+                    'status' => 'error',
+                    'message' => 'Database error occurred'
+                ];
+            }
+        }
     }
