@@ -712,7 +712,11 @@ function route($uri, $method, $req, $res) {
                             }
 
                             if($method === 'GET' && $action === 'getUser'){
-                                $controller->getUser();
+                                if(isset($uriParts[2])){
+                                    $controller->getUser($uriParts[2]);
+                                }else{
+                                    $controller->getUser(null);
+                                }
                                 return;
                             }
 

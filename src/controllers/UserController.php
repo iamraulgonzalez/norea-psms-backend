@@ -317,9 +317,9 @@ class UserController {
         }
     }
 
-    public function getUser() {
+    public function getUser($user_id) {
         try {
-            $users = $this->user->getUser();
+            $users = $this->user->getUser($user_id);
             return jsonResponse(200, [
                 'status' => 'success',
                 'data' => $users

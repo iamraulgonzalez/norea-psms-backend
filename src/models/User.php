@@ -308,16 +308,23 @@ class User {
         }
     }
 
-    public function getUser() {
+    public function getUser($user_id) {
         try {
+            
             $query = "SELECT
                 u.user_id, 
-                u.full_name, 
+                u.full_name,
                 u.user_name
             FROM tbl_user u
             LEFT JOIN tbl_classroom c ON u.user_id = c.teacher_id
-            WHERE u.user_type = 'user' AND u.isDeleted = 0 AND c.teacher_id IS NULL;";
+            WHERE (u.user_type = 'user' AND u.isDeleted = 0 AND c.teacher_id IS NULL)";
+            if($user_id != null){
+                $query .= " OR u.user_id = :user_id";
+            }
             $stmt = $this->conn->prepare($query);
+            if($user_id != null){
+                $stmt->bindParam(':user_id', $user_id);
+            }
             $stmt->execute();
             
             $user = $stmt->fetchAll(PDO::FETCH_ASSOC);
