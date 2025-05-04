@@ -547,6 +547,62 @@ class StudyController {
             ]);
         }
     }
-    
+
+    public function getTopFiveMonthlyStudent($classId, $monthly_id) {
+        try {
+            $result = $this->studyModel->getTopFiveMonthlyStudent($classId, $monthly_id);
+            
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+
+            echo jsonResponse(200, $result);
+        } catch (Exception $e) {
+            error_log("Error in getTopFiveMonthlyStudent: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 monthly students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getTopFiveSemesterStudent($classId, $semester_id) {
+        try {
+            $result = $this->studyModel->getTopFiveSemesterStudent($classId, $semester_id);
+            
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+
+            echo jsonResponse(200, $result);
+        } catch (Exception $e) {
+            error_log("Error in getTopFiveSemesterStudent: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 semester students: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getTopFiveYearlyStudent($classId) {
+        try {
+            $result = $this->studyModel->getTopFiveYearlyStudent($classId);
+            
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+
+            echo jsonResponse(200, $result);
+        } catch (Exception $e) {
+            error_log("Error in getTopFiveYearlyStudent: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 yearly students: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 

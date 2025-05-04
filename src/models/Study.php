@@ -324,8 +324,7 @@ class StudyModel {
         $stmt->execute();
         
         return $stmt;
-    }
-    
+    }    
     public function addMultipleStudies($data) {
         try {
             // Begin transaction
@@ -686,5 +685,86 @@ class StudyModel {
         
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTopFiveMonthlyStudent($classId, $monthly_id) {
+        try {
+            $query = "SELECT * FROM vw_top_monthly_rankings
+                      WHERE class_id = :class_id
+                      AND monthly_id = :monthly_id
+                      LIMIT 5";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $classId, PDO::PARAM_INT);
+            $stmt->bindParam(':monthly_id', $monthly_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getTopFiveMonthlyStudent: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 monthly students: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function getTopFiveSemesterStudent($classId, $semester_id) {
+        try {
+            $query = "SELECT * FROM vw_top_semester_rankings
+                      WHERE class_id = :class_id
+                      AND semester_id = :semester_id
+                      ORDER BY semester_avg DESC
+                      LIMIT 5";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $classId, PDO::PARAM_INT);
+            $stmt->bindParam(':semester_id', $semester_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getTopFiveSemesterStudent: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 semester students: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function getTopFiveYearlyStudent($classId) {
+        try {
+            $query = "SELECT * FROM vw_top_yearly_rankings
+                      WHERE class_id = :class_id
+                      ORDER BY yearly_avg DESC
+                      LIMIT 5";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $classId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getTopFiveYearlyStudent: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch top 5 yearly students: ' . $e->getMessage()
+            ];
+        }
     }
 }

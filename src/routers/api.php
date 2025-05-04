@@ -989,6 +989,31 @@ function route($uri, $method, $req, $res) {
                                 }
                             }
 
+                            if ($method === "GET" && $action === "getTopFiveMonthlyStudent") {
+                                if (isset($uriParts[2]) && isset($uriParts[3])) {
+                                    $controller->getTopFiveMonthlyStudent($uriParts[2], $uriParts[3]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID and Monthly ID not provided']);
+                                }
+                            }
+
+                            if ($method === "GET" && $action === "getTopFiveSemesterStudent") {
+                                if (isset($uriParts[2]) && isset($uriParts[3])) {
+                                    $controller->getTopFiveSemesterStudent($uriParts[2], $uriParts[3]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID and Semester ID not provided']);
+                                }
+                            }
+
+                            if ($method === "GET" && $action === "getTopFiveYearlyStudent") {
+                                if (isset($uriParts[2])) {
+                                    $controller->getTopFiveYearlyStudent($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Class ID not provided']);
+                                }
+                            }
+                            
+
                             if ($method === "GET" && $action === "getStudentsByGradeIdWithHighScores") {
                                 if (isset($uriParts[2])) {
                                     $controller->getStudentRankingsByGradeId($uriParts[2]);
