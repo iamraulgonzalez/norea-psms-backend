@@ -25,6 +25,7 @@ class UserController {
                         'full_name' => $user['full_name'],
                         'phone' => $user['phone'],
                         'user_type' => $user['user_type'],
+                        'created_date' => $user['created_date'],
                         'status' => $user['status']
                     ];
                 }, $users)
@@ -349,22 +350,67 @@ class UserController {
         }
     }
 
-    public function resetPassword($userId, $newPassword) {
-        try {
+    public function resetPassword($userId, $newPassword){
+        try{
+            // Validate input
+            if (empty($userId) || empty($newPassword)) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'អត្តលេខអ្នកប្រើប្រាស់ និងពាក្យសម្ងាត់ថ្មីត្រូវការ'
+                ]);
+            }
+
             $result = $this->user->resetPassword($userId, $newPassword);
+            if (isset($result['error'])) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => $result['error']
+                ]);
+            }
+
+            if (isset($result['success'])) {
+                return jsonResponse(200, [
+                    'status' => 'success',
+                    'message' => $result['success']
+                ]);
+            }
+
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to change password'
+            ]);
         }
         catch (Exception $e) {
             error_log("Error in resetPassword: " . $e->getMessage());
             return jsonResponse(500, [
                 'status' => 'error',
-                'message' => 'Failed to reset password'
+                'message' => 'Failed to change password'
             ]);
         }
     }
 
-    public function changePassword($userId, $newPassword) {
+    public function changePassword($userId, $oldPassword, $newPassword) {
         try {
-            $result = $this->user->changePassword($userId, $newPassword);
+            $result = $this->user->changePassword($userId, $oldPassword, $newPassword);
+            
+            if (isset($result['error'])) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => $result['error']
+                ]);
+            }
+
+            if (isset($result['success'])) {
+                return jsonResponse(200, [
+                    'status' => 'success',
+                    'message' => $result['success']
+                ]);
+            }
+
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to change password'
+            ]);
         }
         catch (Exception $e) {
             error_log("Error in changePassword: " . $e->getMessage());
@@ -374,5 +420,4 @@ class UserController {
             ]);
         }
     }
-
 }

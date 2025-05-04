@@ -767,4 +767,23 @@ class StudyModel {
             ];
         }
     }
+
+    public function getStudentYearlyRank($studentId) {
+        try {
+            $query = "SELECT * FROM vw_top_5_students
+                      WHERE student_id = :student_id
+                      ORDER BY yearly_avg DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':student_id', $studentId, PDO::PARAM_INT);
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $results;
+        } catch (PDOException $e) {
+            error_log("Error in getStudentYearlyRank: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Failed to fetch student yearly rank: ' . $e->getMessage()
+            ];
+        }
+    }
 }

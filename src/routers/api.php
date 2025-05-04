@@ -691,8 +691,22 @@ function route($uri, $method, $req, $res) {
                             if ($method === 'POST' && $action === 'resetPassword') {
                                 $data = json_decode(file_get_contents('php://input'), true);
                                 if($data){
-                                    $controller->resetPassword($data['userId'], $data['newPassword']);
-                                }else{
+                                    // Handle both newPassword and NewPassword cases
+                                    $newPassword = isset($data['newPassword']) ? $data['newPassword'] : 
+                                                 (isset($data['NewPassword']) ? $data['NewPassword'] : null);
+                                    $userId = isset($data['userId']) ? $data['userId'] : 
+                                             (isset($data['user_id']) ? $data['user_id'] : null);
+                                    
+                                    if (!$userId || !$newPassword) {
+                                        echo json_encode([
+                                            'status' => 'error',
+                                            'message' => 'Missing required fields'
+                                        ]);
+                                        return;
+                                    }
+                                    
+                                    $controller->resetPassword($userId, $newPassword);
+                                } else {
                                     echo json_encode(['message' => 'Invalid input data']);
                                 }
                             }
@@ -700,7 +714,7 @@ function route($uri, $method, $req, $res) {
                             if ($method === 'POST' && $action === 'changePassword') {
                                 $data = json_decode(file_get_contents('php://input'), true);
                                 if($data){
-                                    $controller->changePassword($data['userId'], $data['newPassword']);
+                                    $controller->changePassword($data['userId'], $data['oldPassword'], $data['newPassword']);
                                 }else{
                                     echo json_encode(['message' => 'Invalid input data']);
                                 }

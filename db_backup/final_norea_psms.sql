@@ -2,7 +2,8 @@
 SQLyog Enterprise - MySQL GUI v8.18 
 MySQL - 5.5.5-10.4.32-MariaDB : Database - norea_psms
 *********************************************************************
-*/
+*/
+
 
 /*!40101 SET NAMES utf8 */;
 
@@ -338,11 +339,11 @@ CREATE TABLE `tbl_user` (
   `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_user` */
 
-insert  into `tbl_user`(`user_id`,`full_name`,`user_name`,`password`,`phone`,`user_type`,`status`,`created_date`,`isDeleted`) values (1,'ពៅ សំ','khmersr','$2y$10$LljfIoNdd4ua088RMl9NnOowB8a.ljbgQd6wD.hBX0jnNNfiGXE1q','098582828','admin',1,'0000-00-00 00:00:00',0),(2,'Norea PMS','admin_norea','$2y$10$1Ow1S23GKdkv1uR5ZS.seOO0w0.t4AMkZyOmJm6I3lmnMOsyVLaQa','0123456789','super_admin',1,'2025-02-02 11:41:44',0),(3,'នី ឡេនីន','lenin','$2y$10$F05Y.0ET3h7BBJHwmqPyuuu7nyhKLnmwtAEhyyIb7BlLibt.Bt04S','054359273','user',1,'2025-02-02 11:42:01',0),(4,'ផល សុផាត','sophat','$2y$10$y7fU6kwX40R/wYZUu9zrNe5fFQ1eQKNn4g0M/R8AKpwo6eiQpl/YO','0123456','user',1,'2025-02-11 23:15:10',0),(5,'ឃុត ទីណា','tina','$2y$10$yegGusbbXzg0EQocY4SoCeFVncn31a1WzcDGaPVZ4nbFEfw6KVohK','099887766','user',1,'2025-04-06 15:08:14',0),(6,'បោយ លីន','test','$2y$10$tkvDTFUzRI7ei3fFYEb3hOEJu2YMehkVoXemeTuRSMGVWJMl4r3Y2','0123456','user',1,'2025-04-30 21:58:17',0),(7,'bhhhh','hhhhh','$2y$10$p5IUQGhqaVG5bu8EEYH3ROdk03XREOBENoXc1/9SIjjifLZzFGqFi','0001012','user',1,'2025-05-01 10:32:24',0);
+insert  into `tbl_user`(`user_id`,`full_name`,`user_name`,`password`,`phone`,`user_type`,`status`,`created_date`,`isDeleted`) values (1,'ពៅ សំ','khmersr','$2y$10$Q.VLgo/R..2KsmPCie8oMe1PwiQZoix5EQB6a8A3TyUINt4uPiOf2','098582828','admin',1,'2025-02-02 11:41:40',0),(2,'Norea PMS','admin_norea','$2y$10$0BlKYh8a5PqSZBtTVbAASOnBhEdrxj4gnQHPU1u.sD1HlVamaqCxq','0123456789','super_admin',1,'2025-02-02 11:41:44',0),(3,'នី ឡេនីន','lenin','$2y$10$2OCIICvBQ6bkOBklqc7ZXuE2hu.o441OMA.m5o8jzUPPVJYOyrBL6','054359273','user',1,'2025-02-02 11:42:01',0),(4,'ផល សុផាត','sophat','$2y$10$y7fU6kwX40R/wYZUu9zrNe5fFQ1eQKNn4g0M/R8AKpwo6eiQpl/YO','0123456','user',1,'2025-02-11 23:15:10',0),(5,'ឃុត ទីណា','tina','$2y$10$yegGusbbXzg0EQocY4SoCeFVncn31a1WzcDGaPVZ4nbFEfw6KVohK','099887766','user',1,'2025-04-06 15:08:14',0),(6,'បោយ លីន','test','$2y$10$tkvDTFUzRI7ei3fFYEb3hOEJu2YMehkVoXemeTuRSMGVWJMl4r3Y2','0123456','user',1,'2025-04-30 21:58:17',0),(7,'អ៊ុំ វ៉ាន់ច័ន្ទ','hhhhh','$2y$10$p5IUQGhqaVG5bu8EEYH3ROdk03XREOBENoXc1/9SIjjifLZzFGqFi','092783456','user',1,'2025-05-01 10:32:24',0),(8,'ពៅ សំ','hhbb','$2y$10$sdWAXhwIr/eqZPPUQyEmX.ghXKQYbDhDTem3F41l898Qa/w4wNTg2','0123456','user',1,'2025-05-04 21:43:49',0);
 
 /*Table structure for table `tbl_year_study` */
 
@@ -1267,7 +1268,7 @@ BEGIN
                 WHEN FIND_IN_SET(csms.monthly_id, ses1.monthly_ids) THEN sms.score 
                 ELSE NULL 
             END), 0) +
-            IFNULL(AVG(CASE 
+            IFNULL(AVG(CASE
                 WHEN ses.semester_id = 1 THEN sss.score 
                 ELSE NULL 
             END), 0)
@@ -1667,6 +1668,24 @@ DROP TABLE IF EXISTS `vw_student_semester_scores_with_averages`;
  `yearly_avg` double(19,2) 
 )*/;
 
+/*Table structure for table `vw_top_5_students` */
+
+DROP TABLE IF EXISTS `vw_top_5_students`;
+
+/*!50001 DROP VIEW IF EXISTS `vw_top_5_students` */;
+/*!50001 DROP TABLE IF EXISTS `vw_top_5_students` */;
+
+/*!50001 CREATE TABLE  `vw_top_5_students`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `grade_id` int(11) ,
+ `grade_name` varchar(255) ,
+ `yearly_avg` double(19,2) ,
+ `yearly_rank` bigint(21) 
+)*/;
+
 /*Table structure for table `vw_top_monthly_rankings` */
 
 DROP TABLE IF EXISTS `vw_top_monthly_rankings`;
@@ -1779,6 +1798,13 @@ DROP TABLE IF EXISTS `vw_top_semester_rankings`;
 /*!50001 DROP VIEW IF EXISTS `vw_student_semester_scores_with_averages` */;
 
 /*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_student_semester_scores_with_averages` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,`sem`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,`sub`.`subject_name` AS `subject_name`,`sub`.`subject_code` AS `subject_code`,`asg`.`assign_subject_grade_id` AS `assign_subject_grade_id`,coalesce(`sss`.`student_semester_score_id`,NULL) AS `student_semester_score_id`,coalesce(`sss`.`score`,NULL) AS `score`,`sss`.`create_date` AS `create_date`,(select avg(`sss1`.`score`) from (`tbl_student_semester_score` `sss1` join `tbl_semester_exam_subjects` `ses1` on(`sss1`.`semester_exam_subject_id` = `ses1`.`id`)) where `sss1`.`student_id` = `s`.`student_id` and `ses1`.`semester_id` = 1 and `ses1`.`class_id` = `c`.`class_id` and `sss1`.`isDeleted` = 0 and `ses1`.`isDeleted` = 0) AS `semester1_avg`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `s`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `semester2_avg`,(select round((ifnull((select avg(`sss1`.`score`) from (`tbl_student_semester_score` `sss1` join `tbl_semester_exam_subjects` `ses1` on(`sss1`.`semester_exam_subject_id` = `ses1`.`id`)) where `sss1`.`student_id` = `s`.`student_id` and `ses1`.`semester_id` = 1 and `ses1`.`class_id` = `c`.`class_id` and `sss1`.`isDeleted` = 0 and `ses1`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `s`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2,2)) AS `yearly_avg` from ((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) join `tbl_semester_exam_subjects` `ses` on(`c`.`class_id` = `ses`.`class_id` and `ses`.`isDeleted` = 0)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id` and `sss`.`semester_exam_subject_id` = `ses`.`id` and `sss`.`isDeleted` = 0)) where `s`.`isDeleted` = 0 order by `s`.`student_name`,`sub`.`subject_name` */;
+
+/*View structure for view vw_top_5_students */
+
+/*!50001 DROP TABLE IF EXISTS `vw_top_5_students` */;
+/*!50001 DROP VIEW IF EXISTS `vw_top_5_students` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_5_students` AS with StudentRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_id` AS `grade_id`,`g`.`grade_name` AS `grade_name`,round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) AS `yearly_avg`,dense_rank() over ( partition by `c`.`class_id` order by round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) desc) AS `yearly_rank` from (((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id`)) left join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id`)) left join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) left join `tbl_semester_exam_subjects` `ses1` on(`ses1`.`class_id` = `c`.`class_id` and `ses1`.`semester_id` = 1)) left join `tbl_semester_exam_subjects` `ses2` on(`ses2`.`class_id` = `c`.`class_id` and `ses2`.`semester_id` = 2)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sms`.`isDeleted` = 0 or `sms`.`isDeleted` is null) and (`csms`.`isDeleted` = 0 or `csms`.`isDeleted` is null) and (`sss`.`isDeleted` = 0 or `sss`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`g`.`grade_id`,`g`.`grade_name`)select `studentrankings`.`student_id` AS `student_id`,`studentrankings`.`student_name` AS `student_name`,`studentrankings`.`class_id` AS `class_id`,`studentrankings`.`class_name` AS `class_name`,`studentrankings`.`grade_id` AS `grade_id`,`studentrankings`.`grade_name` AS `grade_name`,`studentrankings`.`yearly_avg` AS `yearly_avg`,`studentrankings`.`yearly_rank` AS `yearly_rank` from `studentrankings` where `studentrankings`.`yearly_rank` <= 5 order by `studentrankings`.`class_id`,`studentrankings`.`yearly_rank` */;
 
 /*View structure for view vw_top_monthly_rankings */
 

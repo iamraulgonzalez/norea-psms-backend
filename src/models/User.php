@@ -350,30 +350,83 @@ class User {
     // function for resetting password securely
     public function resetPassword($userId, $newPassword) {
         try {
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT); // hash before storing
+            // Validate input
+            if (empty($newPassword)) {
+                return ["error" => "ពាក្យសម្ងាត់ថ្មីមិនអាចទទេបានទេ"];
+            }
+
+            // Check if user exists
+            $checkUser = "SELECT user_id FROM tbl_user WHERE user_id = :userId AND isDeleted = 0";
+            $stmt = $this->conn->prepare($checkUser);
+            $stmt->bindParam(':userId', $userId);
+            $stmt->execute();
+            
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                return ["error" => "មិនមានអ្នកប្រើប្រាស់នេះទេ។"];
+            }
+
+            // Hash the new password
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            
+            // Update the password
             $query = "UPDATE tbl_user SET password = :newPassword WHERE user_id = :userId";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':newPassword', $hashedPassword);
             $stmt->bindParam(':userId', $userId);
-            return $stmt->execute();
+    
+            if ($stmt->execute()) {
+                return ["success" => "ពាក្យសម្ងាត់ត្រូវបានកំណត់ឡើងវិញជោគជ័យ។"];
+            } else {
+                return ["error" => "មិនអាចកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ។"];
+            }
         } catch (PDOException $e) {
             error_log("Database Error in resetPassword: " . $e->getMessage());
-            throw $e;
+            return ["error" => "មានបញ្ហាជាមួយមូលដ្ឋានទិន្នន័យ។"];
         }
     }
-
+    
     // function for changing password securely
-    public function changePassword($userId, $newPassword) {
+    public function changePassword($userId, $oldPassword, $newPassword) {
         try {
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT); // hash before storing
+            // Check if user exists and get their current password
+            $query = "SELECT password FROM tbl_user WHERE user_id = :userId AND isDeleted = 0 AND status = 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':userId', $userId);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if (!$user) {
+                return ["error" => "មិនមានអ្នកប្រើប្រាស់នេះទេ។"];
+            }
+    
+            // Verify old password - compare with stored hashed password
+            if (!password_verify($oldPassword, $user['password'])) {
+                error_log("Password verification failed for user ID: " . $userId);
+                return ["error" => "ពាក្យសម្ងាត់ចាស់មិនត្រឹមត្រូវ"];
+            }
+    
+            // Prevent reuse of old password
+            if (password_verify($newPassword, $user['password'])) {
+                return ["error" => "ពាក្យសម្ងាត់ថ្មីមិនអាចដូចគ្នានឹងពាក្យសម្ងាត់ចាស់បានទេ"];
+            }
+    
+            // Hash and update new password
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
             $query = "UPDATE tbl_user SET password = :newPassword WHERE user_id = :userId";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':newPassword', $hashedPassword);
             $stmt->bindParam(':userId', $userId);
-            return $stmt->execute();
+    
+            if ($stmt->execute()) {
+                error_log("Password changed successfully for user ID: " . $userId);
+                return ["success" => "បានផ្លាស់ប្តូរពាក្យសម្ងាត់ជោគជ័យ"];
+            } else {
+                error_log("Failed to update password for user ID: " . $userId);
+                return ["error" => "មានបញ្ហាក្នុងការផ្លាស់ប្តូរពាក្យសម្ងាត់"];
+            }
         } catch (PDOException $e) {
             error_log("Database Error in changePassword: " . $e->getMessage());
-            throw $e;
+            return ["error" => "មានបញ្ហាជាមួយមូលដ្ឋានទិន្នន័យ។"];
         }
-}
+    }    
 }
