@@ -11,13 +11,12 @@ class Classroom {
 
     public function fetchAll() {
         $query = "SELECT c.*, s.session_name, g.grade_name, u.full_name as teacher_name, u.user_id as teacher_id,
-                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date,
+                  c.status, c.num_students_in_class, c.create_date,
                   (SELECT COUNT(*) FROM tbl_study st WHERE st.class_id = c.class_id AND st.status = 'active' AND st.isDeleted = 0) as actual_student_count
                   FROM tbl_classroom c
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
                   LEFT JOIN tbl_user u ON c.teacher_id = u.user_id
-                  LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
                   WHERE c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -31,7 +30,6 @@ class Classroom {
             $session_id = $data['session_id'] ?? null;
             $teacher_id = $data['teacher_id'] ?? null;
             $num_students_in_class = $data['num_students_in_class'] ?? 45;
-            $year_study_id = $data['year_study_id'] ?? null;
             $status = $data['status'] ?? 'active';
 
             // Validate required fields
@@ -64,8 +62,8 @@ class Classroom {
             }
 
             // Insert new class
-            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, teacher_id, num_students_in_class, year_study_id, status) 
-                           VALUES (:class_name, :grade_id, :session_id, :teacher_id, :num_students_in_class, :year_study_id, :status)";
+            $insertQuery = "INSERT INTO tbl_classroom (class_name, grade_id, session_id, teacher_id, num_students_in_class, status) 
+                           VALUES (:class_name, :grade_id, :session_id, :teacher_id, :num_students_in_class, :status)";
             $stmt = $this->conn->prepare($insertQuery);
 
             $stmt->bindParam(':class_name', $class_name);
@@ -73,7 +71,6 @@ class Classroom {
             $stmt->bindParam(':session_id', $session_id);
             $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
-            $stmt->bindParam(':year_study_id', $year_study_id);
             $stmt->bindParam(':status', $status);
 
             if ($stmt->execute()) {
@@ -105,7 +102,6 @@ class Classroom {
             $session_id = $data['session_id'] ?? null;
             $teacher_id = $data['teacher_id'] ?? null;
             $num_students_in_class = $data['num_students_in_class'] ?? 45;
-            $year_study_id = $data['year_study_id'] ?? null;
             $status = $data['status'] ?? 'active';
 
             if ($class_name === null || $grade_id === null || $session_id === null || $num_students_in_class === null) {
@@ -164,7 +160,6 @@ class Classroom {
                                session_id = :session_id,
                                teacher_id = :teacher_id,
                                num_students_in_class = :num_students_in_class,
-                               year_study_id = :year_study_id,
                                status = :status
                            WHERE class_id = :class_id 
                            AND isDeleted = 0";
@@ -176,7 +171,6 @@ class Classroom {
             $stmt->bindParam(':session_id', $session_id);
             $stmt->bindParam(':teacher_id', $teacher_id);
             $stmt->bindParam(':num_students_in_class', $num_students_in_class, PDO::PARAM_INT);
-            $stmt->bindParam(':year_study_id', $year_study_id);
             $stmt->bindParam(':status', $status);
 
             if ($stmt->execute()) {
@@ -224,12 +218,11 @@ class Classroom {
 
     public function getClassesByGrade($gradeId) {
         $query = "SELECT c.*, s.session_name, g.grade_name, u.full_name as teacher_name, u.user_id as teacher_id,
-                  c.year_study_id, ys.year_study, c.status, c.num_students_in_class, c.create_date
+                  c.status, c.num_students_in_class, c.create_date
                   FROM tbl_classroom c
                   INNER JOIN tbl_school_session s ON c.session_id = s.session_id 
                   INNER JOIN tbl_grade g ON c.grade_id = g.grade_id
                   LEFT JOIN tbl_user u ON c.teacher_id = u.user_id
-                  LEFT JOIN tbl_year_study ys ON c.year_study_id = ys.year_study_id
                   WHERE c.grade_id = :grade_id AND c.isDeleted = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':grade_id', $gradeId);

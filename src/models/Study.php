@@ -223,90 +223,7 @@ class StudyModel {
         
         return $stmt;
     }
-    
-    public function promoteStudent($studentId, $currentClassId, $newClassId, $yearStudyId) {
-        try {
-            // Begin transaction
-            $this->conn->beginTransaction();
-            
-            // First check if student is in the current class
-            $checkStmt = $this->conn->prepare(
-                "SELECT study_id FROM tbl_study 
-                 WHERE student_id = ? AND class_id = ? AND year_study_id = ? 
-                 AND status = 'active' AND isDeleted = 0"
-            );
-            $checkStmt->bindParam(1, $studentId);
-            $checkStmt->bindParam(2, $currentClassId);
-            $checkStmt->bindParam(3, $yearStudyId);
-            $checkStmt->execute();
-            
-            $currentStudy = $checkStmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$currentStudy) {
-                error_log("Student $studentId not found in current class $currentClassId");
-                $this->conn->rollBack();
-                return false;
-            }
-            
-            // Check if student is already in the target class
-            $targetCheckStmt = $this->conn->prepare(
-                "SELECT study_id FROM tbl_study 
-                 WHERE student_id = ? AND class_id = ? AND year_study_id = ? 
-                 AND status = 'active' AND isDeleted = 0"
-            );
-            $targetCheckStmt->bindParam(1, $studentId);
-            $targetCheckStmt->bindParam(2, $newClassId);
-            $targetCheckStmt->bindParam(3, $yearStudyId);
-            $targetCheckStmt->execute();
-            
-            if ($targetCheckStmt->fetch(PDO::FETCH_ASSOC)) {
-                error_log("Student $studentId already in target class $newClassId");
-                $this->conn->rollBack();
-                return false;
-            }
-            
-            // Update current study to inactive
-            $updateStmt = $this->conn->prepare(
-                "UPDATE tbl_study SET status = 'inactive' WHERE study_id = ?"
-            );
-            $updateStmt->bindParam(1, $currentStudy['study_id']);
-            $updateSuccess = $updateStmt->execute();
-            
-            if (!$updateSuccess) {
-                error_log("Failed to update current study status for student $studentId");
-                $this->conn->rollBack();
-                return false;
-            }
-            
-            // Create new study record
-            $insertStmt = $this->conn->prepare(
-                "INSERT INTO tbl_study 
-                 (student_id, class_id, year_study_id, enrollment_date, status, create_date)
-                 VALUES (?, ?, ?, CURRENT_DATE(), 'active', CURRENT_TIMESTAMP())"
-            );
-            $insertStmt->bindParam(1, $studentId);
-            $insertStmt->bindParam(2, $newClassId);
-            $insertStmt->bindParam(3, $yearStudyId);
-            $insertSuccess = $insertStmt->execute();
-            
-            if (!$insertSuccess) {
-                error_log("Failed to create new study record for student $studentId");
-                $this->conn->rollBack();
-                return false;
-            }
-            
-            $this->conn->commit();
-            error_log("Successfully promoted student $studentId from class $currentClassId to $newClassId");
-            return true;
-        } catch (Exception $e) {
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
-            }
-            error_log("Error promoting student $studentId: " . $e->getMessage());
-            return false;
-        }
-    }
-    
+     
     public function getCurrentEnrollment($classId) {
         $query = "SELECT s.*, si.student_name, si.gender, si.dob, si.father_name, si.mother_name, si.pob_address,
                   c.class_name, c.grade_id, y.year_study 
@@ -553,17 +470,6 @@ class StudyModel {
             ];
         }
     }
-    
-    public function getCurrentYearStudy() {
-        // For now, return year_study_id=1 since that's where the students are enrolled
-        return ['year_study_id' => 1];
-        
-        // Original code commented out for reference
-        // $query = "SELECT year_study_id FROM tbl_year_study WHERE isDeleted = 0 ORDER BY year_study_id DESC LIMIT 1";
-        // $stmt = $this->conn->prepare($query);
-        // $stmt->execute();
-        // return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     public function getStudentSemesterScore($studentId) {
         try {
@@ -742,15 +648,17 @@ class StudyModel {
         }
     }
 
-    public function getTopFiveYearlyStudent($classId) {
+    public function getTopFiveYearlyStudent($classId, $yearStudyId) {
         try {
             $query = "SELECT * FROM vw_top_yearly_rankings
                       WHERE class_id = :class_id
+                      AND year_study_id = :year_study_id
                       ORDER BY yearly_avg DESC
                       LIMIT 5";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':class_id', $classId, PDO::PARAM_INT);
+            $stmt->bindParam(':year_study_id', $yearStudyId, PDO::PARAM_INT);
             $stmt->execute();
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -768,21 +676,339 @@ class StudyModel {
         }
     }
 
-    public function getStudentYearlyRank($studentId) {
+    //give me function to promote student to next class by checking the yearly average promote by 0.5
+    public function promoteStudentToNextClass($studentId, $classId, $yearStudyId) {
         try {
-            $query = "SELECT * FROM vw_top_5_students
-                      WHERE student_id = :student_id
-                      ORDER BY yearly_avg DESC";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':student_id', $studentId, PDO::PARAM_INT);
+            $this->conn->beginTransaction();
+
+            // First check if student exists and is active
+            $studentQuery = "SELECT s.student_id, s.status 
+                           FROM tbl_study s 
+                           WHERE s.student_id = :student_id 
+                           AND s.class_id = :class_id 
+                           AND s.year_study_id = :year_study_id 
+                           AND s.isDeleted = 0 
+                           AND s.status = 'active'";
+            
+            $stmt = $this->conn->prepare($studentQuery);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->bindParam(':year_study_id', $yearStudyId);
             $stmt->execute();
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $results;
-        } catch (PDOException $e) {
-            error_log("Error in getStudentYearlyRank: " . $e->getMessage());
+            
+            if (!$stmt->fetch()) {
+                throw new Exception("សិស្សមិនត្រូវបានរកឃើញ ឬមិនមានស្ថានភាពសកម្ម");
+            }
+
+            // Get the current class's grade
+            $gradeQuery = "SELECT c.grade_id, g.grade_name 
+                          FROM tbl_classroom c 
+                          JOIN tbl_grade g ON c.grade_id = g.grade_id 
+                          WHERE c.class_id = :class_id";
+            
+            $stmt = $this->conn->prepare($gradeQuery);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->execute();
+            $currentGrade = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$currentGrade) {
+                throw new Exception("ថ្នាក់មិនត្រូវបានរកឃើញ");
+            }
+
+            // Get the next grade's ID
+            $nextGradeQuery = "SELECT grade_id, grade_name 
+                             FROM tbl_grade
+                             WHERE grade_id > :current_grade_id 
+                             ORDER BY grade_id ASC 
+                             LIMIT 1";
+            
+            $stmt = $this->conn->prepare($nextGradeQuery);
+            $stmt->bindParam(':current_grade_id', $currentGrade['grade_id']);
+            $stmt->execute();
+            $nextGrade = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$nextGrade) {
+                throw new Exception("គ្មានថ្នាក់បន្ទាប់ទេ");
+            }
+
+            // Get a class in the next grade
+            $nextClassQuery = "SELECT class_id, class_name 
+                             FROM tbl_classroom 
+                             WHERE grade_id = :next_grade_id 
+                             AND isDeleted = 0 
+                             LIMIT 1";
+            
+            $stmt = $this->conn->prepare($nextClassQuery);
+            $stmt->bindParam(':next_grade_id', $nextGrade['grade_id']);
+            $stmt->execute();
+            $nextClass = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$nextClass) {
+                throw new Exception("គ្មានថ្នាក់នៅក្នុងថ្នាក់បន្ទាប់ទេ");
+            }
+
+            // Update the current study record to inactive
+            $updateCurrentQuery = "UPDATE tbl_study 
+                                 SET status = 'inactive' 
+                                 WHERE student_id = :student_id 
+                                 AND class_id = :class_id 
+                                 AND year_study_id = :year_study_id";
+            
+            $stmt = $this->conn->prepare($updateCurrentQuery);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->bindParam(':year_study_id', $yearStudyId);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("មិនអាចធ្វើបច្ចុប្បន្នភាពកំណត់ត្រាបច្ចុប្បន្នបានទេ");
+            }
+
+            // Create new study record for next class
+            $insertQuery = "INSERT INTO tbl_study 
+                          (student_id, class_id, year_study_id, enrollment_date, status) 
+                          VALUES (:student_id, :next_class_id, :year_study_id, CURDATE(), 'active')";
+            
+            $stmt = $this->conn->prepare($insertQuery);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->bindParam(':next_class_id', $nextClass['class_id']);
+            $stmt->bindParam(':year_study_id', $yearStudyId);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("មិនអាចបង្កើតកំណត់ត្រាថ្មីបានទេ");
+            }
+
+            $this->conn->commit();
+            
+            return [
+                'status' => 'success',
+                'message' => 'សិស្សត្រូវបានផ្លាស់ប្តូរទៅថ្នាក់បន្ទាប់ដោយជោគជ័យ',
+                'data' => [
+                    'student_id' => $studentId,
+                    'previous_class' => $currentGrade['grade_name'],
+                    'new_class' => $nextGrade['grade_name'],
+                    'new_class_name' => $nextClass['class_name']
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error promoting student to next class: " . $e->getMessage());
             return [
                 'status' => 'error',
-                'message' => 'Failed to fetch student yearly rank: ' . $e->getMessage()
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function promoteStudentsByGrade($currentGradeId, $yearStudyId) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Get next grade
+            $nextGradeQuery = "SELECT grade_id, grade_name 
+                              FROM tbl_grade 
+                              WHERE grade_id > :current_grade_id 
+                              ORDER BY grade_id ASC 
+                              LIMIT 1";
+            
+            $stmt = $this->conn->prepare($nextGradeQuery);
+            $stmt->bindParam(':current_grade_id', $currentGradeId);
+            $stmt->execute();
+            $nextGrade = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$nextGrade) {
+                throw new Exception("គ្មានថ្នាក់បន្ទាប់ទេ");
+            }
+
+            // 2. Get next year study
+            $nextYearQuery = "SELECT year_study_id, year_study 
+                             FROM tbl_year_study 
+                             WHERE year_study_id > :current_year_id 
+                             ORDER BY year_study_id ASC 
+                             LIMIT 1";
+            
+            $stmt = $this->conn->prepare($nextYearQuery);
+            $stmt->bindParam(':current_year_id', $yearStudyId);
+            $stmt->execute();
+            $nextYear = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$nextYear) {
+                throw new Exception("គ្មានឆ្នាំសិក្សាបន្ទាប់ទេ");
+            }
+
+            // 3. Get all classes in the next grade
+            $nextClassesQuery = "SELECT class_id, class_name 
+                               FROM tbl_classroom 
+                               WHERE grade_id = :next_grade_id 
+                               AND isDeleted = 0";
+            
+            $stmt = $this->conn->prepare($nextClassesQuery);
+            $stmt->bindParam(':next_grade_id', $nextGrade['grade_id']);
+            $stmt->execute();
+            $nextClasses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($nextClasses)) {
+                throw new Exception("គ្មានថ្នាក់រៀននៅក្នុងកំរិតបន្ទាប់ទេ");
+            }
+
+            // 4. Get all classes in current grade
+            $currentClassesQuery = "SELECT class_id, class_name 
+                                  FROM tbl_classroom 
+                                  WHERE grade_id = :current_grade_id 
+                                  AND isDeleted = 0";
+            
+            $stmt = $this->conn->prepare($currentClassesQuery);
+            $stmt->bindParam(':current_grade_id', $currentGradeId);
+            $stmt->execute();
+            $currentClasses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 5. Get eligible students with yearly averages
+            $eligibleStudents = [];
+            foreach ($currentClasses as $class) {
+                // Get yearly averages for each class using the stored procedure
+                $yearlyAvgQuery = "CALL GetYearlyAverageForClass(:class_id)";
+                $stmt = $this->conn->prepare($yearlyAvgQuery);
+                $stmt->bindParam(':class_id', $class['class_id']);
+                $stmt->execute();
+                $classResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Filter students with yearly average >= 5.0
+                foreach ($classResults as $student) {
+                    if ($student['yearly_avg'] >= 5.0) {
+                        $eligibleStudents[] = [
+                            'student_id' => $student['student_id'],
+                            'student_name' => $student['student_name'],
+                            'current_class_id' => $class['class_id'],
+                            'current_class_name' => $class['class_name'],
+                            'yearly_avg' => $student['yearly_avg']
+                        ];
+                    }
+                }
+            }
+
+            if (empty($eligibleStudents)) {
+                throw new Exception("គ្មានសិស្សដែលមានមធ្យមភាគ ≥ 5.0 ទេ");
+            }
+
+            // 6. Distribute students to new classes
+            $studentsPerClass = ceil(count($eligibleStudents) / count($nextClasses));
+            $classAssignments = array_fill(0, count($nextClasses), []);
+
+            // Group students by their current class
+            $studentsByOldClass = [];
+            foreach ($eligibleStudents as $student) {
+                $studentsByOldClass[$student['current_class_id']][] = $student;
+            }
+
+            // Assign top students from each old class to different new classes
+            $currentClassIndex = 0;
+            foreach ($studentsByOldClass as $oldClassStudents) {
+                if (!empty($oldClassStudents)) {
+                    // Sort students by yearly average
+                    usort($oldClassStudents, function($a, $b) {
+                        return $b['yearly_avg'] <=> $a['yearly_avg'];
+                    });
+                    
+                    $topStudent = $oldClassStudents[0];
+                    $classAssignments[$currentClassIndex][] = $topStudent;
+                    $currentClassIndex = ($currentClassIndex + 1) % count($nextClasses);
+                }
+            }
+
+            // Assign remaining students
+            $remainingStudents = array_filter($eligibleStudents, function($student) use ($classAssignments) {
+                foreach ($classAssignments as $class) {
+                    foreach ($class as $assignedStudent) {
+                        if ($assignedStudent['student_id'] === $student['student_id']) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
+
+            // Distribute remaining students while maintaining balanced class averages
+            foreach ($remainingStudents as $student) {
+                $minAvgClassIndex = 0;
+                $minClassAvg = PHP_FLOAT_MAX;
+                
+                for ($i = 0; $i < count($nextClasses); $i++) {
+                    if (count($classAssignments[$i]) < $studentsPerClass) {
+                        $classAvg = 0;
+                        if (!empty($classAssignments[$i])) {
+                            $classAvg = array_sum(array_column($classAssignments[$i], 'yearly_avg')) / count($classAssignments[$i]);
+                        }
+                        if ($classAvg < $minClassAvg) {
+                            $minClassAvg = $classAvg;
+                            $minAvgClassIndex = $i;
+                        }
+                    }
+                }
+                
+                $classAssignments[$minAvgClassIndex][] = $student;
+            }
+
+            // 7. Process promotions
+            $promotionResults = [];
+            foreach ($classAssignments as $classIndex => $students) {
+                $nextClass = $nextClasses[$classIndex];
+                
+                foreach ($students as $student) {
+                    // Update current class to inactive
+                    $updateCurrentQuery = "UPDATE tbl_study 
+                                         SET status = 'inactive' 
+                                         WHERE student_id = :student_id 
+                                         AND class_id = :current_class_id 
+                                         AND year_study_id = :year_study_id";
+                    
+                    $stmt = $this->conn->prepare($updateCurrentQuery);
+                    $stmt->bindParam(':student_id', $student['student_id']);
+                    $stmt->bindParam(':current_class_id', $student['current_class_id']);
+                    $stmt->bindParam(':year_study_id', $yearStudyId);
+                    $stmt->execute();
+
+                    // Create new study record with next year study ID
+                    $insertQuery = "INSERT INTO tbl_study 
+                                  (student_id, class_id, year_study_id, enrollment_date, status) 
+                                  VALUES (:student_id, :next_class_id, :next_year_study_id, CURDATE(), 'active')";
+                    
+                    $stmt = $this->conn->prepare($insertQuery);
+                    $stmt->bindParam(':student_id', $student['student_id']);
+                    $stmt->bindParam(':next_class_id', $nextClass['class_id']);
+                    $stmt->bindParam(':next_year_study_id', $nextYear['year_study_id']);
+                    $stmt->execute();
+
+                    $promotionResults[] = [
+                        'student_id' => $student['student_id'],
+                        'student_name' => $student['student_name'],
+                        'from_class' => $student['current_class_name'],
+                        'to_class' => $nextClass['class_name'],
+                        'yearly_avg' => $student['yearly_avg'],
+                        'from_year' => $yearStudyId,
+                        'to_year' => $nextYear['year_study_id']
+                    ];
+                }
+            }
+
+            $this->conn->commit();
+            
+            return [
+                'status' => 'success',
+                'message' => 'សិស្សត្រូវបានដំឡើងថ្នាក់ដោយជោគជ័យ',
+                'data' => [
+                    'promoted_students' => $promotionResults,
+                    'next_grade' => $nextGrade['grade_name'],
+                    'next_year' => $nextYear['year_study'],
+                    'total_promoted' => count($promotionResults)
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error promoting students by grade: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
             ];
         }
     }

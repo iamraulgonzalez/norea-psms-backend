@@ -2,8 +2,7 @@
 SQLyog Enterprise - MySQL GUI v8.18 
 MySQL - 5.5.5-10.4.32-MariaDB : Database - norea_psms
 *********************************************************************
-*/
-
+*/
 
 /*!40101 SET NAMES utf8 */;
 
@@ -99,23 +98,20 @@ CREATE TABLE `tbl_classroom` (
   `teacher_id` int(10) unsigned DEFAULT NULL,
   `create_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `isDeleted` int(2) DEFAULT 0,
-  `year_study_id` int(10) unsigned DEFAULT NULL,
   `status` varchar(255) DEFAULT 'active',
   `num_students_in_class` int(11) NOT NULL DEFAULT 45 COMMENT 'Maximum number of students allowed in this class',
   PRIMARY KEY (`class_id`,`class_name`),
   KEY `fk_classroom_session` (`session_id`),
-  KEY `fk_classroom_year_study` (`year_study_id`),
   KEY `fk_classroom_grade` (`grade_id`),
   KEY `fk_classroom_teacher` (`teacher_id`),
   CONSTRAINT `fk_classroom_grade` FOREIGN KEY (`grade_id`) REFERENCES `tbl_grade` (`grade_id`),
   CONSTRAINT `fk_classroom_session` FOREIGN KEY (`session_id`) REFERENCES `tbl_school_session` (`session_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_classroom_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `tbl_user` (`user_id`),
-  CONSTRAINT `fk_classroom_year_study` FOREIGN KEY (`year_study_id`) REFERENCES `tbl_year_study` (`year_study_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `fk_classroom_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `tbl_user` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_classroom` */
 
-insert  into `tbl_classroom`(`class_id`,`class_name`,`grade_id`,`session_id`,`teacher_id`,`create_date`,`isDeleted`,`year_study_id`,`status`,`num_students_in_class`) values (10,'១ក',1,1,6,'2025-04-05 17:18:45',0,1,'active',45),(11,'២ក',2,1,NULL,'2025-04-05 17:24:22',0,1,'active',45),(12,'១ខ',1,1,3,'2025-04-12 08:26:25',0,1,'active',9),(13,'១គ',1,1,5,'2025-04-19 08:42:27',0,1,'active',9),(14,'៤ក',4,1,4,'2025-05-01 09:47:46',0,1,'active',45),(15,'៤ខ',4,1,7,'2025-05-01 20:41:12',0,1,'active',9);
+insert  into `tbl_classroom`(`class_id`,`class_name`,`grade_id`,`session_id`,`teacher_id`,`create_date`,`isDeleted`,`status`,`num_students_in_class`) values (10,'១ក',1,1,6,'2025-04-05 17:18:45',0,'active',45),(11,'២ក',2,1,NULL,'2025-04-05 17:24:22',0,'active',45),(12,'១ខ',1,1,3,'2025-04-12 08:26:25',0,'active',9),(13,'១គ',1,1,5,'2025-04-19 08:42:27',0,'active',9),(14,'៤ក',4,1,4,'2025-05-01 09:47:46',0,'active',45),(15,'៤ខ',4,1,7,'2025-05-01 20:41:12',0,'active',9),(16,'៥ក',5,1,NULL,'2025-05-06 15:31:52',0,'active',11),(17,'៥ខ',5,1,8,'2025-05-06 15:38:08',0,'active',9),(18,'៥គ',5,1,NULL,'2025-05-06 15:39:30',0,'active',9);
 
 /*Table structure for table `tbl_grade` */
 
@@ -360,7 +356,7 @@ CREATE TABLE `tbl_year_study` (
 
 /*Data for the table `tbl_year_study` */
 
-insert  into `tbl_year_study`(`year_study_id`,`year_study`,`create_date`,`isDeleted`) values (1,'2025-2026','2025-02-02 09:49:37',0),(2,'2026-2027','2025-02-02 09:49:37',0),(3,'2027-2028','2025-02-02 09:49:37',0),(4,'2028-2029','2025-04-08 17:37:54',0),(5,'2029-2030','2025-04-08 17:43:17',0);
+insert  into `tbl_year_study`(`year_study_id`,`year_study`,`create_date`,`isDeleted`) values (1,'២០២៥-២០២៦','2025-02-02 09:49:37',0),(2,'២០២៦-២០២៧','2025-02-02 09:49:37',0),(3,'២០២៧-២០២៨','2025-02-02 09:49:37',0),(4,'២០២៨-២០២៩','2025-04-08 17:37:54',0),(5,'២០២៩-២០៣០','2025-04-08 17:43:17',0);
 
 /* Procedure structure for procedure `CalculateFinalSemesterAverage` */
 
@@ -1086,6 +1082,7 @@ BEGIN
         c.class_name,
         g.grade_id,
         g.grade_name,
+        st.year_study_id,  -- Added year_study_id field
         -- Semester 1 Monthly Average
         ROUND(IFNULL(AVG(CASE 
             WHEN FIND_IN_SET(csms.monthly_id, ses1.monthly_ids) THEN sms.score 
@@ -1223,7 +1220,7 @@ BEGIN
         AND (csms.isDeleted = 0 OR csms.isDeleted IS NULL)
         AND (sss.isDeleted = 0 OR sss.isDeleted IS NULL)
     GROUP BY 
-        s.student_id, s.student_name, c.class_id, c.class_name, g.grade_id, g.grade_name;
+        s.student_id, s.student_name, c.class_id, c.class_name, g.grade_id, g.grade_name, st.year_study_id;  -- Added year_study_id to GROUP BY
 END */$$
 DELIMITER ;
 
@@ -1268,7 +1265,7 @@ BEGIN
                 WHEN FIND_IN_SET(csms.monthly_id, ses1.monthly_ids) THEN sms.score 
                 ELSE NULL 
             END), 0) +
-            IFNULL(AVG(CASE
+            IFNULL(AVG(CASE 
                 WHEN ses.semester_id = 1 THEN sss.score 
                 ELSE NULL 
             END), 0)
@@ -1455,6 +1452,7 @@ DROP TABLE IF EXISTS `view_final_semester_averages`;
  `subject_code` int(10) unsigned ,
  `subject_name` varchar(255) ,
  `subject_score` float ,
+ `year_study` varchar(255) ,
  `monthly_average` double ,
  `semester_exam_average` double ,
  `final_semester_average` double(19,2) ,
@@ -1500,7 +1498,8 @@ DROP TABLE IF EXISTS `view_student_monthly_score_report`;
  `subject_code` int(10) unsigned ,
  `subject_name` varchar(255) ,
  `score` float ,
- `isDeleted` int(2) 
+ `isDeleted` int(2) ,
+ `year_study` varchar(255) 
 )*/;
 
 /*Table structure for table `view_student_monthly_score_summary` */
@@ -1668,24 +1667,6 @@ DROP TABLE IF EXISTS `vw_student_semester_scores_with_averages`;
  `yearly_avg` double(19,2) 
 )*/;
 
-/*Table structure for table `vw_top_5_students` */
-
-DROP TABLE IF EXISTS `vw_top_5_students`;
-
-/*!50001 DROP VIEW IF EXISTS `vw_top_5_students` */;
-/*!50001 DROP TABLE IF EXISTS `vw_top_5_students` */;
-
-/*!50001 CREATE TABLE  `vw_top_5_students`(
- `student_id` int(10) unsigned ,
- `student_name` varchar(255) ,
- `class_id` int(10) unsigned ,
- `class_name` varchar(255) ,
- `grade_id` int(11) ,
- `grade_name` varchar(255) ,
- `yearly_avg` double(19,2) ,
- `yearly_rank` bigint(21) 
-)*/;
-
 /*Table structure for table `vw_top_monthly_rankings` */
 
 DROP TABLE IF EXISTS `vw_top_monthly_rankings`;
@@ -1700,6 +1681,8 @@ DROP TABLE IF EXISTS `vw_top_monthly_rankings`;
  `class_name` varchar(255) ,
  `monthly_id` int(10) unsigned ,
  `month_name` varchar(255) ,
+ `year_study_id` int(10) unsigned ,
+ `year_study` varchar(255) ,
  `monthly_avg` double(19,2) ,
  `monthly_rank` bigint(21) 
 )*/;
@@ -1718,8 +1701,32 @@ DROP TABLE IF EXISTS `vw_top_semester_rankings`;
  `class_name` varchar(255) ,
  `semester_id` int(10) unsigned ,
  `semester_name` varchar(255) ,
+ `year_study_id` int(10) unsigned ,
+ `year_study` varchar(255) ,
  `semester_avg` double(19,2) ,
  `semester_rank` bigint(21) 
+)*/;
+
+/*Table structure for table `vw_top_yearly_rankings` */
+
+DROP TABLE IF EXISTS `vw_top_yearly_rankings`;
+
+/*!50001 DROP VIEW IF EXISTS `vw_top_yearly_rankings` */;
+/*!50001 DROP TABLE IF EXISTS `vw_top_yearly_rankings` */;
+
+/*!50001 CREATE TABLE  `vw_top_yearly_rankings`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `gender` varchar(255) ,
+ `dob` date ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `grade_id` int(11) ,
+ `grade_name` varchar(255) ,
+ `year_study_id` int(10) unsigned ,
+ `year_study` varchar(255) ,
+ `yearly_avg` double(19,2) ,
+ `yearly_rank` bigint(21) 
 )*/;
 
 /*View structure for view view_final_semester_averages */
@@ -1727,7 +1734,7 @@ DROP TABLE IF EXISTS `vw_top_semester_rankings`;
 /*!50001 DROP TABLE IF EXISTS `view_final_semester_averages` */;
 /*!50001 DROP VIEW IF EXISTS `view_final_semester_averages` */;
 
-/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_final_semester_averages` AS select `si`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`si`.`gender` AS `gender`,`sem`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,`sub`.`subject_code` AS `subject_code`,`sub`.`subject_name` AS `subject_name`,`sss`.`score` AS `subject_score`,(select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `monthly_average`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `semester_exam_average`,round((ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2,2) AS `final_semester_average`,round(((ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = 1 and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = 1 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2 + (ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = 2 and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2) / 2,2) AS `yearly_average` from (((((((`tbl_student_info` `si` join `tbl_student_semester_score` `sss` on(`si`.`student_id` = `sss`.`student_id`)) join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) join `tbl_classroom` `c` on(`ses`.`class_id` = `c`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_grade` `g` on(`asg`.`grade_id` = `g`.`grade_id`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) where `si`.`isDeleted` = 0 and `c`.`isDeleted` = 0 and `sem`.`isDeleted` = 0 and `asg`.`isDeleted` = 0 and `sss`.`isDeleted` = 0 group by `si`.`student_id`,`sem`.`semester_id`,`c`.`class_id`,`sub`.`subject_code` */;
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_final_semester_averages` AS select `si`.`student_id` AS `student_id`,`si`.`student_name` AS `student_name`,`si`.`gender` AS `gender`,`sem`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,`sub`.`subject_code` AS `subject_code`,`sub`.`subject_name` AS `subject_name`,`sss`.`score` AS `subject_score`,`ys`.`year_study` AS `year_study`,(select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `monthly_average`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `semester_exam_average`,round((ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = `sem`.`semester_id` and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = `sem`.`semester_id` and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2,2) AS `final_semester_average`,round(((ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = 1 and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = 1 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2 + (ifnull((select avg(`sms`.`score`) from ((`tbl_student_monthly_score` `sms` join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) join `tbl_semester_exam_subjects` `ses2` on(`csms`.`class_id` = `ses2`.`class_id` and `ses2`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) where `sms`.`student_id` = `si`.`student_id` and find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) and `ses2`.`semester_id` = 2 and `sms`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `si`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2) / 2,2) AS `yearly_average` from (((((((((`tbl_student_info` `si` join `tbl_student_semester_score` `sss` on(`si`.`student_id` = `sss`.`student_id`)) join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) join `tbl_classroom` `c` on(`ses`.`class_id` = `c`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_grade` `g` on(`asg`.`grade_id` = `g`.`grade_id`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) join `tbl_study` `st` on(`si`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) where `si`.`isDeleted` = 0 and `c`.`isDeleted` = 0 and `sem`.`isDeleted` = 0 and `asg`.`isDeleted` = 0 and `sss`.`isDeleted` = 0 group by `si`.`student_id`,`sem`.`semester_id`,`c`.`class_id`,`sub`.`subject_code` */;
 
 /*View structure for view view_student_monthly_rankings */
 
@@ -1741,7 +1748,7 @@ DROP TABLE IF EXISTS `vw_top_semester_rankings`;
 /*!50001 DROP TABLE IF EXISTS `view_student_monthly_score_report` */;
 /*!50001 DROP VIEW IF EXISTS `view_student_monthly_score_report` */;
 
-/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_score_report` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`s`.`gender` AS `gender`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`m`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,`sub`.`subject_code` AS `subject_code`,`sub`.`subject_name` AS `subject_name`,`sms`.`score` AS `score`,`sms`.`isDeleted` AS `isDeleted` from (((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `classroom_subject_monthly_score` `csms` on(`c`.`class_id` = `csms`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id` and `sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id` and `sms`.`isDeleted` = 0)) where `s`.`isDeleted` = 0 and `csms`.`isDeleted` = 0 */;
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_student_monthly_score_report` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`s`.`gender` AS `gender`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`m`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,`sub`.`subject_code` AS `subject_code`,`sub`.`subject_name` AS `subject_name`,`sms`.`score` AS `score`,`sms`.`isDeleted` AS `isDeleted`,`ys`.`year_study` AS `year_study` from ((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) join `classroom_subject_monthly_score` `csms` on(`c`.`class_id` = `csms`.`class_id`)) join `tbl_assign_subject_grade` `asg` on(`csms`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id` and `sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id` and `sms`.`isDeleted` = 0)) where `s`.`isDeleted` = 0 and `csms`.`isDeleted` = 0 */;
 
 /*View structure for view view_student_monthly_score_summary */
 
@@ -1799,26 +1806,26 @@ DROP TABLE IF EXISTS `vw_top_semester_rankings`;
 
 /*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_student_semester_scores_with_averages` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_name` AS `grade_name`,`sem`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,`sub`.`subject_name` AS `subject_name`,`sub`.`subject_code` AS `subject_code`,`asg`.`assign_subject_grade_id` AS `assign_subject_grade_id`,coalesce(`sss`.`student_semester_score_id`,NULL) AS `student_semester_score_id`,coalesce(`sss`.`score`,NULL) AS `score`,`sss`.`create_date` AS `create_date`,(select avg(`sss1`.`score`) from (`tbl_student_semester_score` `sss1` join `tbl_semester_exam_subjects` `ses1` on(`sss1`.`semester_exam_subject_id` = `ses1`.`id`)) where `sss1`.`student_id` = `s`.`student_id` and `ses1`.`semester_id` = 1 and `ses1`.`class_id` = `c`.`class_id` and `sss1`.`isDeleted` = 0 and `ses1`.`isDeleted` = 0) AS `semester1_avg`,(select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `s`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0) AS `semester2_avg`,(select round((ifnull((select avg(`sss1`.`score`) from (`tbl_student_semester_score` `sss1` join `tbl_semester_exam_subjects` `ses1` on(`sss1`.`semester_exam_subject_id` = `ses1`.`id`)) where `sss1`.`student_id` = `s`.`student_id` and `ses1`.`semester_id` = 1 and `ses1`.`class_id` = `c`.`class_id` and `sss1`.`isDeleted` = 0 and `ses1`.`isDeleted` = 0),0) + ifnull((select avg(`sss2`.`score`) from (`tbl_student_semester_score` `sss2` join `tbl_semester_exam_subjects` `ses2` on(`sss2`.`semester_exam_subject_id` = `ses2`.`id`)) where `sss2`.`student_id` = `s`.`student_id` and `ses2`.`semester_id` = 2 and `ses2`.`class_id` = `c`.`class_id` and `sss2`.`isDeleted` = 0 and `ses2`.`isDeleted` = 0),0)) / 2,2)) AS `yearly_avg` from ((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) join `tbl_semester_exam_subjects` `ses` on(`c`.`class_id` = `ses`.`class_id` and `ses`.`isDeleted` = 0)) join `tbl_assign_subject_grade` `asg` on(`ses`.`assign_subject_grade_id` = `asg`.`assign_subject_grade_id`)) join `tbl_subject` `sub` on(`asg`.`subject_code` = `sub`.`subject_code`)) join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id` and `sss`.`semester_exam_subject_id` = `ses`.`id` and `sss`.`isDeleted` = 0)) where `s`.`isDeleted` = 0 order by `s`.`student_name`,`sub`.`subject_name` */;
 
-/*View structure for view vw_top_5_students */
-
-/*!50001 DROP TABLE IF EXISTS `vw_top_5_students` */;
-/*!50001 DROP VIEW IF EXISTS `vw_top_5_students` */;
-
-/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_5_students` AS with StudentRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_id` AS `grade_id`,`g`.`grade_name` AS `grade_name`,round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) AS `yearly_avg`,dense_rank() over ( partition by `c`.`class_id` order by round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) desc) AS `yearly_rank` from (((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id`)) left join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id`)) left join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) left join `tbl_semester_exam_subjects` `ses1` on(`ses1`.`class_id` = `c`.`class_id` and `ses1`.`semester_id` = 1)) left join `tbl_semester_exam_subjects` `ses2` on(`ses2`.`class_id` = `c`.`class_id` and `ses2`.`semester_id` = 2)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sms`.`isDeleted` = 0 or `sms`.`isDeleted` is null) and (`csms`.`isDeleted` = 0 or `csms`.`isDeleted` is null) and (`sss`.`isDeleted` = 0 or `sss`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`g`.`grade_id`,`g`.`grade_name`)select `studentrankings`.`student_id` AS `student_id`,`studentrankings`.`student_name` AS `student_name`,`studentrankings`.`class_id` AS `class_id`,`studentrankings`.`class_name` AS `class_name`,`studentrankings`.`grade_id` AS `grade_id`,`studentrankings`.`grade_name` AS `grade_name`,`studentrankings`.`yearly_avg` AS `yearly_avg`,`studentrankings`.`yearly_rank` AS `yearly_rank` from `studentrankings` where `studentrankings`.`yearly_rank` <= 5 order by `studentrankings`.`class_id`,`studentrankings`.`yearly_rank` */;
-
 /*View structure for view vw_top_monthly_rankings */
 
 /*!50001 DROP TABLE IF EXISTS `vw_top_monthly_rankings` */;
 /*!50001 DROP VIEW IF EXISTS `vw_top_monthly_rankings` */;
 
-/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_monthly_rankings` AS with MonthlyRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`csms`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,round(avg(`sms`.`score`),2) AS `monthly_avg`,row_number() over ( partition by `c`.`class_id`,`csms`.`monthly_id` order by avg(`sms`.`score`) desc) AS `monthly_rank` from (((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id`)) left join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) left join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sms`.`isDeleted` = 0 or `sms`.`isDeleted` is null) and (`csms`.`isDeleted` = 0 or `csms`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`csms`.`monthly_id`,`m`.`month_name`)select `monthlyrankings`.`student_id` AS `student_id`,`monthlyrankings`.`student_name` AS `student_name`,`monthlyrankings`.`class_id` AS `class_id`,`monthlyrankings`.`class_name` AS `class_name`,`monthlyrankings`.`monthly_id` AS `monthly_id`,`monthlyrankings`.`month_name` AS `month_name`,`monthlyrankings`.`monthly_avg` AS `monthly_avg`,`monthlyrankings`.`monthly_rank` AS `monthly_rank` from `monthlyrankings` where `monthlyrankings`.`monthly_rank` <= 5 */;
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_monthly_rankings` AS with MonthlyRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`csms`.`monthly_id` AS `monthly_id`,`m`.`month_name` AS `month_name`,`ys`.`year_study_id` AS `year_study_id`,`ys`.`year_study` AS `year_study`,round(avg(`sms`.`score`),2) AS `monthly_avg`,row_number() over ( partition by `c`.`class_id`,`csms`.`monthly_id`,`ys`.`year_study_id` order by avg(`sms`.`score`) desc) AS `monthly_rank` from ((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id`)) left join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) left join `tbl_monthly` `m` on(`csms`.`monthly_id` = `m`.`monthly_id`)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sms`.`isDeleted` = 0 or `sms`.`isDeleted` is null) and (`csms`.`isDeleted` = 0 or `csms`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`csms`.`monthly_id`,`m`.`month_name`,`ys`.`year_study_id`,`ys`.`year_study`)select `monthlyrankings`.`student_id` AS `student_id`,`monthlyrankings`.`student_name` AS `student_name`,`monthlyrankings`.`class_id` AS `class_id`,`monthlyrankings`.`class_name` AS `class_name`,`monthlyrankings`.`monthly_id` AS `monthly_id`,`monthlyrankings`.`month_name` AS `month_name`,`monthlyrankings`.`year_study_id` AS `year_study_id`,`monthlyrankings`.`year_study` AS `year_study`,`monthlyrankings`.`monthly_avg` AS `monthly_avg`,`monthlyrankings`.`monthly_rank` AS `monthly_rank` from `monthlyrankings` where `monthlyrankings`.`monthly_rank` <= 5 */;
 
 /*View structure for view vw_top_semester_rankings */
 
 /*!50001 DROP TABLE IF EXISTS `vw_top_semester_rankings` */;
 /*!50001 DROP VIEW IF EXISTS `vw_top_semester_rankings` */;
 
-/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_semester_rankings` AS with SemesterRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`ses`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,round(avg(`sss`.`score`),2) AS `semester_avg`,row_number() over ( partition by `c`.`class_id`,`ses`.`semester_id` order by avg(`sss`.`score`) desc) AS `semester_rank` from (((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id`)) left join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) left join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sss`.`isDeleted` = 0 or `sss`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`ses`.`semester_id`,`sem`.`semester_name`)select `semesterrankings`.`student_id` AS `student_id`,`semesterrankings`.`student_name` AS `student_name`,`semesterrankings`.`class_id` AS `class_id`,`semesterrankings`.`class_name` AS `class_name`,`semesterrankings`.`semester_id` AS `semester_id`,`semesterrankings`.`semester_name` AS `semester_name`,`semesterrankings`.`semester_avg` AS `semester_avg`,`semesterrankings`.`semester_rank` AS `semester_rank` from `semesterrankings` where `semesterrankings`.`semester_rank` <= 5 */;
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_semester_rankings` AS with SemesterRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`ses`.`semester_id` AS `semester_id`,`sem`.`semester_name` AS `semester_name`,`ys`.`year_study_id` AS `year_study_id`,`ys`.`year_study` AS `year_study`,round(avg(`sss`.`score`),2) AS `semester_avg`,row_number() over ( partition by `c`.`class_id`,`ses`.`semester_id`,`ys`.`year_study_id` order by avg(`sss`.`score`) desc) AS `semester_rank` from ((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id`)) left join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) left join `tbl_semester` `sem` on(`ses`.`semester_id` = `sem`.`semester_id`)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sss`.`isDeleted` = 0 or `sss`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`ses`.`semester_id`,`sem`.`semester_name`,`ys`.`year_study_id`,`ys`.`year_study`)select `semesterrankings`.`student_id` AS `student_id`,`semesterrankings`.`student_name` AS `student_name`,`semesterrankings`.`class_id` AS `class_id`,`semesterrankings`.`class_name` AS `class_name`,`semesterrankings`.`semester_id` AS `semester_id`,`semesterrankings`.`semester_name` AS `semester_name`,`semesterrankings`.`year_study_id` AS `year_study_id`,`semesterrankings`.`year_study` AS `year_study`,`semesterrankings`.`semester_avg` AS `semester_avg`,`semesterrankings`.`semester_rank` AS `semester_rank` from `semesterrankings` where `semesterrankings`.`semester_rank` <= 5 */;
+
+/*View structure for view vw_top_yearly_rankings */
+
+/*!50001 DROP TABLE IF EXISTS `vw_top_yearly_rankings` */;
+/*!50001 DROP VIEW IF EXISTS `vw_top_yearly_rankings` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_top_yearly_rankings` AS with StudentRankings as (select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`s`.`gender` AS `gender`,`s`.`dob` AS `dob`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_id` AS `grade_id`,`g`.`grade_name` AS `grade_name`,`ys`.`year_study_id` AS `year_study_id`,`ys`.`year_study` AS `year_study`,round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) AS `yearly_avg`,dense_rank() over ( partition by `c`.`class_id`,`ys`.`year_study_id` order by round(((ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses1`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 1 then `sss`.`score` else NULL end),0)) / 2 + (ifnull(avg(case when find_in_set(`csms`.`monthly_id`,`ses2`.`monthly_ids`) then `sms`.`score` else NULL end),0) + ifnull(avg(case when `ses`.`semester_id` = 2 then `sss`.`score` else NULL end),0)) / 2) / 2,2) desc) AS `yearly_rank` from ((((((((((`tbl_student_info` `s` join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id`)) join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) left join `tbl_student_monthly_score` `sms` on(`s`.`student_id` = `sms`.`student_id`)) left join `classroom_subject_monthly_score` `csms` on(`sms`.`classroom_subject_monthly_score_id` = `csms`.`classroom_subject_monthly_score_id`)) left join `tbl_student_semester_score` `sss` on(`s`.`student_id` = `sss`.`student_id`)) left join `tbl_semester_exam_subjects` `ses` on(`sss`.`semester_exam_subject_id` = `ses`.`id`)) left join `tbl_semester_exam_subjects` `ses1` on(`ses1`.`class_id` = `c`.`class_id` and `ses1`.`semester_id` = 1)) left join `tbl_semester_exam_subjects` `ses2` on(`ses2`.`class_id` = `c`.`class_id` and `ses2`.`semester_id` = 2)) where `st`.`status` = 'active' and `s`.`isDeleted` = 0 and `st`.`isDeleted` = 0 and (`sms`.`isDeleted` = 0 or `sms`.`isDeleted` is null) and (`csms`.`isDeleted` = 0 or `csms`.`isDeleted` is null) and (`sss`.`isDeleted` = 0 or `sss`.`isDeleted` is null) group by `s`.`student_id`,`s`.`student_name`,`c`.`class_id`,`c`.`class_name`,`g`.`grade_id`,`g`.`grade_name`,`ys`.`year_study_id`,`ys`.`year_study`)select `studentrankings`.`student_id` AS `student_id`,`studentrankings`.`student_name` AS `student_name`,`studentrankings`.`gender` AS `gender`,`studentrankings`.`dob` AS `dob`,`studentrankings`.`class_id` AS `class_id`,`studentrankings`.`class_name` AS `class_name`,`studentrankings`.`grade_id` AS `grade_id`,`studentrankings`.`grade_name` AS `grade_name`,`studentrankings`.`year_study_id` AS `year_study_id`,`studentrankings`.`year_study` AS `year_study`,`studentrankings`.`yearly_avg` AS `yearly_avg`,`studentrankings`.`yearly_rank` AS `yearly_rank` from `studentrankings` where `studentrankings`.`yearly_rank` <= 5 order by `studentrankings`.`class_id`,`studentrankings`.`year_study_id`,`studentrankings`.`yearly_rank` */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

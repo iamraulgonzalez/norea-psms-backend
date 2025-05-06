@@ -123,23 +123,6 @@ function route($uri, $method, $req, $res) {
                     $controller->getEnrollmentCountsByMonth($uriParts[2]);
                     return;
                 }
-
-                if ($method === "POST" && $action === "promote" && isset($uriParts[2])) {
-                    $controller->promoteStudent($uriParts[2]);
-                }
-
-                // Add route for promoting students by grade
-                if ($method === "POST" && $action === "promoteByGrade") {
-                    $data = json_decode(file_get_contents('php://input'), true);
-                    if ($data && isset($data['current_grade_id']) && isset($data['new_grade_id'])) {
-                        $controller->promoteStudentsByGrade($data['current_grade_id'], $data['new_grade_id']);
-                    } else {
-                        echo json_encode([
-                            'status' => 'error',
-                            'message' => 'Missing required grade IDs'
-                        ]);
-                    }
-                }
                 break;
 
             case 'teachers':
@@ -1020,14 +1003,13 @@ function route($uri, $method, $req, $res) {
                             }
 
                             if ($method === "GET" && $action === "getTopFiveYearlyStudent") {
-                                if (isset($uriParts[2])) {
-                                    $controller->getTopFiveYearlyStudent($uriParts[2]);
+                                if (isset($uriParts[2]) && isset($uriParts[3])) {
+                                    $controller->getTopFiveYearlyStudent($uriParts[2], $uriParts[3]);
                                 } else {
-                                    echo jsonResponse(400, ['message' => 'Class ID not provided']);
+                                    echo jsonResponse(400, ['message' => 'Class ID and Year Study ID not provided']);
                                 }
                             }
                             
-
                             if ($method === "GET" && $action === "getStudentsByGradeIdWithHighScores") {
                                 if (isset($uriParts[2])) {
                                     $controller->getStudentRankingsByGradeId($uriParts[2]);
@@ -1117,13 +1099,25 @@ function route($uri, $method, $req, $res) {
                                     echo jsonResponse(400, ['message' => 'Class ID not provided']);
                                 }
                             }
-                            
-                            if ($method === "POST" && $action === "promoteByClass") {
-                                $controller->promoteByClass();
+
+                            if ($method === "POST" && $action === "promoteStudentToNextClass") {
+                                if (isset($uriParts[2]) && isset($uriParts[3]) && isset($uriParts[4])) {
+                                    $controller->promoteStudentToNextClass($uriParts[2], $uriParts[3], $uriParts[4]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Student ID, Class ID, and Year Study ID not provided']);
+                                }
                             }
-                            
-                            if ($method === "POST" && $action === "promoteStudent") {
-                                $controller->promoteStudent();
+
+                            if ($method === "POST" && $action === "promoteStudentsByGrade") {
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if ($data && isset($data['grade_id']) && isset($data['year_study_id'])) {
+                                    $controller->promoteStudentsByGrade($data['grade_id'], $data['year_study_id']);
+                                } else {
+                                    echo jsonResponse(400, [
+                                        'status' => 'error',
+                                        'message' => 'Grade ID and Year Study ID are required'
+                                    ]);
+                                }
                             }
                             break;
                         case 'studies':

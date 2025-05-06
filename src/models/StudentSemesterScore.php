@@ -487,7 +487,7 @@ require_once __DIR__ . '/../config/database.php';
         }
 
         public function getStudentSemesterScoreReport($class_id, $semester_id) {
-            try {
+            try {   
                 $query = "SELECT * FROM view_final_semester_averages 
                           WHERE class_id = :class_id
                           AND semester_id = :semester_id
@@ -512,6 +512,7 @@ require_once __DIR__ . '/../config/database.php';
                             'class_id' => $row['class_id'],
                             'class_name' => $row['class_name'],
                             'grade_name' => $row['grade_name'],
+                            'year_study' => $row['year_study'],
                             'semester_id' => $row['semester_id'],
                             'semester_name' => $row['semester_name'],
                             'monthly_average' => $row['monthly_average'],

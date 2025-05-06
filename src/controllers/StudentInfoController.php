@@ -196,60 +196,7 @@ class StudentInfoController extends BaseController {
             errorResponse(500, 'Failed to get student count');
         }
     }
-
-    public function promoteStudent($student_id) {
-        try {
-            if (!$student_id) {
-                echo jsonResponse(400, [
-                    'status' => 'error',
-                    'message' => 'Student ID is required'
-                ]);
-                return;
-            }
-
-            $data = json_decode(file_get_contents("php://input"), true);
-            
-            if (!isset($data['new_class_id'])) {
-                echo jsonResponse(400, [
-                    'status' => 'error',
-                    'message' => 'New class ID is required'
-                ]);
-                return;
-            }
-
-            $result = $this->studentModel->promoteStudent($student_id, $data['new_class_id']);
-            
-            echo jsonResponse(
-                $result['status'] === 'success' ? 200 : 400,
-                $result
-            );
-            
-        } catch (Exception $e) {
-            error_log("Error in promoteStudent: " . $e->getMessage());
-            echo jsonResponse(500, [
-                'status' => 'error',
-                'message' => 'Server error occurred'
-            ]);
-        }
-    }
-
-    public function promoteStudentsByGrade($currentGradeId, $newGradeId) {
-        try {
-            $studentModel = new Student();
-            $result = $studentModel->promoteStudentsByGrade($currentGradeId, $newGradeId);
-            
-            header('Content-Type: application/json');
-            echo json_encode($result);
-        } catch (Exception $e) {
-            error_log("Error in promoteStudentsByGrade: " . $e->getMessage());
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Failed to promote students: ' . $e->getMessage()
-            ]);
-        }
-    }
-
+    
     public function getStudentsByMonth() {
         try {
             if (ob_get_level()) ob_end_clean();
