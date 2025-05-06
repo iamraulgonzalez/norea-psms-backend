@@ -69,7 +69,7 @@ class Report {
                     'month_name' => $row['month_name'],
                     'subject_code' => $row['subject_code'],
                     'subject_name' => $row['subject_name'],
-                    'score' => $row['score']
+                    'score' => isset($row['score']) ? $row['score'] : null
                 ];
 
                 // Group subjects by month
@@ -107,7 +107,7 @@ class Report {
     }
     public function getStudentSemesterScoreReport($class_id, $semester_id, $year_study_id) {
         try {
-            $query = "SELECT * FROM view_final_semester_averages WHERE 1=1";
+            $query = "SELECT * FROM view_student_semester_report WHERE 1=1";
             $params = [];
 
             if (!empty($class_id)) {
@@ -143,7 +143,9 @@ class Report {
             $groupedResults = [];
             foreach ($results as $row) {
                 $studentId = $row['student_id'];
+                $semesterId = $row['semester_id'];
 
+                // Initialize student if not exists
                 if (!isset($groupedResults[$studentId])) {
                     $groupedResults[$studentId] = [
                         'student_id' => $studentId,
@@ -153,25 +155,33 @@ class Report {
                         'class_name' => $row['class_name'],
                         'year_study_id' => $row['year_study_id'],
                         'year_study' => $row['year_study'],
-                        'subjects' => []    
+                        'monthly_average' => $row['monthly_average'],
+                        'semester_exam_average' => $row['semester_exam_average'],
+                        'final_semester_average' => $row['final_semester_average'],
                     ];
                 }
 
-                $subjectData = [
-                    'semester_id' => $row['semester_id'],
-                    'semester_name' => $row['semester_name'],
+                // Initialize semester if not exists
+                if (!isset($groupedResults[$studentId]['semesters'][$semesterId])) {
+                    $groupedResults[$studentId]['semesters'][$semesterId] = [
+                        'semester_id' => $semesterId,
+                        'semester_name' => $row['semester_name'],
+                        'subjects' => []
+                    ];
+                }
+
+                // Add subject to the semester
+                $groupedResults[$studentId]['semesters'][$semesterId]['subjects'][] = [
                     'subject_code' => $row['subject_code'],
                     'subject_name' => $row['subject_name'],
-                    'score' => $row['subject_score']
+                    'score' => isset($row['subject_score']) ? $row['subject_score'] : null
                 ];
-
-                $groupedResults[$studentId]['subjects'][$row['semester_id']]['subjects'][] = $subjectData;
             }
 
-            // Convert associative arrays to indexed arrays
+            // Convert associative arrays to indexed arrays for output
             foreach ($groupedResults as &$student) {
-                $student['subjects'] = array_values($student['subjects']);
-                foreach ($student['subjects'] as &$semester) {
+                $student['semesters'] = array_values($student['semesters']);
+                foreach ($student['semesters'] as &$semester) {
                     $semester['subjects'] = array_values($semester['subjects']);
                 }
             }

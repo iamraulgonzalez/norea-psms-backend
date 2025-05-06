@@ -131,6 +131,34 @@ class StudyModel {
     }
     
     public function updateStudy($id, $data) {
+
+        //check if student is already enrolled in another class
+        $checkQuery = "SELECT * FROM tbl_study WHERE student_id = ? AND isDeleted = 0";
+        $checkStmt = $this->conn->prepare($checkQuery);
+        $checkStmt->bindParam(1, $data['student_id']);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($checkResult) {
+            throw new Exception("សិស្សនេះកំពុងរៀននៅថ្នាក់ផ្សេង");
+        }
+        
+        //check if class limit is reached
+        $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
+                               (SELECT COUNT(*) FROM tbl_study s 
+                                WHERE s.class_id = c.class_id AND s.isDeleted = 0 AND s.status = 'active') as current_students
+                               FROM tbl_classroom c 
+                               WHERE c.class_id = ? FOR UPDATE";
+        $classLimitStmt = $this->conn->prepare($classLimitQuery);
+        $classLimitStmt->bindParam(1, $data['class_id']);
+        $classLimitStmt->execute();
+        $classInfo = $classLimitStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($classInfo['current_students'] >= $classInfo['num_students_in_class']) {
+            throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
+        }
+
+        //update study
         $query = "UPDATE tbl_study 
                   SET student_id = ?, class_id = ?, year_study_id = ?, 
                       enrollment_date = ?, status = ? 
@@ -300,7 +328,7 @@ class StudyModel {
                     $stmt = $this->conn->prepare($query);
                     
                     $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
-                    $status = !empty($data['status']) ? $data['status'] : 'active';
+                    $status = !empty($data['status']) ? $data['status'] : $studentInfo['status'];
                     
                     $stmt->bindParam(1, $studentId);
                     $stmt->bindParam(2, $data['class_id']);
@@ -579,13 +607,23 @@ class StudyModel {
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':status', $status);
             $stmt->bindParam(':study_id', $studyId);
-            return $stmt->execute();
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return [
+                'status' => 'success',
+                'message' => 'Study status updated successfully',
+                'data' => $result
+            ];
+
         } catch (PDOException $e) {
             error_log("Error updating study status: " . $e->getMessage());
-            return false;
+            return [
+                'status' => 'error',
+                'message' => 'Failed to update study status: ' . $e->getMessage()
+            ];
         }
     }
-
+    
     public function checkClassesExist($classIds) {
         $placeholders = str_repeat('?,', count($classIds) - 1) . '?';
         $query = "SELECT class_id, class_name FROM tbl_classroom WHERE class_id IN ($placeholders) AND isDeleted = 0";
