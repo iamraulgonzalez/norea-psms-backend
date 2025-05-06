@@ -69,56 +69,65 @@ class StudyModel {
     }
     
     public function addStudy($data) {
-        // First check if student exists
-        $checkQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
-        $checkStmt = $this->conn->prepare($checkQuery);
-        $checkStmt->bindParam(1, $data['student_id']);
-        $checkStmt->execute();
-        
-        if (!$checkStmt->fetch(PDO::FETCH_ASSOC)) {
-            throw new Exception("សិស្សមិនត្រូវបានរកឃើញ");
-        }
+        try {
+            $this->conn->beginTransaction();
 
-        // Check class limit
-        $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
-                           (SELECT COUNT(*) FROM tbl_study s 
-                            WHERE s.class_id = c.class_id AND s.isDeleted = 0 AND s.status = 'active') as current_students
-                           FROM tbl_classroom c 
-                           WHERE c.class_id = ?";
-        $classLimitStmt = $this->conn->prepare($classLimitQuery);
-        $classLimitStmt->bindParam(1, $data['class_id']);
-        $classLimitStmt->execute();
-        $classInfo = $classLimitStmt->fetch(PDO::FETCH_ASSOC);
+            // First check if student exists
+            $checkQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt->bindParam(1, $data['student_id']);
+            $checkStmt->execute();
+            
+            if (!$checkStmt->fetch(PDO::FETCH_ASSOC)) {
+                throw new Exception("សិស្សមិនត្រូវបានរកឃើញ");
+            }
 
-        if (!$classInfo) {
-            throw new Exception("ថ្នាក់មិនត្រូវបានរកឃើញ");
-        }
+            // Check class limit with a lock
+            $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
+                               (SELECT COUNT(*) FROM tbl_study s 
+                                WHERE s.class_id = c.class_id AND s.isDeleted = 0 AND s.status = 'active') as current_students
+                               FROM tbl_classroom c 
+                               WHERE c.class_id = ? FOR UPDATE";
+            $classLimitStmt = $this->conn->prepare($classLimitQuery);
+            $classLimitStmt->bindParam(1, $data['class_id']);
+            $classLimitStmt->execute();
+            $classInfo = $classLimitStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($classInfo['current_students'] >= $classInfo['num_students_in_class']) {
-            throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
+            if (!$classInfo) {
+                throw new Exception("ថ្នាក់មិនត្រូវបានរកឃើញ");
+            }
+
+            if ($classInfo['current_students'] >= $classInfo['num_students_in_class']) {
+                throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
+            }
+            
+            $query = "INSERT INTO tbl_study 
+                      (student_id, class_id, year_study_id, enrollment_date, status) 
+                      VALUES (?, ?, ?, ?, ?)";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Set default enrollment date to today if not provided
+            $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
+            $status = !empty($data['status']) ? $data['status'] : 'active';
+            
+            $stmt->bindParam(1, $data['student_id']);
+            $stmt->bindParam(2, $data['class_id']);
+            $stmt->bindParam(3, $data['year_study_id']);
+            $stmt->bindParam(4, $enrollmentDate);
+            $stmt->bindParam(5, $status);
+            
+            if($stmt->execute()) {
+                $this->conn->commit();
+                return $this->conn->lastInsertId();
+            }
+            
+            $this->conn->rollBack();
+            return false;
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            throw $e;
         }
-        
-        $query = "INSERT INTO tbl_study 
-                  (student_id, class_id, year_study_id, enrollment_date, status) 
-                  VALUES (?, ?, ?, ?, ?)";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        // Set default enrollment date to today if not provided
-        $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
-        $status = !empty($data['status']) ? $data['status'] : 'active';
-        
-        $stmt->bindParam(1, $data['student_id']);
-        $stmt->bindParam(2, $data['class_id']);
-        $stmt->bindParam(3, $data['year_study_id']);
-        $stmt->bindParam(4, $enrollmentDate);
-        $stmt->bindParam(5, $status);
-        
-        if($stmt->execute()) {
-            return $this->conn->lastInsertId();
-        }
-        
-        return false;
     }
     
     public function updateStudy($id, $data) {
@@ -244,15 +253,14 @@ class StudyModel {
     }    
     public function addMultipleStudies($data) {
         try {
-            // Begin transaction
             $this->conn->beginTransaction();
             
-            // Check class limit first
+            // Check class limit with a lock
             $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
                                (SELECT COUNT(*) FROM tbl_study s 
                                 WHERE s.class_id = c.class_id AND s.isDeleted = 0 AND s.status = 'active') as current_students
                                FROM tbl_classroom c 
-                               WHERE c.class_id = ?";
+                               WHERE c.class_id = ? FOR UPDATE";
             $classLimitStmt = $this->conn->prepare($classLimitQuery);
             $classLimitStmt->bindParam(1, $data['class_id']);
             $classLimitStmt->execute();
@@ -264,7 +272,7 @@ class StudyModel {
 
             $availableSlots = $classInfo['num_students_in_class'] - $classInfo['current_students'];
             if (count($data['student_ids']) > $availableSlots) {
-                throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " សិស្សពេញហើយ");
+                throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " សិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
             }
             
             $successCount = 0;
@@ -311,7 +319,6 @@ class StudyModel {
                 }
             }
             
-            // Commit transaction if all operations were successful
             $this->conn->commit();
             
             $message = "បានចុះឈ្មោះសិស្សដោយជោគជ័យ " . $successCount . " នាក់";
@@ -326,7 +333,6 @@ class StudyModel {
             ];
             
         } catch (Exception $e) {
-            // Rollback transaction on error
             $this->conn->rollBack();
             throw $e;
         }
@@ -763,18 +769,39 @@ class StudyModel {
                 throw new Exception("មិនអាចធ្វើបច្ចុប្បន្នភាពកំណត់ត្រាបច្ចុប្បន្នបានទេ");
             }
 
-            // Create new study record for next class
-            $insertQuery = "INSERT INTO tbl_study 
-                          (student_id, class_id, year_study_id, enrollment_date, status) 
-                          VALUES (:student_id, :next_class_id, :year_study_id, CURDATE(), 'active')";
-            
-            $stmt = $this->conn->prepare($insertQuery);
-            $stmt->bindParam(':student_id', $studentId);
+            // Fetch student info
+            $studentInfoQuery = "SELECT student_name FROM tbl_student_info WHERE student_id = :student_id";
+            $stmtStudentInfo = $this->conn->prepare($studentInfoQuery);
+            $stmtStudentInfo->bindParam(':student_id', $studentId);
+            $stmtStudentInfo->execute();
+            $studentInfo = $stmtStudentInfo->fetch(PDO::FETCH_ASSOC);
+
+            //check if new class status = inactive dont insert to that class if other class is active insert to that class
+            $checkNewClassStatus = "SELECT status FROM tbl_classroom WHERE class_id = :next_class_id";
+            $stmt = $this->conn->prepare($checkNewClassStatus);
             $stmt->bindParam(':next_class_id', $nextClass['class_id']);
-            $stmt->bindParam(':year_study_id', $yearStudyId);
-            
-            if (!$stmt->execute()) {
-                throw new Exception("មិនអាចបង្កើតកំណត់ត្រាថ្មីបានទេ");
+            $stmt->execute();
+            $newClassStatus = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($newClassStatus['status'] == 'inactive') {
+                throw new Exception("ថ្នាក់រៀននេះត្រូវបានផ្អាក");
+            }else{
+                // Create new study record with next year study ID
+                $insertQuery = "INSERT INTO tbl_study
+                              (student_id, class_id, year_study_id, enrollment_date, status) 
+                              VALUES (:student_id, :next_class_id, :next_year_study_id, CURDATE(), 'active')";
+                $stmt = $this->conn->prepare($insertQuery);
+                $stmt->bindParam(':student_id', $studentId);
+                $stmt->bindParam(':next_class_id', $nextClass['class_id']);
+                $stmt->bindParam(':next_year_study_id', $nextGrade['year_study_id']);
+                $stmt->execute();
+
+                $promotionResults = [
+                    'student_id' => $studentId,
+                    'student_name' => $studentInfo['student_name'],
+                    'from_class' => $currentGrade['grade_name'],
+                    'to_class' => $nextGrade['grade_name'],
+                    'new_class_name' => $nextClass['class_name']
+                ];
             }
 
             $this->conn->commit();
@@ -782,12 +809,7 @@ class StudyModel {
             return [
                 'status' => 'success',
                 'message' => 'សិស្សត្រូវបានផ្លាស់ប្តូរទៅថ្នាក់បន្ទាប់ដោយជោគជ័យ',
-                'data' => [
-                    'student_id' => $studentId,
-                    'previous_class' => $currentGrade['grade_name'],
-                    'new_class' => $nextGrade['grade_name'],
-                    'new_class_name' => $nextClass['class_name']
-                ]
+                'data' => $promotionResults
             ];
 
         } catch (Exception $e) {
@@ -822,7 +844,7 @@ class StudyModel {
 
             // 2. Get next year study
             $nextYearQuery = "SELECT year_study_id, year_study 
-                             FROM tbl_year_study 
+                             FROM tbl_year_study
                              WHERE year_study_id > :current_year_id 
                              ORDER BY year_study_id ASC 
                              LIMIT 1";
@@ -836,11 +858,12 @@ class StudyModel {
                 throw new Exception("គ្មានឆ្នាំសិក្សាបន្ទាប់ទេ");
             }
 
-            // 3. Get all classes in the next grade
+            // 3. Get all classes in the next grade (only active)
             $nextClassesQuery = "SELECT class_id, class_name 
                                FROM tbl_classroom 
                                WHERE grade_id = :next_grade_id 
-                               AND isDeleted = 0";
+                               AND isDeleted = 0
+                               AND status = 'active'";
             
             $stmt = $this->conn->prepare($nextClassesQuery);
             $stmt->bindParam(':next_grade_id', $nextGrade['grade_id']);
@@ -967,26 +990,42 @@ class StudyModel {
                     $stmt->bindParam(':year_study_id', $yearStudyId);
                     $stmt->execute();
 
-                    // Create new study record with next year study ID
-                    $insertQuery = "INSERT INTO tbl_study 
-                                  (student_id, class_id, year_study_id, enrollment_date, status) 
-                                  VALUES (:student_id, :next_class_id, :next_year_study_id, CURDATE(), 'active')";
-                    
-                    $stmt = $this->conn->prepare($insertQuery);
-                    $stmt->bindParam(':student_id', $student['student_id']);
-                    $stmt->bindParam(':next_class_id', $nextClass['class_id']);
-                    $stmt->bindParam(':next_year_study_id', $nextYear['year_study_id']);
-                    $stmt->execute();
+                    // Fetch student info
+                    $studentInfoQuery = "SELECT student_name FROM tbl_student_info WHERE student_id = :student_id";
+                    $stmtStudentInfo = $this->conn->prepare($studentInfoQuery);
+                    $stmtStudentInfo->bindParam(':student_id', $student['student_id']);
+                    $stmtStudentInfo->execute();
+                    $studentInfo = $stmtStudentInfo->fetch(PDO::FETCH_ASSOC);
 
-                    $promotionResults[] = [
-                        'student_id' => $student['student_id'],
-                        'student_name' => $student['student_name'],
-                        'from_class' => $student['current_class_name'],
-                        'to_class' => $nextClass['class_name'],
-                        'yearly_avg' => $student['yearly_avg'],
-                        'from_year' => $yearStudyId,
-                        'to_year' => $nextYear['year_study_id']
-                    ];
+                    //check if new class status = inactive dont insert to that class if other class is active insert to that class
+                    $checkNewClassStatus = "SELECT status FROM tbl_classroom WHERE class_id = :next_class_id";
+                    $stmt = $this->conn->prepare($checkNewClassStatus);
+                    $stmt->bindParam(':next_class_id', $nextClass['class_id']);
+                    $stmt->execute();
+                    $newClassStatus = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($newClassStatus['status'] == 'inactive') {
+                        throw new Exception("ថ្នាក់រៀននេះត្រូវបានផ្អាក");
+                    }else{
+                        // Create new study record with next year study ID
+                        $insertQuery = "INSERT INTO tbl_study
+                                      (student_id, class_id, year_study_id, enrollment_date, status) 
+                                      VALUES (:student_id, :next_class_id, :next_year_study_id, CURDATE(), 'active')";
+                        $stmt = $this->conn->prepare($insertQuery);
+                        $stmt->bindParam(':student_id', $student['student_id']);
+                        $stmt->bindParam(':next_class_id', $nextClass['class_id']);
+                        $stmt->bindParam(':next_year_study_id', $nextYear['year_study_id']);
+                        $stmt->execute();
+
+                        $promotionResults[] = [
+                            'student_id' => $student['student_id'],
+                            'student_name' => $student['student_name'],
+                            'from_class' => $student['current_class_name'],
+                            'to_class' => $nextClass['class_name'],
+                            'yearly_avg' => $student['yearly_avg'],
+                            'from_year' => $yearStudyId,
+                            'to_year' => $nextYear['year_study_id']
+                        ];
+                    }
                 }
             }
 
