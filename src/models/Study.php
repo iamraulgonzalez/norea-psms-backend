@@ -603,7 +603,14 @@ class StudyModel {
 
     public function updateStudyStatus($studyId, $status) {
         try {
-            $query = "UPDATE tbl_study SET status = :status WHERE study_id = :study_id";
+            //make the status select from tbl_student_info
+            $studentInfoQuery = "SELECT status FROM tbl_student_info WHERE student_id = :student_id";
+            $stmt = $this->conn->prepare($studentInfoQuery);
+            $stmt->bindParam(':student_id', $studyId);
+            $stmt->execute();
+            $studentInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+            $status = $studentInfo['status'];
+            $query = "UPDATE tbl_study SET status = :status, class_id = :class_id, year_study_id = :year_study_id, WHERE study_id = :study_id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':status', $status);
             $stmt->bindParam(':study_id', $studyId);
