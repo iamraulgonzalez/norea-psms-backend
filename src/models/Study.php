@@ -1,5 +1,8 @@
 <?php
 require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/utils/Cache.php';
+require_once dirname(__DIR__) . '/utils/Logger.php';
+require_once dirname(__DIR__) . '/utils/Exceptions.php';
 
 class StudyModel {
     private $conn;
@@ -131,49 +134,121 @@ class StudyModel {
     }
     
     public function updateStudy($id, $data) {
+        try {
+            $this->conn->beginTransaction();
 
-        //check if student is already enrolled in another class
-        $checkQuery = "SELECT * FROM tbl_study WHERE student_id = ? AND isDeleted = 0";
-        $checkStmt = $this->conn->prepare($checkQuery);
-        $checkStmt->bindParam(1, $data['student_id']);
-        $checkStmt->execute();
-        $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            // First get the current study record
+            $currentStudyQuery = "SELECT * FROM tbl_study WHERE study_id = ? AND isDeleted = 0";
+            $currentStmt = $this->conn->prepare($currentStudyQuery);
+            $currentStmt->bindParam(1, $id);
+            $currentStmt->execute();
+            $currentStudy = $currentStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($checkResult) {
-            throw new Exception("សិស្សនេះកំពុងរៀននៅថ្នាក់ផ្សេង");
-        }
-        
-        //check if class limit is reached
-        $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
+            if (!$currentStudy) {
+                throw new Exception("កំណត់ត្រាសិស្សមិនត្រូវបានរកឃើញ");
+            }
+
+            // Check if student is already enrolled in another class (excluding current class)
+            $checkQuery = "SELECT * FROM tbl_study 
+                          WHERE student_id = ? 
+                          AND study_id != ? 
+                          AND isDeleted = 0 
+                          AND status = 'active'";
+            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt->bindParam(1, $data['student_id']);
+            $checkStmt->bindParam(2, $id);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($checkResult) {
+                throw new Exception("សិស្សនេះកំពុងរៀននៅថ្នាក់ផ្សេង");
+            }
+
+            // Check if student has any monthly scores
+            $monthlyScoreQuery = "SELECT COUNT(*) as score_count 
+                                FROM tbl_student_monthly_score sms
+                                INNER JOIN classroom_subject_monthly_score csms 
+                                    ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                                WHERE sms.student_id = ? 
+                                AND csms.class_id = ? 
+                                AND sms.isDeleted = 0";
+            $monthlyStmt = $this->conn->prepare($monthlyScoreQuery);
+            $monthlyStmt->bindParam(1, $data['student_id']);
+            $monthlyStmt->bindParam(2, $currentStudy['class_id']);
+            $monthlyStmt->execute();
+            $monthlyResult = $monthlyStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($monthlyResult['score_count'] > 0) {
+                throw new Exception("សិស្សនេះមានពិន្ទុប្រចាំខែរួចហើយ មិនអាចផ្លាស់ប្តូរថ្នាក់បានទេ");
+            }
+
+            // Check if student has any semester scores
+            $semesterScoreQuery = "SELECT COUNT(*) as score_count 
+                                 FROM tbl_student_semester_score sss
+                                 INNER JOIN tbl_semester_exam_subjects ses 
+                                    ON sss.semester_exam_subject_id = ses.id
+                                 WHERE sss.student_id = ? 
+                                 AND ses.class_id = ? 
+                                 AND sss.isDeleted = 0";
+            $semesterStmt = $this->conn->prepare($semesterScoreQuery);
+            $semesterStmt->bindParam(1, $data['student_id']);
+            $semesterStmt->bindParam(2, $currentStudy['class_id']);
+            $semesterStmt->execute();
+            $semesterResult = $semesterStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($semesterResult['score_count'] > 0) {
+                throw new Exception("សិស្សនេះមានពិន្ទុប្រចាំឆមាសរួចហើយ មិនអាចផ្លាស់ប្តូរថ្នាក់បានទេ");
+            }
+            
+            // Check if class limit is reached (excluding current student if moving within same class)
+            $classLimitQuery = "SELECT c.num_students_in_class, c.class_name,
                                (SELECT COUNT(*) FROM tbl_study s 
-                                WHERE s.class_id = c.class_id AND s.isDeleted = 0 AND s.status = 'active') as current_students
+                                WHERE s.class_id = c.class_id 
+                                AND s.isDeleted = 0 
+                                AND s.status = 'active'
+                                AND s.student_id != ?) as current_students
                                FROM tbl_classroom c 
                                WHERE c.class_id = ? FOR UPDATE";
-        $classLimitStmt = $this->conn->prepare($classLimitQuery);
-        $classLimitStmt->bindParam(1, $data['class_id']);
-        $classLimitStmt->execute();
-        $classInfo = $classLimitStmt->fetch(PDO::FETCH_ASSOC);
+            $classLimitStmt = $this->conn->prepare($classLimitQuery);
+            $classLimitStmt->bindParam(1, $data['student_id']);
+            $classLimitStmt->bindParam(2, $data['class_id']);
+            $classLimitStmt->execute();
+            $classInfo = $classLimitStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($classInfo['current_students'] >= $classInfo['num_students_in_class']) {
-            throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
+            if ($classInfo['current_students'] >= $classInfo['num_students_in_class']) {
+                throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
+            }
+
+            // Update study
+            $query = "UPDATE tbl_study 
+                      SET student_id = ?, 
+                          class_id = ?, 
+                          year_study_id = ?, 
+                          enrollment_date = ?, 
+                          status = ? 
+                      WHERE study_id = ?";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindParam(1, $data['student_id']);
+            $stmt->bindParam(2, $data['class_id']);
+            $stmt->bindParam(3, $data['year_study_id']);
+            $stmt->bindParam(4, $data['enrollment_date']);
+            $stmt->bindParam(5, $data['status']);
+            $stmt->bindParam(6, $id);
+            
+            if ($stmt->execute()) {
+                $this->conn->commit();
+                return true;
+            }
+
+            $this->conn->rollBack();
+            return false;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            throw $e;
         }
-
-        //update study
-        $query = "UPDATE tbl_study 
-                  SET student_id = ?, class_id = ?, year_study_id = ?, 
-                      enrollment_date = ?, status = ? 
-                  WHERE study_id = ?";
-        
-        $stmt = $this->conn->prepare($query);
-        
-        $stmt->bindParam(1, $data['student_id']);
-        $stmt->bindParam(2, $data['class_id']);
-        $stmt->bindParam(3, $data['year_study_id']);
-        $stmt->bindParam(4, $data['enrollment_date']);
-        $stmt->bindParam(5, $data['status']);
-        $stmt->bindParam(6, $id);
-        
-        return $stmt->execute();
     }
     
     public function deleteStudy($id) {

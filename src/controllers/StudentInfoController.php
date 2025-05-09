@@ -44,7 +44,7 @@ class StudentInfoController extends BaseController {
     }
     public function getStudentById($id) {
         if (!$id) {
-            $this->sendError('Student ID not provided');
+            $this->sendError('Student ID not provided', 400);
             return;
         }
         try {
@@ -54,7 +54,7 @@ class StudentInfoController extends BaseController {
                 'data' => $student
             ]);
         } catch (Exception $e) {
-            $this->sendError($e->getMessage());
+            $this->sendError($e->getMessage(), 500);
         }
     }
 
@@ -160,7 +160,7 @@ class StudentInfoController extends BaseController {
             }
         } catch (Exception $e) {
             error_log("Error in deleteStudent: " . $e->getMessage());
-            $this->sendError($e->getMessage());
+            $this->sendError($e->getMessage(), 500);
         }
     }
     public function getStudentsByClassId($class_id) {

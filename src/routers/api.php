@@ -1060,9 +1060,11 @@ function route($uri, $method, $req, $res) {
                                 }
                             }
                             
-                            if ($method === "PUT" && $action === "updateStudy") {
+                            if ($method === "POST" && $action === "updateStudy") {
                                 if (isset($uriParts[2])) {
-                                    $controller->updateStudy($uriParts[2]);
+                                    $id = $uriParts[2];
+                                    $data = json_decode(file_get_contents('php://input'), true);
+                                    $controller->updateStudy($id, $data);
                                 } else {
                                     echo jsonResponse(400, ['message' => 'Study ID not provided']);
                                 }

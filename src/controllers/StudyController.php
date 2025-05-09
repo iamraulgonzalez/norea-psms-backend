@@ -152,57 +152,77 @@ class StudyController {
         }
     }
     
-    public function updateStudy($id) {
+    public function updateStudy($id, $data) {
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            if (!isset($data['student_id']) || !isset($data['class_id']) || !isset($data['year_study_id'])) {
+            // Validate required fields
+            if (empty($data['student_id']) || empty($data['class_id']) || empty($data['year_study_id'])) {
                 echo jsonResponse(400, [
                     'status' => 'error',
-                    'message' => 'Required fields missing'
+                    'message' => 'សូមបំពេញព័ត៌មានដែលត្រូវការទាំងអស់'
                 ]);
                 return;
             }
-            
-            // Check if student is already enrolled in another active class for the same academic year
-            $stmt = $this->studyModel->getStudiesByStudentId($data['student_id']);
-            $existingStudies = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($existingStudies as $study) {
-                // Skip the current study being updated
-                if ($study['study_id'] == $id) {
-                    continue;
-                }
-                
-                // Check if there's another active enrollment in the same year
-                if ($study['year_study_id'] == $data['year_study_id'] && 
-                    $study['status'] == 'active' && 
-                    isset($data['status']) && 
-                    $data['status'] == 'active') {
+
+            // Validate enrollment date if provided
+            if (!empty($data['enrollment_date'])) {
+                $date = DateTime::createFromFormat('Y-m-d', $data['enrollment_date']);
+                if (!$date || $date->format('Y-m-d') !== $data['enrollment_date']) {
                     echo jsonResponse(400, [
                         'status' => 'error',
-                        'message' => 'Student is already enrolled in another active class for this academic year'
+                        'message' => 'ទម្រង់កាលបរិច្ឆេទមិនត្រឹមត្រូវទេ'
                     ]);
                     return;
                 }
             }
-            
-            if ($this->studyModel->updateStudy($id, $data)) {
-                echo jsonResponse(200, [
-                    'status' => 'success',
-                    'message' => 'Study record updated successfully'
-                ]);
-            } else {
-                echo jsonResponse(500, [
+
+            // Validate status if provided
+            if (!empty($data['status']) && !in_array($data['status'], ['active', 'inactive'])) {
+                echo jsonResponse(400, [
                     'status' => 'error',
-                    'message' => 'Failed to update study record'
+                    'message' => 'ស្ថានភាពមិនត្រឹមត្រូវទេ'
+                ]);
+                return;
+            }
+
+            try {
+                $result = $this->studyModel->updateStudy($id, $data);
+                
+                if ($result) {
+                    echo jsonResponse(200, [
+                        'status' => 'success',
+                        'message' => 'កែប្រែថ្នាក់រៀនសម្រាប់សិស្សជោគជ័យ'
+                    ]);
+                } else {
+                    throw new Exception("កែប្រែប្រវត្តិសិស្សមិនជោគជ័យ");
+                }
+            } catch (Exception $e) {
+                // Handle specific error messages from the model
+                $errorMessage = $e->getMessage();
+                
+                // Map specific error messages to appropriate HTTP status codes
+                $statusCode = 500;
+                if (strpos($errorMessage, 'មិនត្រូវបានរកឃើញ') !== false) {
+                    $statusCode = 404;
+                } elseif (strpos($errorMessage, 'មានសិស្សពេញហើយ') !== false) {
+                    $statusCode = 400;
+                } elseif (strpos($errorMessage, 'កំពុងរៀននៅថ្នាក់ផ្សេង') !== false) {
+                    $statusCode = 400;
+                } elseif (strpos($errorMessage, 'មានពិន្ទុប្រចាំខែរួចហើយ') !== false) {
+                    $statusCode = 400;
+                } elseif (strpos($errorMessage, 'មានពិន្ទុប្រចាំឆមាសរួចហើយ') !== false) {
+                    $statusCode = 400;
+                }
+
+                echo jsonResponse($statusCode, [
+                    'status' => 'error',
+                    'message' => $errorMessage
                 ]);
             }
         } catch (Exception $e) {
             error_log("Error updating study: " . $e->getMessage());
             echo jsonResponse(500, [
                 'status' => 'error',
-                'message' => 'Failed to update study record'
+                'message' => 'កែប្រែប្រវត្តិសិស្សមិនជោគជ័យ'
             ]);
         }
     }
