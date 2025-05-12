@@ -1,8 +1,5 @@
 <?php
 require_once dirname(__DIR__) . '/config/database.php';
-require_once dirname(__DIR__) . '/utils/Cache.php';
-require_once dirname(__DIR__) . '/utils/Logger.php';
-require_once dirname(__DIR__) . '/utils/Exceptions.php';
 
 class StudyModel {
     private $conn;
