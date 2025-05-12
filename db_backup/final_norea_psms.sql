@@ -415,6 +415,61 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/* Procedure structure for procedure `CalculateFinalSemesterAveragesForClass` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateFinalSemesterAveragesForClass` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateFinalSemesterAveragesForClass`(
+    IN p_class_id INT,
+    IN p_semester_id INT,
+    IN p_monthly_ids VARCHAR(255)
+)
+BEGIN
+    SELECT
+        s.student_id,
+        s.student_name,
+        ms.monthly_average,
+        ss.semester_exam_average,
+        ROUND(
+            (IFNULL(ms.monthly_average, 0) + IFNULL(ss.semester_exam_average, 0)) / 
+            (CASE WHEN ms.monthly_average IS NOT NULL AND ss.semester_exam_average IS NOT NULL THEN 2
+                  WHEN ms.monthly_average IS NOT NULL OR ss.semester_exam_average IS NOT NULL THEN 1
+                  ELSE 1 END), 
+            3
+        ) AS final_semester_average
+    FROM tbl_student_info s
+    JOIN tbl_study st ON s.student_id = st.student_id
+        AND st.class_id = p_class_id
+        AND st.status = 'active'
+        AND st.isDeleted = 0
+    LEFT JOIN (
+        SELECT
+            mms.student_id,
+            AVG(mms.score) AS monthly_average
+        FROM tbl_student_monthly_score mms
+        JOIN classroom_subject_monthly_score csms
+            ON mms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            AND csms.class_id = p_class_id
+            AND FIND_IN_SET(csms.monthly_id, p_monthly_ids)
+        GROUP BY mms.student_id
+    ) ms ON s.student_id = ms.student_id
+    LEFT JOIN (
+        SELECT
+            sss.student_id,
+            AVG(sss.score) AS semester_exam_average
+        FROM tbl_student_semester_score sss
+        JOIN tbl_semester_exam_subjects ses
+            ON sss.semester_exam_subject_id = ses.id
+            AND ses.class_id = p_class_id
+            AND ses.semester_id = p_semester_id
+        GROUP BY sss.student_id
+    ) ss ON s.student_id = ss.student_id
+    WHERE s.isDeleted = 0;
+END */$$
+DELIMITER ;
+
 /* Procedure structure for procedure `CalculateMonthlyAverage` */
 
 /*!50003 DROP PROCEDURE IF EXISTS  `CalculateMonthlyAverage` */;
