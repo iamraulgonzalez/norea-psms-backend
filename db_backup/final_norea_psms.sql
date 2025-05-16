@@ -296,11 +296,11 @@ CREATE TABLE `tbl_study` (
   CONSTRAINT `fk_study_class` FOREIGN KEY (`class_id`) REFERENCES `tbl_classroom` (`class_id`),
   CONSTRAINT `fk_study_student` FOREIGN KEY (`student_id`) REFERENCES `tbl_student_info` (`student_id`),
   CONSTRAINT `fk_study_year` FOREIGN KEY (`year_study_id`) REFERENCES `tbl_year_study` (`year_study_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=200 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `tbl_study` */
 
-insert  into `tbl_study`(`study_id`,`student_id`,`class_id`,`year_study_id`,`enrollment_date`,`status`,`create_date`,`isDeleted`) values (128,1091,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(129,1092,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(130,1003,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(131,1015,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(132,1043,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(133,1057,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(134,1093,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(135,1027,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(136,1059,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(137,1029,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(138,1012,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(139,1032,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(140,1008,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(141,1094,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(142,1021,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(143,1081,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(144,1009,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(145,1041,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(146,1025,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(147,1090,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(148,1073,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(149,1095,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(150,1096,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(151,1097,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(152,1017,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(153,1060,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(154,1006,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(155,1030,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(156,1079,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(157,1087,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(158,1071,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(159,1098,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(160,1099,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(161,1089,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(162,1072,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(163,1088,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(164,1080,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(165,1085,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(166,1002,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(167,1020,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(168,1077,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(169,1034,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(170,1037,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(171,1022,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(172,1086,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(173,1078,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(174,1100,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(175,1084,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(176,1076,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(177,1026,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(178,1004,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(179,1042,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(180,1018,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(181,1019,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(182,1001,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(183,1033,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(184,1075,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(185,1083,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(186,1023,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(187,1038,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(188,1035,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(189,1040,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(190,1010,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(191,1024,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(192,1039,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(193,1014,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(194,1011,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(195,1036,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(196,1074,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(197,1005,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(198,1016,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(199,1044,12,1,'2025-05-08','active','2025-05-08 19:18:44',0);
+insert  into `tbl_study`(`study_id`,`student_id`,`class_id`,`year_study_id`,`enrollment_date`,`status`,`create_date`,`isDeleted`) values (128,1091,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(129,1092,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(130,1003,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(131,1015,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(132,1043,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(133,1057,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(134,1093,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(135,1027,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(136,1059,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(137,1029,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(138,1012,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(139,1032,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(140,1008,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(141,1094,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(142,1021,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(143,1081,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(144,1009,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(145,1041,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(146,1025,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(147,1090,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(148,1073,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(149,1095,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(150,1096,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(151,1097,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(152,1017,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(153,1060,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(154,1006,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(155,1030,10,1,'2025-05-08','active','2025-05-08 16:34:48',0),(156,1079,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(157,1087,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(158,1071,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(159,1098,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(160,1099,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(161,1089,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(162,1072,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(163,1088,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(164,1080,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(165,1085,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(166,1002,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(167,1020,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(168,1077,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(169,1034,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(170,1037,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(171,1022,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(172,1086,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(173,1078,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(174,1100,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(175,1084,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(176,1076,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(177,1026,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(178,1004,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(179,1042,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(180,1018,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(181,1019,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(182,1001,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(183,1033,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(184,1075,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(185,1083,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(186,1023,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(187,1038,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(188,1035,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(189,1040,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(190,1010,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(191,1024,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(192,1039,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(193,1014,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(194,1011,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(195,1036,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(196,1074,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(197,1005,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(198,1016,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(199,1044,12,1,'2025-05-08','active','2025-05-08 19:18:44',0),(200,1058,13,1,'2025-05-16','active','2025-05-16 20:09:11',0),(201,1028,13,1,'2025-05-16','active','2025-05-16 20:09:11',0),(202,1082,13,1,'2025-05-16','active','2025-05-16 20:09:11',0),(203,1031,13,1,'2025-05-16','active','2025-05-16 20:09:11',0),(204,1013,13,1,'2025-05-16','active','2025-05-16 20:09:11',0);
 
 /*Table structure for table `tbl_subject` */
 
@@ -357,6 +357,181 @@ CREATE TABLE `tbl_year_study` (
 /*Data for the table `tbl_year_study` */
 
 insert  into `tbl_year_study`(`year_study_id`,`year_study`,`create_date`,`isDeleted`) values (1,'២០២៥-២០២៦','2025-02-02 09:49:37',0),(2,'២០២៦-២០២៧','2025-02-02 09:49:37',0),(3,'២០២៧-២០២៨','2025-02-02 09:49:37',0),(4,'២០២៨-២០២៩','2025-04-08 17:37:54',0),(5,'២០២៩-២០៣០','2025-04-08 17:43:17',0);
+
+/* Procedure structure for procedure `CalculateClassYearlyAverage` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `CalculateClassYearlyAverage` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `CalculateClassYearlyAverage`(
+    IN p_class_id INT, 
+    IN p_year_study_id INT,
+    IN p_semester1_monthly_ids VARCHAR(255),
+    IN p_semester2_monthly_ids VARCHAR(255)
+)
+BEGIN
+    SELECT 
+        s.student_id,
+        s.student_name,
+        c.class_id,
+        c.class_name,
+        -- Semester 1 Monthly Average
+        ROUND((
+            SELECT AVG(sms.score)
+            FROM tbl_student_monthly_score sms
+            JOIN classroom_subject_monthly_score csms 
+                ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            WHERE sms.student_id = s.student_id
+              AND csms.class_id = c.class_id
+              AND FIND_IN_SET(csms.monthly_id, p_semester1_monthly_ids)
+              AND sms.isDeleted = 0
+        ), 2) AS semester1_monthly_avg,
+        -- Semester 1 Exam Average
+        ROUND((
+            SELECT AVG(sss.score)
+            FROM tbl_student_semester_score sss
+            JOIN tbl_semester_exam_subjects ses 
+                ON sss.semester_exam_subject_id = ses.id
+            WHERE sss.student_id = s.student_id
+              AND ses.class_id = c.class_id
+              AND ses.semester_id = 1
+              AND sss.isDeleted = 0
+        ), 2) AS semester1_exam_avg,
+        -- Semester 1 Final
+        ROUND((
+            IFNULL((
+                SELECT AVG(sms.score)
+                FROM tbl_student_monthly_score sms
+                JOIN classroom_subject_monthly_score csms 
+                    ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                WHERE sms.student_id = s.student_id
+                  AND csms.class_id = c.class_id
+                  AND FIND_IN_SET(csms.monthly_id, p_semester1_monthly_ids)
+                  AND sms.isDeleted = 0
+            ), 0)
+            +
+            IFNULL((
+                SELECT AVG(sss.score)
+                FROM tbl_student_semester_score sss
+                JOIN tbl_semester_exam_subjects ses 
+                    ON sss.semester_exam_subject_id = ses.id
+                WHERE sss.student_id = s.student_id
+                  AND ses.class_id = c.class_id
+                  AND ses.semester_id = 1
+                  AND sss.isDeleted = 0
+            ), 0)
+        ) / 2, 2) AS semester1_final_avg,
+        -- Semester 2 Monthly Average
+        ROUND((
+            SELECT AVG(sms.score)
+            FROM tbl_student_monthly_score sms
+            JOIN classroom_subject_monthly_score csms 
+                ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+            WHERE sms.student_id = s.student_id
+              AND csms.class_id = c.class_id
+              AND FIND_IN_SET(csms.monthly_id, p_semester2_monthly_ids)
+              AND sms.isDeleted = 0
+        ), 2) AS semester2_monthly_avg,
+        -- Semester 2 Exam Average
+        ROUND((
+            SELECT AVG(sss.score)
+            FROM tbl_student_semester_score sss
+            JOIN tbl_semester_exam_subjects ses 
+                ON sss.semester_exam_subject_id = ses.id
+            WHERE sss.student_id = s.student_id
+              AND ses.class_id = c.class_id
+              AND ses.semester_id = 2
+              AND sss.isDeleted = 0
+        ), 2) AS semester2_exam_avg,
+        -- Semester 2 Final
+        ROUND((
+            IFNULL((
+                SELECT AVG(sms.score)
+                FROM tbl_student_monthly_score sms
+                JOIN classroom_subject_monthly_score csms 
+                    ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                WHERE sms.student_id = s.student_id
+                  AND csms.class_id = c.class_id
+                  AND FIND_IN_SET(csms.monthly_id, p_semester2_monthly_ids)
+                  AND sms.isDeleted = 0
+            ), 0)
+            +
+            IFNULL((
+                SELECT AVG(sss.score)
+                FROM tbl_student_semester_score sss
+                JOIN tbl_semester_exam_subjects ses 
+                    ON sss.semester_exam_subject_id = ses.id
+                WHERE sss.student_id = s.student_id
+                  AND ses.class_id = c.class_id
+                  AND ses.semester_id = 2
+                  AND sss.isDeleted = 0
+            ), 0)
+        ) / 2, 2) AS semester2_final_avg,
+        -- Yearly Average
+        ROUND((
+            (
+                IFNULL((
+                    IFNULL((
+                        SELECT AVG(sms.score)
+                        FROM tbl_student_monthly_score sms
+                        JOIN classroom_subject_monthly_score csms 
+                            ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                        WHERE sms.student_id = s.student_id
+                          AND csms.class_id = c.class_id
+                          AND FIND_IN_SET(csms.monthly_id, p_semester1_monthly_ids)
+                          AND sms.isDeleted = 0
+                    ), 0)
+                    +
+                    IFNULL((
+                        SELECT AVG(sss.score)
+                        FROM tbl_student_semester_score sss
+                        JOIN tbl_semester_exam_subjects ses 
+                            ON sss.semester_exam_subject_id = ses.id
+                        WHERE sss.student_id = s.student_id
+                          AND ses.class_id = c.class_id
+                          AND ses.semester_id = 1
+                          AND sss.isDeleted = 0
+                    ), 0)
+                ) / 2, 0)
+            )
+            +
+            (
+                IFNULL((
+                    IFNULL((
+                        SELECT AVG(sms.score)
+                        FROM tbl_student_monthly_score sms
+                        JOIN classroom_subject_monthly_score csms 
+                            ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                        WHERE sms.student_id = s.student_id
+                          AND csms.class_id = c.class_id
+                          AND FIND_IN_SET(csms.monthly_id, p_semester2_monthly_ids)
+                          AND sms.isDeleted = 0
+                    ), 0)
+                    +
+                    IFNULL((
+                        SELECT AVG(sss.score)
+                        FROM tbl_student_semester_score sss
+                        JOIN tbl_semester_exam_subjects ses 
+                            ON sss.semester_exam_subject_id = ses.id
+                        WHERE sss.student_id = s.student_id
+                          AND ses.class_id = c.class_id
+                          AND ses.semester_id = 2
+                          AND sss.isDeleted = 0
+                    ), 0)
+                ) / 2, 0)
+            )
+        ) / 2, 2) AS yearly_avg
+    FROM tbl_student_info s
+    INNER JOIN tbl_study st ON s.student_id = st.student_id
+    INNER JOIN tbl_classroom c ON st.class_id = c.class_id
+    WHERE c.class_id = p_class_id
+      AND st.year_study_id = p_year_study_id
+      AND s.isDeleted = 0
+      AND st.isDeleted = 0
+    GROUP BY s.student_id, s.student_name, c.class_id, c.class_name;
+END */$$
+DELIMITER ;
 
 /* Procedure structure for procedure `CalculateFinalSemesterAverage` */
 
@@ -1433,6 +1608,24 @@ BEGIN
 END */$$
 DELIMITER ;
 
+/*Table structure for table `view_all_students_by_year_study` */
+
+DROP TABLE IF EXISTS `view_all_students_by_year_study`;
+
+/*!50001 DROP VIEW IF EXISTS `view_all_students_by_year_study` */;
+/*!50001 DROP TABLE IF EXISTS `view_all_students_by_year_study` */;
+
+/*!50001 CREATE TABLE  `view_all_students_by_year_study`(
+ `student_id` int(10) unsigned ,
+ `student_name` varchar(255) ,
+ `year_study_id` int(10) unsigned ,
+ `year_study` varchar(255) ,
+ `class_id` int(10) unsigned ,
+ `class_name` varchar(255) ,
+ `grade_id` int(11) ,
+ `grade_name` varchar(255) 
+)*/;
+
 /*Table structure for table `view_final_semester_averages` */
 
 DROP TABLE IF EXISTS `view_final_semester_averages`;
@@ -1783,6 +1976,13 @@ DROP TABLE IF EXISTS `vw_top_yearly_rankings`;
  `yearly_avg` double(19,2) ,
  `yearly_rank` bigint(21) 
 )*/;
+
+/*View structure for view view_all_students_by_year_study */
+
+/*!50001 DROP TABLE IF EXISTS `view_all_students_by_year_study` */;
+/*!50001 DROP VIEW IF EXISTS `view_all_students_by_year_study` */;
+
+/*!50001 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_all_students_by_year_study` AS select `s`.`student_id` AS `student_id`,`s`.`student_name` AS `student_name`,`st`.`year_study_id` AS `year_study_id`,`ys`.`year_study` AS `year_study`,`c`.`class_id` AS `class_id`,`c`.`class_name` AS `class_name`,`g`.`grade_id` AS `grade_id`,`g`.`grade_name` AS `grade_name` from ((((`tbl_student_info` `s` left join `tbl_study` `st` on(`s`.`student_id` = `st`.`student_id` and `st`.`status` = 'active' and `st`.`isDeleted` = 0)) left join `tbl_year_study` `ys` on(`st`.`year_study_id` = `ys`.`year_study_id`)) left join `tbl_classroom` `c` on(`st`.`class_id` = `c`.`class_id`)) left join `tbl_grade` `g` on(`c`.`grade_id` = `g`.`grade_id`)) where `s`.`isDeleted` = 0 */;
 
 /*View structure for view view_final_semester_averages */
 
