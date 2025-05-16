@@ -146,6 +146,67 @@ class Report {
             ];
         }
     }
+
+    public function getAllStudentbyGrade($grade_id) {
+        try {
+            $query = "SELECT 
+                    s.student_id,
+                    s.student_name,
+                    c.class_id,
+                    c.class_name,
+                    g.grade_id,
+                    g.grade_name
+                FROM 
+                    tbl_student_info s
+                    JOIN tbl_study st ON s.student_id = st.student_id
+                    JOIN tbl_classroom c ON st.class_id = c.class_id
+                    JOIN tbl_grade g ON c.grade_id = g.grade_id
+                WHERE 
+                    c.grade_id = ?
+                    AND st.status = 'active'
+                    AND s.isDeleted = 0
+                    AND st.isDeleted = 0
+                ORDER BY 
+                    c.class_name, s.student_name";
+            $params = [$grade_id];
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute($params);
+
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getAllStudentbyGrade: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    public function getAllStudentbyYearStudy() {
+        try {
+            $query = "SELECT * FROM view_all_students_by_year_study";
+            $params = [];
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute($params);
+
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getAllStudentbyYearStudy: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error: ' . $e->getMessage()
+            ];
+        }
+    }
+
 }
 
 

@@ -1157,6 +1157,12 @@ function route($uri, $method, $req, $res) {
                             if ($method === 'GET' && $action === 'getStudentSemesterScoreReport') {
                                 $controller->getStudentSemesterScoreReport();
                             }
+                            if ($method === 'GET' && $action === 'getAllStudentbyGrade') {
+                                $controller->getAllStudentbyGrade();
+                            }
+                            if ($method === 'GET' && $action === 'getAllStudentbyYearStudy') {
+                                $controller->getAllStudentbyYearStudy();
+                            }
                             break;
                 default:
                     echo json_encode(['message' => 'Route not found']);

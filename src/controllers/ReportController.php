@@ -110,7 +110,51 @@ class ReportController {
                 'message' => 'Failed to generate student semester score report: ' . $e->getMessage()
             ]);
         }
-    }    
+    }
+
+    public function getAllStudentbyGrade() {
+        try {
+            $grade_id = $_GET['grade_id'] ?? null;
+
+            if (!$grade_id) {
+                echo jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => 'Grade ID is required'
+                ]);
+                return;
+            }
+
+            $result = $this->reportModel->getAllStudentbyGrade($grade_id);
+
+            echo jsonResponse(200, [
+                'status' => 'success',
+                'data' => $result
+            ]);
+        } catch (Exception $e) {
+            error_log("Error in getAllStudentbyGrade: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to get all students by grade: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getAllStudentbyYearStudy() {
+        try {
+            $result = $this->reportModel->getAllStudentbyYearStudy();
+
+            echo jsonResponse(200, [
+                'status' => 'success',
+                'data' => $result
+            ]);
+        } catch (Exception $e) {
+            error_log("Error in getAllStudentbyYearStudy: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to get all students by year study: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
 
 
