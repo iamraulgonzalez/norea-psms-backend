@@ -24,9 +24,17 @@ class SubjectController {
     }
 
     public function deleteSubject($id) {
-        $subject = new Subject();
-        $result = $subject->delete($id);
-        echo jsonResponse(200, ['message' => 'Subject deleted successfully']);
+        try {
+            $subject = new Subject();
+            $result = $subject->delete($id);
+            if ($result['status'] === 'error') {
+            echo jsonResponse(400, $result);
+        } else {
+                echo jsonResponse(200, ['message' => 'លុបមុខវិជ្ជានេះបានជោគជ័យ']);
+            }
+        } catch (Exception $e) {
+            errorResponse(500, 'Failed to delete subject');
+        }
     }
     
     public function getSubjectById($id) {

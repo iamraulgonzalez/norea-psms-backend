@@ -139,9 +139,9 @@ class ReportController {
         }
     }
 
-    public function getAllStudentbyYearStudy() {
+    public function getAllStudentbyYearStudy($year_study_id) {
         try {
-            $result = $this->reportModel->getAllStudentbyYearStudy();
+            $result = $this->reportModel->getAllStudentbyYearStudy($year_study_id);
 
             echo jsonResponse(200, [
                 'status' => 'success',
@@ -152,6 +152,23 @@ class ReportController {
             echo jsonResponse(500, [
                 'status' => 'error',
                 'message' => 'Failed to get all students by year study: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getStudentByGrade($grade_id) {
+        try {
+            $result = $this->reportModel->getStudentByGrade($grade_id);
+
+            echo jsonResponse(200, [
+                'status' => 'success',
+                'data' => $result
+            ]);
+        } catch (Exception $e) {
+            error_log("Error in getStudentByGrade: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to get student by grade: ' . $e->getMessage()
             ]);
         }
     }

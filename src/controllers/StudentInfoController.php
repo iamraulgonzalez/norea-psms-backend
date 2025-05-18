@@ -141,6 +141,9 @@ class StudentInfoController extends BaseController {
 
     public function deleteStudent($id) {
         try {
+            // Clear any previous output
+            if (ob_get_level()) ob_end_clean();
+            
             error_log("Attempting to delete student ID: " . $id);
             
             if (!$id) {
@@ -148,19 +151,22 @@ class StudentInfoController extends BaseController {
             }
             
             $result = $this->studentModel->delete($id);
+
+            // Set proper headers
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code($result['status'] === 'error' ? 400 : 200);
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+            exit();
             
-            if ($result) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Student deleted successfully'
-                ]);
-            } else {
-                throw new Exception('Failed to delete student or student already deleted');
-            }
         } catch (Exception $e) {
             error_log("Error in deleteStudent: " . $e->getMessage());
-            $this->sendError($e->getMessage(), 500);
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(500);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការលុបសិស្ស'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
         }
     }
     public function getStudentsByClassId($class_id) {

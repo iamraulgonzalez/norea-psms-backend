@@ -352,7 +352,7 @@ function route($uri, $method, $req, $res) {
                                 echo json_encode(['message' => 'Subject ID not provided']);
                             }
                         }
-                        if($method === "DELETE" && $action === "deleteSubject"){
+                        if($method === "POST" && $action === "deleteSubject"){
                             if(isset($uriParts[2])){
                                 $controller->deleteSubject($uriParts[2]);
                             }else{
@@ -592,7 +592,7 @@ function route($uri, $method, $req, $res) {
                                     }
                                 }
                             }
-                            if($method === "DELETE" && $action === "deleteMonthly"){
+                            if($method === "POST" && $action === "deleteMonthly"){
                                 if(isset($uriParts[2])){
                                     $controller->deleteMonthly($uriParts[2]);
                                 }else{
@@ -670,6 +670,19 @@ function route($uri, $method, $req, $res) {
                                 $controller->count();
                                 return;
                             }
+
+                            if ($method === 'POST' && $action === 'deleteUser') {
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data && isset($data['userId'])) {
+                                    $controller->deleteUser($data['userId']);
+                                }else{
+                                    echo json_encode([
+                                        'status' => 'error',
+                                        'message' => 'User ID is required'
+                                    ]);
+                                }
+                            }
+                            
 
                             if ($method === 'POST' && $action === 'resetPassword') {
                                 $data = json_decode(file_get_contents('php://input'), true);
@@ -953,7 +966,12 @@ function route($uri, $method, $req, $res) {
                                 $controller->getAllStudentSemesterScores();
                             }
                             if($method === "POST" && $action === "addStudentSemesterScore"){
-                                $controller->addStudentSemesterScore($req, $res);
+                                $data = json_decode(file_get_contents('php://input'), true);
+                                if($data){
+                                    $controller->addStudentSemesterScore($req, $res);
+                                }else{
+                                    echo json_encode(['message' => 'Invalid input data']);
+                                }
                             }
                             if($method === "POST" && $action === "updateStudentSemesterScore"){
                                 // Expecting ID in the URL now: /updateStudentSemesterScore/{id}
@@ -1161,7 +1179,18 @@ function route($uri, $method, $req, $res) {
                                 $controller->getAllStudentbyGrade();
                             }
                             if ($method === 'GET' && $action === 'getAllStudentbyYearStudy') {
-                                $controller->getAllStudentbyYearStudy();
+                                if (isset($uriParts[2])) {
+                                    $controller->getAllStudentbyYearStudy($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Year Study ID not provided']);
+                                }
+                            }
+                            if ($method === 'GET' && $action === 'getStudentByGrade') {
+                                if (isset($uriParts[2])) {
+                                    $controller->getStudentByGrade($uriParts[2]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Grade ID not provided']);
+                                }
                             }
                             break;
                 default:

@@ -142,8 +142,10 @@ class Student {
                          FROM tbl_study st 
                          WHERE st.student_id = s.student_id 
                          AND st.status = 'active'
+                         AND st.isDeleted = 0
                      )
                      AND s.status = 'active'
+                     AND s.isDeleted = 0
                      ORDER BY s.student_name ASC";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
@@ -165,6 +167,8 @@ class Student {
     
     public function update($id, $data) {
         try {
+            $this->conn->beginTransaction();
+            
             // Check if student exists
             $stmt = $this->conn->prepare("SELECT COUNT(*) FROM tbl_student_info WHERE student_id = :student_id AND isDeleted = 0");
             $stmt->bindParam(':student_id', $id);
@@ -172,12 +176,21 @@ class Student {
             $exists = $stmt->fetchColumn();
         
             if ($exists == 0) {
+                $this->conn->rollBack();
                 return [
                     'status' => 'error',
                     'message' => 'រកមិនឃើញលេខសម្គាល់សិស្ស: ' . $id
                 ];
             }
-        
+
+            // Get current status before update
+            $stmt = $this->conn->prepare("SELECT status FROM tbl_student_info WHERE student_id = :student_id");
+            $stmt->bindParam(':student_id', $id);
+            $stmt->execute();
+            $currentStatus = $stmt->fetchColumn();
+            $newStatus = $data['status'] ?? $currentStatus;
+
+            // Update student info
             $query = "UPDATE tbl_student_info 
                      SET student_name = :student_name, 
                          gender = :gender, 
@@ -209,7 +222,7 @@ class Student {
             $mother_job = $data['mother_job'] ?? null;
             $mother_phone = $data['mother_phone'] ?? null;
             $family_status = $data['family_status'] ?? null;
-            $status = $data['status'] ?? null;
+            $status = $newStatus;
 
             // Bind parameters
             $stmt->bindParam(':student_id', $id);
@@ -227,26 +240,50 @@ class Student {
             $stmt->bindParam(':family_status', $family_status);
             $stmt->bindParam(':status', $status);
             
-            if ($stmt->execute()) {
-                if ($stmt->rowCount() > 0) {
+            if (!$stmt->execute()) {
+                $this->conn->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => 'មានបញ្ហាក្នុងការធ្វើបច្ចុប្បន្នភាពសិស្ស'
+                ];
+            }
+
+            // If status has changed, update all active study records
+            if ($currentStatus !== $newStatus) {
+                $updateStudyQuery = "UPDATE tbl_study 
+                                   SET status = :status 
+                                   WHERE student_id = :student_id 
+                                   AND isDeleted = 0 
+                                   AND status = 'active'";
+                $stmt = $this->conn->prepare($updateStudyQuery);
+                $stmt->bindParam(':student_id', $id);
+                $stmt->bindParam(':status', $newStatus);
+                
+                if (!$stmt->execute()) {
+                    $this->conn->rollBack();
                     return [
-                        'status' => 'success',
-                        'message' => 'សិស្សត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ'
-                    ];
-                } else {
-                    return [
-                        'status' => 'info',
-                        'message' => 'គ្មានការផ្លាស់ប្តូរទិន្នន័យទេ'
+                        'status' => 'error',
+                        'message' => 'មានបញ្ហាក្នុងការធ្វើបច្ចុប្បន្នភាពស្ថានភាពការសិក្សា'
                     ];
                 }
             }
 
-            return [
-                'status' => 'error',
-                'message' => 'មានបញ្ហាក្នុងការធ្វើបច្ចុប្បន្នភាពសិស្ស'
-            ];
+            $this->conn->commit();
+            
+            if ($stmt->rowCount() > 0) {
+                return [
+                    'status' => 'success',
+                    'message' => 'សិស្សត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ'
+                ];
+            } else {
+                return [
+                    'status' => 'info',
+                    'message' => 'គ្មានការផ្លាស់ប្តូរទិន្នន័យទេ'
+                ];
+            }
             
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Database Error in update: " . $e->getMessage());
             return [
                 'status' => 'error',
@@ -268,7 +305,31 @@ class Student {
             
             if ($exists == 0) {
                 error_log("Student ID not found or already deleted: " . $id);
-                return false;
+                return [
+                    'status' => 'error',
+                    'message' => 'សិស្សមិនត្រូវបានរកឃើញ'
+                ];
+            }
+
+            // Check if student is enrolled in any active class
+            $stmt = $this->conn->prepare("
+                SELECT c.class_name 
+                FROM tbl_study s
+                JOIN tbl_classroom c ON s.class_id = c.class_id
+                WHERE s.student_id = :student_id 
+                AND s.isDeleted = 0 
+                AND s.status = 'active'
+                LIMIT 1
+            ");
+            $stmt->bindParam(':student_id', $id);
+            $stmt->execute();
+            $classInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($classInfo) {
+                return [
+                    'status' => 'error',
+                    'message' => "សិស្សកំពុងរៀននៅក្នុងថ្នាក់ {$classInfo['class_name']} មិនអាចលុបបានទេ"
+                ];
             }
             
             // Perform soft delete by updating isDeleted field
@@ -280,15 +341,24 @@ class Student {
             
             if (!$result) {
                 error_log("Soft delete failed. SQL Error: " . json_encode($stmt->errorInfo()));
-                return false;
+                return [
+                    'status' => 'error',
+                    'message' => 'មានបញ្ហាក្នុងការលុបសិស្ស'
+                ];
             }
             
             error_log("Student soft deleted successfully. ID: " . $id);
-            return true;
+            return [
+                'status' => 'success',
+                'message' => 'លុបសិស្សបានជោគជ័យ'
+            ];
             
         } catch (PDOException $e) {
             error_log("Database Error in delete: " . $e->getMessage());
-            throw $e;
+            return [
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការលុបសិស្ស'
+            ];
         }
     }
 
@@ -384,25 +454,36 @@ class Student {
 
     public function getEnrollmentCountsByMonth($year_study_id) {
         try {
-            $sql = "SELECT 
-                    tm.monthly_id,
-                    tm.month_name,
-                    COUNT(DISTINCT s.student_id) as student_count
-                FROM tbl_monthly tm
-                LEFT JOIN (
-                    SELECT student_id, MONTH(enrollment_date) as month_num
-                    FROM tbl_study 
-                    WHERE year_study_id = ?
-                    AND isDeleted = 0
-                    AND status = 'active'
-                ) st ON tm.monthly_id = st.month_num
-                LEFT JOIN tbl_student_info s ON st.student_id = s.student_id
-                    AND s.isDeleted = 0
-                GROUP BY tm.monthly_id, tm.month_name
-                ORDER BY tm.monthly_id";
+            $sql = "WITH active_year_studies AS (
+                SELECT DISTINCT ys.year_study_id, ys.year_study
+                FROM tbl_year_study ys
+                INNER JOIN tbl_study st ON st.year_study_id = ys.year_study_id
+                WHERE ys.isDeleted = 0 
+                AND st.isDeleted = 0
+                AND st.status = 'active'
+                AND ys.year_study_id = :year_study_id
+            )
+            SELECT 
+                tm.monthly_id,
+                tm.month_name,
+                ys.year_study_id,
+                ys.year_study,
+                COUNT(DISTINCT st.student_id) as student_count
+            FROM tbl_monthly tm
+            CROSS JOIN active_year_studies ys
+            LEFT JOIN tbl_study st ON 
+                MONTH(st.enrollment_date) = tm.monthly_id 
+                AND st.year_study_id = ys.year_study_id
+                AND st.isDeleted = 0
+                AND st.status = 'active'
+            LEFT JOIN tbl_student_info si ON 
+                st.student_id = si.student_id 
+                AND si.isDeleted = 0
+            GROUP BY tm.monthly_id, tm.month_name, ys.year_study_id, ys.year_study
+            ORDER BY tm.monthly_id";
             
             $stmt = $this->conn->prepare($sql);
-            $stmt->bindParam(1, $year_study_id, PDO::PARAM_INT);
+            $stmt->bindParam(':year_study_id', $year_study_id, PDO::PARAM_INT);
             $stmt->execute();
             
             return $stmt->fetchAll(PDO::FETCH_ASSOC);

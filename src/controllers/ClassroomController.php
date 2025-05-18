@@ -40,9 +40,17 @@ class ClassroomController {
     }
 
     public function deleteClassroom($id) {
-        $classroom = new Classroom();
-        $result = $classroom->delete($id);
-        echo jsonResponse(200, ['message' => 'Classroom deleted successfully']);
+        try{
+            $classroom = new Classroom();
+            $result = $classroom->delete($id);
+            if($result['status'] === 'success'){
+                echo jsonResponse(200, $result);
+            }else{
+                echo jsonResponse(400, $result);
+            }
+        }catch(PDOException $e){
+            errorResponse(500, $e->getMessage());
+        }
     }
     
     public function getClassroomById($id) {

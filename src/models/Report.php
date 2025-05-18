@@ -186,10 +186,10 @@ class Report {
         }
     }
     
-    public function getAllStudentbyYearStudy() {
+    public function getAllStudentbyYearStudy($year_study_id) {
         try {
-            $query = "SELECT * FROM view_all_students_by_year_study";
-            $params = [];
+            $query = "SELECT * FROM view_all_students_by_year_study WHERE year_study_id = ?";
+            $params = [$year_study_id];
 
             $stmt = $this->conn->prepare($query);
             $stmt->execute($params);
@@ -200,6 +200,29 @@ class Report {
             ];
         } catch (PDOException $e) {
             error_log("Error in getAllStudentbyYearStudy: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function getStudentByGrade($grade_id) {
+        try {
+            $query = "SELECT * FROM v_getStudentByGrade WHERE grade_id = ?";
+            $params = [$grade_id];
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute($params);
+
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 'success',
+                'data' => $results
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getStudentByGrade: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'Database error: ' . $e->getMessage()

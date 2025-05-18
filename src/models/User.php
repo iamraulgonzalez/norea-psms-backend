@@ -199,6 +199,17 @@ class User {
 
     public function delete($userId) {
         try {
+            //check if user or teacher is assigned to any classroom
+            $checkClassroom = "SELECT * FROM tbl_classroom WHERE teacher_id = :user_id";
+            $stmt = $this->conn->prepare($checkClassroom);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                return ["error" => "គ្រូកំពុងបង្រៀននៅក្នុងថ្នាក់ {$result['class_name']} មិនអាចលុបបានទេ"];
+            }
+            
             // Soft delete - update isDeleted flag
             $query = "UPDATE tbl_user SET isDeleted = 1, status = 0 WHERE user_id = :user_id";
             $stmt = $this->conn->prepare($query);
@@ -210,28 +221,6 @@ class User {
         }
     }
 
-    private function isUsernameExists($username, $excludeUserId = null) {
-        try {
-            $query = "SELECT COUNT(*) as count FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0";
-            if ($excludeUserId) {
-                $query .= " AND user_id != :user_id";
-            }
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':user_name', $username);
-            if ($excludeUserId) {
-                $stmt->bindParam(':user_id', $excludeUserId);
-            }
-            $stmt->execute();
-            
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['count'] > 0;
-            
-        } catch (PDOException $e) {
-            error_log("Error checking username existence: " . $e->getMessage());
-            throw $e;
-        }
-    }
 
     public function fetchById($userId) {
         try {

@@ -89,10 +89,13 @@ require_once __DIR__ . '/../config/database.php';
 
     public function create($data) {
         try {
+            $this->conn->beginTransaction();
+
             // Validate required fields
             $requiredFields = ['student_id', 'semester_exam_subject_id', 'score'];
             foreach ($requiredFields as $field) {
                 if (!isset($data[$field])) {
+                    $this->conn->rollBack();
                     return [
                         'status' => 'error',
                         'message' => "Missing required field: {$field}"
@@ -101,15 +104,16 @@ require_once __DIR__ . '/../config/database.php';
             }
 
             // Validate score
-            if ($data['score'] < 0 || $data['score'] > 100) {
+            if ($data['score'] < 0 || $data['score'] > 10) {
+                $this->conn->rollBack();
                 return [
                     'status' => 'error',
-                    'message' => 'Score must be between 0 and 100'
+                    'message' => 'ពិន្ទុត្រូវតែបញ្ចូលមានចន្លោះពី 0 ទៅ 10'
                 ];
             }
 
-            // Check for duplicate score
-            $checkQuery = "SELECT student_semester_score_id 
+            // First check if the record exists
+            $checkQuery = "SELECT student_semester_score_id, score 
                          FROM tbl_student_semester_score 
                          WHERE student_id = :student_id 
                          AND semester_exam_subject_id = :semester_exam_subject_id 
@@ -119,15 +123,38 @@ require_once __DIR__ . '/../config/database.php';
             $stmt->bindParam(':student_id', $data['student_id']);
             $stmt->bindParam(':semester_exam_subject_id', $data['semester_exam_subject_id']);
             $stmt->execute();
+            $existingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($stmt->fetch()) {
+            if ($existingRecord) {
+                // If record exists, update it
+                $updateQuery = "UPDATE tbl_student_semester_score 
+                              SET score = :score 
+                              WHERE student_semester_score_id = :id";
+                
+                $stmt = $this->conn->prepare($updateQuery);
+                $stmt->bindParam(':score', $data['score']);
+                $stmt->bindParam(':id', $existingRecord['student_semester_score_id']);
+
+                if (!$stmt->execute()) {
+                    $this->conn->rollBack();
+                    return [
+                        'status' => 'error',
+                        'message' => 'មិនអាចបញ្ចូលពិន្ទុបានទេ'
+                    ];
+                }
+
+                $this->conn->commit();
                 return [
-                    'status' => 'error',
-                    'message' => 'Score already exists for this student'
+                    'status' => 'success',
+                    'message' => 'ពិន្ទុបានបញ្ចូលដោយជោគជ័យ',
+                    'data' => [
+                        'id' => $existingRecord['student_semester_score_id'],
+                        'previous_score' => $existingRecord['score']
+                    ]
                 ];
             }
 
-            // Insert score
+            // If record doesn't exist, insert new one
             $insertQuery = "INSERT INTO tbl_student_semester_score 
                           (student_id, semester_exam_subject_id, score) 
                           VALUES (:student_id, :semester_exam_subject_id, :score)";
@@ -137,36 +164,48 @@ require_once __DIR__ . '/../config/database.php';
             $stmt->bindParam(':semester_exam_subject_id', $data['semester_exam_subject_id']);
             $stmt->bindParam(':score', $data['score']);
 
-            if ($stmt->execute()) {
+            if (!$stmt->execute()) {
+                $this->conn->rollBack();
                 return [
-                    'status' => 'success',
-                    'message' => 'Score added successfully',
-                    'data' => [
-                        'id' => $this->conn->lastInsertId()
-                    ]
+                    'status' => 'error',
+                    'message' => 'មិនអាចបញ្ចូលពិន្ទុបានទេ'
                 ];
             }
 
+            $this->conn->commit();
             return [
-                'status' => 'error',
-                'message' => 'Failed to add score'
+                'status' => 'success',
+                'message' => 'ពិន្ទុបានបញ្ចូលដោយជោគជ័យ',
+                'data' => [
+                    'id' => $this->conn->lastInsertId()
+                ]
             ];
 
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Error in create: " . $e->getMessage());
+            
+            // Check for duplicate key error
+            if ($e->getCode() == 23000) { // MySQL duplicate key error code
+                return [
+                    'status' => 'error',
+                    'message' => 'សិស្សនេះមានពិន្ទុសម្រាប់មុខវិជ្ជានេះរួចរាល់ហើយ'
+                ];
+            }
+            
             return [
                 'status' => 'error',
-                'message' => 'Failed to add score'
+                'message' => 'មានបញ្ហាក្នុងការបញ្ចូលពិន្ទុ'
             ];
         }
     }
     public function update($id, $data) {
         try {
             // Validate score
-            if (!isset($data['score']) || $data['score'] < 0 || $data['score'] > 100) {
+            if (!isset($data['score']) || $data['score'] < 0 || $data['score'] > 10) {
                 return [
                     'status' => 'error',
-                    'message' => 'Score must be between 0 and 100'
+                    'message' => 'ពិន្ទុត្រូវតែបញ្ចូលមានចន្លោះពី 0 ទៅ 10'
                 ];
             }
 
@@ -183,20 +222,20 @@ require_once __DIR__ . '/../config/database.php';
             if ($stmt->execute()) {
                 return [
                     'status' => 'success',
-                    'message' => 'Score updated successfully'
+                    'message' => 'ពិន្ទុបានកែប្រែដោយជោគជ័យ'
                 ];
             }
 
             return [
                 'status' => 'error',
-                'message' => 'Failed to update score'
+                'message' => 'មិនអាចកែប្រែពិន្ទុបានទេ'
             ];
 
         } catch (PDOException $e) {
             error_log("Error updating score: " . $e->getMessage());
             return [
                 'status' => 'error',
-                'message' => 'Database error occurred'
+                'message' => 'មានបញ្ហាក្នុងការកែប្រែពិន្ទុបានទេ'
             ];
         }
     }
@@ -212,20 +251,20 @@ require_once __DIR__ . '/../config/database.php';
             if ($stmt->execute()) {
                 return [
                     'status' => 'success',
-                    'message' => 'Score deleted successfully'
+                    'message' => 'ពិន្ទុបានលុបដោយជោគជ័យ'
                 ];
             }
 
             return [
                 'status' => 'error',
-                'message' => 'Failed to delete score'
+                'message' => 'មិនអាចលុបពិន្ទុបានទេ'
             ];
 
         } catch (PDOException $e) {
             error_log("Error in delete: " . $e->getMessage());
             return [
                 'status' => 'error',
-                'message' => 'Failed to delete score'
+                'message' => 'មិនអាចលុបពិន្ទុបានទេ'
             ];
         }
     }
@@ -251,7 +290,7 @@ require_once __DIR__ . '/../config/database.php';
             error_log("Error in getStudentSemesterScores: " . $e->getMessage());
             return [
                 'status' => 'error',
-                'message' => 'Failed to fetch student semester scores'
+                'message' => 'មិនអាចប្រើប្រាស់ពិន្ទុបានទេ'
             ];
         }
     }
@@ -278,7 +317,7 @@ require_once __DIR__ . '/../config/database.php';
             error_log("Error in calculateFinalSemesterAverage: " . $e->getMessage());
                 return [
                     'status' => 'error',
-                'message' => 'Failed to calculate final semester average'
+                'message' => 'មិនអាចគណនាពិន្ទុបានទេ'
                 ];
             }
         }
@@ -372,7 +411,7 @@ require_once __DIR__ . '/../config/database.php';
             error_log("Error in getStudentScoresByClassAndSemester: " . $e->getMessage());
                 return [
                     'status' => 'error',
-                'message' => 'Database error occurred'
+                'message' => 'មានបញ្ហាក្នុងការប្រើប្រាស់ពិន្ទុបានទេ'
                 ];
             }
         }
@@ -389,7 +428,7 @@ require_once __DIR__ . '/../config/database.php';
                 error_log("No year study found");
                 return [
                     'status' => 'error',
-                    'message' => 'No year study found'
+                    'message' => 'មិនអាចរកឃើញឆ្នាំសិក្សា'
                 ];
             }
             
@@ -406,7 +445,7 @@ require_once __DIR__ . '/../config/database.php';
                 error_log("Student not found: $student_id");
                 return [
                     'status' => 'error',
-                    'message' => "Student not found with ID: $student_id"
+                    'message' => "សិស្សមិនមាននៅក្នុងបញ្ជីនេះ: $student_id"
                 ];
             }
             
@@ -420,7 +459,7 @@ require_once __DIR__ . '/../config/database.php';
                 error_log("Class not found: $class_id");
                 return [
                     'status' => 'error',
-                    'message' => "Class not found with ID: $class_id"
+                    'message' => "ថ្នាក់មិនមាននៅក្នុងបញ្ជីនេះ: $class_id"
                 ];
             }
             

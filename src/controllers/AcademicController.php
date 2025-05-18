@@ -12,35 +12,46 @@ class AcademicController {
     }
     
     public function AddAcademic($data) {
-        $academic = new Academic();
-        $result = $academic->create($data);
-        
+        try {
+            $academic = new Academic();
+            $result = $academic->create($data);
+            
         if ($result['status'] === 'success') {
             echo jsonResponse(201, $result);
         } else {
-            echo jsonResponse(400, $result);
+                echo jsonResponse(400, $result);
+            }
+        } catch (PDOException $e) {
+            echo jsonResponse(500, ['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }
 
     public function updateAcademic($id, $data) {
-        $academic = new Academic();
-        $result = $academic->update($id, $data);
-        
+        try {
+            $academic = new Academic();
+            $result = $academic->update($id, $data);
+            
+        if ($result['status'] === 'success') {
+            echo jsonResponse(200, $result);
+        } else {
+                echo jsonResponse(400, $result);
+            }
+        } catch (PDOException $e) {
+            echo jsonResponse(500, ['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function deleteAcademic($id) {
+        try {
+            $academic = new Academic();
+            $result = $academic->delete($id);
         if ($result['status'] === 'success') {
             echo jsonResponse(200, $result);
         } else {
             echo jsonResponse(400, $result);
         }
-    }
-
-    public function deleteAcademic($id) {
-        $academic = new Academic();
-        $result = $academic->delete($id);
-        
-        if ($result['status'] === 'success') {
-            echo jsonResponse(200, $result);
-        } else {
-            echo jsonResponse(400, $result);
+        } catch (PDOException $e) {
+            echo jsonResponse(500, ['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }
     

@@ -72,13 +72,14 @@ class StudyModel {
         try {
             $this->conn->beginTransaction();
 
-            // First check if student exists
-            $checkQuery = "SELECT student_id FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+            // First check if student exists and get their status
+            $checkQuery = "SELECT student_id, status FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(1, $data['student_id']);
             $checkStmt->execute();
+            $studentInfo = $checkStmt->fetch(PDO::FETCH_ASSOC);
             
-            if (!$checkStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!$studentInfo) {
                 throw new Exception("សិស្សមិនត្រូវបានរកឃើញ");
             }
 
@@ -109,7 +110,8 @@ class StudyModel {
             
             // Set default enrollment date to today if not provided
             $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
-            $status = !empty($data['status']) ? $data['status'] : 'active';
+            // Use status from student_info
+            $status = $studentInfo['status'];
             
             $stmt->bindParam(1, $data['student_id']);
             $stmt->bindParam(2, $data['class_id']);
@@ -134,8 +136,11 @@ class StudyModel {
         try {
             $this->conn->beginTransaction();
 
-            // First get the current study record
-            $currentStudyQuery = "SELECT * FROM tbl_study WHERE study_id = ? AND isDeleted = 0";
+            // First get the current study record and student status
+            $currentStudyQuery = "SELECT s.*, si.status as student_status 
+                                FROM tbl_study s
+                                JOIN tbl_student_info si ON s.student_id = si.student_id
+                                WHERE s.study_id = ? AND s.isDeleted = 0";
             $currentStmt = $this->conn->prepare($currentStudyQuery);
             $currentStmt->bindParam(1, $id);
             $currentStmt->execute();
@@ -143,6 +148,17 @@ class StudyModel {
 
             if (!$currentStudy) {
                 throw new Exception("កំណត់ត្រាសិស្សមិនត្រូវបានរកឃើញ");
+            }
+
+            // Get current student status
+            $studentStatusQuery = "SELECT status FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+            $studentStmt = $this->conn->prepare($studentStatusQuery);
+            $studentStmt->bindParam(1, $data['student_id']);
+            $studentStmt->execute();
+            $studentStatus = $studentStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$studentStatus) {
+                throw new Exception("សិស្សមិនត្រូវបានរកឃើញ");
             }
 
             // Check if student is already enrolled in another class (excluding current class)
@@ -216,7 +232,7 @@ class StudyModel {
                 throw new Exception("ថ្នាក់ " . $classInfo['class_name'] . " មានសិស្សពេញហើយ។ ចំនួនសិស្សអតិបរមា: " . $classInfo['num_students_in_class'] . " នាក់");
             }
 
-            // Update study
+            // Update study with student's current status
             $query = "UPDATE tbl_study 
                       SET student_id = ?, 
                           class_id = ?, 
@@ -231,7 +247,7 @@ class StudyModel {
             $stmt->bindParam(2, $data['class_id']);
             $stmt->bindParam(3, $data['year_study_id']);
             $stmt->bindParam(4, $data['enrollment_date']);
-            $stmt->bindParam(5, $data['status']);
+            $stmt->bindParam(5, $studentStatus['status']); // Use status from student_info
             $stmt->bindParam(6, $id);
             
             if ($stmt->execute()) {
@@ -340,9 +356,9 @@ class StudyModel {
                   JOIN tbl_student_info si ON s.student_id = si.student_id
                   JOIN tbl_classroom c ON s.class_id = c.class_id
                   JOIN tbl_year_study y ON s.year_study_id = y.year_study_id
-                  WHERE s.class_id = :class_id 
-                  AND s.status = 'active' 
+                  WHERE s.class_id = :class_id
                   AND s.isDeleted = 0
+                  AND (s.status = 'active' OR s.status = 'inactive' OR s.status = 'suspended')
                   ORDER BY si.student_name";
         
         $stmt = $this->conn->prepare($query);
@@ -380,8 +396,8 @@ class StudyModel {
             
             foreach ($data['student_ids'] as $studentId) {
                 try {
-                    // Check if student exists
-                    $checkQuery = "SELECT student_id, student_name FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
+                    // Check if student exists and get their status
+                    $checkQuery = "SELECT student_id, student_name, status FROM tbl_student_info WHERE student_id = ? AND isDeleted = 0";
                     $checkStmt = $this->conn->prepare($checkQuery);
                     $checkStmt->bindParam(1, $studentId);
                     $checkStmt->execute();
@@ -392,7 +408,7 @@ class StudyModel {
                         continue;
                     }
                     
-                    // Insert study record
+                    // Insert study record using student's status
                     $query = "INSERT INTO tbl_study 
                               (student_id, class_id, year_study_id, enrollment_date, status) 
                               VALUES (?, ?, ?, ?, ?)";
@@ -400,7 +416,7 @@ class StudyModel {
                     $stmt = $this->conn->prepare($query);
                     
                     $enrollmentDate = !empty($data['enrollment_date']) ? $data['enrollment_date'] : date('Y-m-d');
-                    $status = !empty($data['status']) ? $data['status'] : $studentInfo['status'];
+                    $status = $studentInfo['status']; // Use status from student_info
                     
                     $stmt->bindParam(1, $studentId);
                     $stmt->bindParam(2, $data['class_id']);
@@ -872,7 +888,7 @@ class StudyModel {
 
             // Update the current study record to inactive
             $updateCurrentQuery = "UPDATE tbl_study 
-                                 SET status = 'inactive' 
+                                 SET status = 'graduated' 
                                  WHERE student_id = :student_id 
                                  AND class_id = :class_id 
                                  AND year_study_id = :year_study_id";
@@ -1096,7 +1112,7 @@ class StudyModel {
                 foreach ($students as $student) {
                     // Update current class to inactive
                     $updateCurrentQuery = "UPDATE tbl_study 
-                                         SET status = 'inactive' 
+                                         SET status = 'graduated' 
                                          WHERE student_id = :student_id 
                                          AND class_id = :current_class_id 
                                          AND year_study_id = :year_study_id";

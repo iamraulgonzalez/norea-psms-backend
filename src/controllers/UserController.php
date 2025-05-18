@@ -420,4 +420,28 @@ class UserController {
             ]);
         }
     }
+
+    public function deleteUser($userId) {
+        try {
+            $result = $this->user->delete($userId);
+            if (isset($result['error'])) {
+                return jsonResponse(400, [
+                    'status' => 'error',
+                    'message' => $result['error']
+                ]);
+            }
+            return jsonResponse(200, [
+                'status' => 'success',
+                'message' => 'អ្នកប្រើប្រាស់បានលុបបានជោគជ័យ'
+            ]);
+        }
+        catch (Exception $e) {
+            error_log("Error in deleteUser: " . $e->getMessage());
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'មានបញ្ហាក្នុងការលុបអ្នកប្រើប្រាស់'
+            ]);
+        }
+    }
+    
 }

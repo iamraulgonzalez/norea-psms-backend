@@ -14,8 +14,9 @@ class StudentSemesterScoreController {
     }
     
     public function addStudentSemesterScore($req, $res) {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
         if ($data === null) {
             $res->status(400)->json([
                 'status' => 'error',
@@ -23,8 +24,7 @@ class StudentSemesterScoreController {
             ]);
             return;
         }
-        
-        // Validate required fields
+
         $requiredFields = ['student_id', 'semester_exam_subject_id', 'score'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field])) {
@@ -35,16 +35,39 @@ class StudentSemesterScoreController {
                 return;
             }
         }
+
+        if (!is_numeric($data['student_id']) || !is_numeric($data['semester_exam_subject_id']) || !is_numeric($data['score'])) {
+            $res->status(400)->json([
+                'status' => 'error',
+                'message' => 'Invalid parameter types: student_id, semester_exam_subject_id, and score must be numeric'
+            ]);
+            return;
+        }
+
+        if ($data['score'] < 0 || $data['score'] > 10) {
+            $res->status(400)->json([
+                'status' => 'error',
+                'message' => 'Score must be between 0 and 10'
+            ]);
+            return;
+        }
         
         $result = $this->model->create($data);
         
         if ($result['status'] === 'success') {
             $res->status(201)->json($result);
         } else {
-            $res->status(400)->json($result);
+                $res->status(400)->json($result);
+            }
+        } catch (Exception $e) {
+            error_log("Error in addStudentSemesterScore: " . $e->getMessage());
+            $res->status(500)->json([
+                'status' => 'error',
+                'message' => 'Server error occurred'
+            ]);
         }
     }
-    
+
     public function updateStudentSemesterScore($id, $data) {
         try {
             $result = $this->model->update($id, $data);

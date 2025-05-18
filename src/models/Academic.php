@@ -73,6 +73,24 @@ class Academic {
                 'message' => 'Year study is required'
             ];
         }
+
+        //check if year_study is used in other table
+        $checkUsed = "SELECT y.year_study, s.study_id FROM tbl_study s
+                      JOIN tbl_year_study y ON s.year_study_id = y.year_study_id
+                      WHERE s.year_study_id = :year_study_id";
+        $stmt = $this->conn->prepare($checkUsed);
+        $stmt->bindParam(':year_study_id', $id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            return [
+                'status' => 'error',
+                'message' => 'ឆ្នាំសិក្សានេះត្រូវបានប្រើប្រាស់នៅក្នុងការចុះឈ្មោះសិសស្សហើយមិនអាចកែប្រែបានទេ!'
+            ];
+        }
+        
+        
         
         try {
             // Check if the new year_study already exists (excluding the current record)
@@ -83,7 +101,7 @@ class Academic {
             if ($count > 0) {
                 return [
                     'status' => 'error',
-                    'message' => 'Year study already exists'
+                    'message' => 'ឆ្នាំសិក្សានេះមានរួចហើយ'
                 ];
             }
             
@@ -92,7 +110,7 @@ class Academic {
             
             return [
                 'status' => 'success',
-                'message' => 'Academic year updated successfully'
+                'message' => 'កែប្រែឆ្នាំសិក្សាបានជោគជ័យ'
             ];
         } catch (PDOException $e) {
             return [
@@ -103,6 +121,23 @@ class Academic {
     }
     
     public function delete($id) {
+
+        //check if year_study is used in other table
+        $checkUsed = "SELECT y.year_study, s.study_id FROM tbl_study s
+                      JOIN tbl_year_study y ON s.year_study_id = y.year_study_id
+                      WHERE s.year_study_id = :year_study_id";
+        $stmt = $this->conn->prepare($checkUsed);
+        $stmt->bindParam(':year_study_id', $id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result) {
+            return [
+                'status' => 'error',
+                'message' => 'ឆ្នាំសិក្សានេះត្រូវបានប្រើប្រាស់នៅក្នុងការចុះឈ្មោះសិសស្សហើយមិនអាចលុបបានទេ!'
+            ];
+        }        
+        
         $query = "UPDATE tbl_year_study SET isDeleted = 1 WHERE year_study_id = :year_study_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':year_study_id', $id);
@@ -110,12 +145,12 @@ class Academic {
         if ($stmt->execute()) {
             return [
                 'status' => 'success',
-                'message' => 'Academic year deleted successfully'
+                'message' => 'លុបឆ្នាំសិក្សាបានជោគជ័យ'
             ];
         } else {
             return [
                 'status' => 'error',
-                'message' => 'Failed to delete academic year'
+                'message' => 'មិនអាចលុបបានទេ'
             ];
         }
     }
@@ -135,7 +170,7 @@ class Academic {
         } else {
             return [
                 'status' => 'error',
-                'message' => 'Academic year not found'
+                'message' => 'ឆ្នាំសិក្សាមិនមានទិន្នន័យទេ'
             ];
         }
     }

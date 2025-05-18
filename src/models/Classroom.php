@@ -194,11 +194,48 @@ class Classroom {
         }
     }
     
-    public function delete($id) {
-        $query = "UPDATE tbl_classroom SET isDeleted = 1 WHERE class_id = :class_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':class_id', $id);
-        return $stmt->execute();
+    public function delete($classId) {
+        try {
+            // Check if the class has students
+            $checkStudentsQuery = "SELECT COUNT(*) as student_count
+                               FROM tbl_study s
+                               WHERE s.class_id = :class_id 
+                               AND s.isDeleted = 0";
+            $stmt = $this->conn->prepare($checkStudentsQuery);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result['student_count'] > 0) {
+                return [
+                    'status' => 'error',
+                    'message' => 'ថ្នាក់រៀននេះមានសិស្សកំពុងរៀន មិនអាចលុបបានទេ!'
+                ];
+            }
+
+            //update tbl_classroom fields teacher to null when delete
+            $updateTeacherQuery = "UPDATE tbl_classroom SET teacher_id = NULL WHERE class_id = :class_id";
+            $stmt = $this->conn->prepare($updateTeacherQuery);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->execute();
+
+            // If no students, proceed with deletion
+            $query = "UPDATE tbl_classroom SET isDeleted = 1 WHERE class_id = :class_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->execute();
+            
+            return [
+                'status' => 'success',
+                'message' => 'ថ្នាក់រៀនបានលុបដោយជោគជ័យ'
+            ];
+        } catch (PDOException $e) {
+            error_log("Database Error in delete: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error occurred'
+            ];
+        }
     }
     
     public function fetchById($id) {
