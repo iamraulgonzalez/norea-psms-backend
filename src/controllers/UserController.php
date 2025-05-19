@@ -443,5 +443,21 @@ class UserController {
             ]);
         }
     }
-    
+
+    public function getTeacherInClass($class_id) {
+        try {
+            $result = $this->user->getTeacherInClass($class_id);
+            return jsonResponse(200, [
+                'status' => 'success',
+                'data' => $result
+            ]);
+        }
+        catch (Exception $e) {
+            error_log("Error in getTeacherInClass: " . $e->getMessage());
+            return jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to get teacher in class'
+            ]);
+        }
+    }
 }

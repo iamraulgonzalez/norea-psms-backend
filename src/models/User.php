@@ -141,11 +141,11 @@ class User {
 
     public function update($userId, $data) {
         try {
-            
-            //check existing username
-            $checkExiting = "SELECT * FROM tbl_user WHERE user_name = :user_name AND isDeleted = 0 AND status = 1";
+            //check existing username, but exclude current user
+            $checkExiting = "SELECT * FROM tbl_user WHERE user_name = :user_name AND user_id != :user_id AND isDeleted = 0 AND status = 1";
             $stmt = $this->conn->prepare($checkExiting);
             $stmt->bindParam(':user_name', $data['user_name']);
+            $stmt->bindParam(':user_id', $userId);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -153,7 +153,7 @@ class User {
                 error_log("Username already exists: " . $data['user_name']);
                 return [
                     'status' => 'error',
-                    'message' => 'Username already exists',
+                    'message' => 'ឈ្មោះគណនីនេះមានរួចហើយនៅក្នុងប្រព័ន្ធ!',
                     'code' => 'DUPLICATE_USERNAME'
                 ];
             }
@@ -423,5 +423,18 @@ class User {
             error_log("Database Error in changePassword: " . $e->getMessage());
             return ["error" => "មានបញ្ហាជាមួយមូលដ្ឋានទិន្នន័យ។"];
         }
-    }    
+    }
+
+    public function getTeacherInClass($class_id) {
+        try {
+            $query = "SELECT teacher_id FROM tbl_classroom  JOIN tbl_user ON tbl_classroom.teacher_id = tbl_user.user_id WHERE class_id = :class_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':class_id', $class_id);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Database Error in getTeacherInClass: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
