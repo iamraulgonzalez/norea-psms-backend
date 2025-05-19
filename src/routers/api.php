@@ -682,7 +682,6 @@ function route($uri, $method, $req, $res) {
                                     ]);
                                 }
                             }
-                            
 
                             if ($method === 'POST' && $action === 'resetPassword') {
                                 $data = json_decode(file_get_contents('php://input'), true);
@@ -758,6 +757,10 @@ function route($uri, $method, $req, $res) {
                                     return $controller->logout();
                                 case 'current':
                                     return $controller->getCurrentUser();
+                            }
+
+                            if($method === "GET" && $action === "getTeacherInClass"){
+                                $controller->getTeacherInClass();
                             }
                             break;
                         case 'school_session':
@@ -1137,6 +1140,13 @@ function route($uri, $method, $req, $res) {
                                         'status' => 'error',
                                         'message' => 'Grade ID and Year Study ID are required'
                                     ]);
+                                }
+                            }
+                            if ($method === "DELETE" && $action === "deleteStudentFromStudy") {
+                                if (isset($uriParts[2]) && isset($uriParts[3]) && isset($uriParts[4])) {
+                                    $controller->deleteStudentFromStudy($uriParts[2], $uriParts[3], $uriParts[4]);
+                                } else {
+                                    echo jsonResponse(400, ['message' => 'Student ID, Class ID, and Year Study ID not provided']);
                                 }
                             }
                             break;

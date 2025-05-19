@@ -25,6 +25,8 @@ class UserController {
                         'full_name' => $user['full_name'],
                         'phone' => $user['phone'],
                         'user_type' => $user['user_type'],
+                        'class_name' => $user['class_name'],
+                        'class_id' => $user['class_id'],
                         'created_date' => $user['created_date'],
                         'status' => $user['status']
                     ];
@@ -444,9 +446,9 @@ class UserController {
         }
     }
 
-    public function getTeacherInClass($class_id) {
+    public function getTeacherInClass() {
         try {
-            $result = $this->user->getTeacherInClass($class_id);
+            $result = $this->user->getTeacherInClass();
             return jsonResponse(200, [
                 'status' => 'success',
                 'data' => $result

@@ -1184,4 +1184,86 @@ class StudyModel {
             ];
         }
     }
+
+    public function deleteStudentFromStudy($studentId, $classId, $yearStudyId) {
+        try {
+            $this->conn->beginTransaction();
+
+            // Check if the student is enrolled in the class
+            $checkEnrollmentQuery = "SELECT * FROM tbl_study 
+                                    WHERE student_id = :student_id 
+                                    AND class_id = :class_id 
+                                    AND year_study_id = :year_study_id";
+            $stmt = $this->conn->prepare($checkEnrollmentQuery);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->bindParam(':year_study_id', $yearStudyId);
+            $stmt->execute();
+            $enrollment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$enrollment) {
+                throw new Exception("សិស្សមិនមានការសិក្សានៅថ្នាក់នេះទេ");
+            }
+
+           // Check if student has any monthly scores
+            $monthlyScoreQuery = "SELECT COUNT(*) as score_count FROM tbl_student_monthly_score sms
+                                    INNER JOIN classroom_subject_monthly_score csms 
+                                        ON sms.classroom_subject_monthly_score_id = csms.classroom_subject_monthly_score_id
+                                    WHERE sms.student_id = ? 
+                                    AND csms.class_id = ? 
+                                    AND sms.isDeleted = 0";
+            $monthlyStmt = $this->conn->prepare($monthlyScoreQuery);
+            $monthlyStmt->bindParam(1, $studentId);
+            $monthlyStmt->bindParam(2, $classId);
+            $monthlyStmt->execute();
+            $monthlyResult = $monthlyStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($monthlyResult['score_count'] > 0) {
+            throw new Exception("សិស្សនេះមានពិន្ទុប្រចាំខែរួចហើយ មិនអាចលុបបានទេ");
+            }
+
+            // Check if student has any semester scores
+            $semesterScoreQuery = "SELECT COUNT(*) as score_count 
+                        FROM tbl_student_semester_score sss
+                        INNER JOIN tbl_semester_exam_subjects ses 
+                        ON sss.semester_exam_subject_id = ses.id
+                        WHERE sss.student_id = ? 
+                        AND ses.class_id = ? 
+                        AND sss.isDeleted = 0";
+            $semesterStmt = $this->conn->prepare($semesterScoreQuery);
+            $semesterStmt->bindParam(1, $studentId);
+            $semesterStmt->bindParam(2, $classId);
+            $semesterStmt->execute();
+            $semesterResult = $semesterStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($semesterResult['score_count'] > 0) {
+                throw new Exception("សិស្សនេះមានពិន្ទុប្រចាំឆមាសរួចហើយ មិនអាចលុបបានទេ");
+            }
+
+            // Delete the enrollment record
+            $deleteEnrollmentQuery = "DELETE FROM tbl_study 
+                                    WHERE student_id = :student_id 
+                                    AND class_id = :class_id 
+                                    AND year_study_id = :year_study_id";
+            $stmt = $this->conn->prepare($deleteEnrollmentQuery);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->bindParam(':class_id', $classId);
+            $stmt->bindParam(':year_study_id', $yearStudyId);
+            $stmt->execute();
+
+            $this->conn->commit();
+
+            return [
+                'status' => 'success',
+                'message' => 'សិស្សត្រូវបានលុបចោលពីថ្នាក់នេះជោគជ័យ'
+            ];  
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Error deleting student from study: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
 }

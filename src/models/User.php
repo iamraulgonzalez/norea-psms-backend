@@ -18,11 +18,15 @@ class User {
                         full_name,
                         phone,
                         user_type,
-                        status,
+                        c.class_name as class_name,
+                        c.class_id as class_id,
+                        u.status,
                         created_date
-                    FROM tbl_user 
-                    WHERE isDeleted = 0
+                    FROM tbl_user u
+                    LEFT JOIN tbl_classroom c ON u.user_id = c.teacher_id
+                    WHERE u.isDeleted = 0
                     ORDER BY user_id DESC";
+
             
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
@@ -425,13 +429,16 @@ class User {
         }
     }
 
-    public function getTeacherInClass($class_id) {
+    public function getTeacherInClass() {
         try {
-            $query = "SELECT teacher_id FROM tbl_classroom  JOIN tbl_user ON tbl_classroom.teacher_id = tbl_user.user_id WHERE class_id = :class_id";
+            $query = "SELECT c.class_id,c.class_name,u.user_id AS teacher_id,u.full_name AS teacher_name
+            FROM tbl_classroom c
+            LEFT JOIN tbl_user u ON c.teacher_id = u.user_id
+            WHERE u.user_type = 'user'
+            AND c.isDeleted = 0;";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':class_id', $class_id);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Database Error in getTeacherInClass: " . $e->getMessage());
             throw $e;

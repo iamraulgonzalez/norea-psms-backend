@@ -489,5 +489,25 @@ class StudyController {
             ]);
         }
     }
+
+    public function deleteStudentFromStudy($studentId, $classId, $yearStudyId) {
+        try {
+            $result = $this->studyModel->deleteStudentFromStudy($studentId, $classId, $yearStudyId);
+            
+            if ($result['status'] === 'error') {
+                echo jsonResponse(500, $result);
+                return;
+            }
+
+            echo jsonResponse(200, $result);
+        } catch (Exception $e) {
+            error_log("Error in deleteStudentFromStudy: " . $e->getMessage());
+            echo jsonResponse(500, [
+                'status' => 'error',
+                'message' => 'Failed to delete student from study: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
+
 
