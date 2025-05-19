@@ -166,6 +166,12 @@ class User {
                 $updateFields[] = "full_name = :full_name";
                 $params[':full_name'] = $data['full_name'];
             }
+
+            if (isset($data['user_name'])) {
+                $updateFields[] = "user_name = :user_name";
+                $params[':user_name'] = $data['user_name'];
+            }
+
             if (isset($data['phone'])) {
                 $updateFields[] = "phone = :phone";
                 $params[':phone'] = $data['phone'];

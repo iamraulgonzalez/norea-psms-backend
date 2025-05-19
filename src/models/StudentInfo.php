@@ -316,9 +316,9 @@ class Student {
                 SELECT c.class_name 
                 FROM tbl_study s
                 JOIN tbl_classroom c ON s.class_id = c.class_id
-                WHERE s.student_id = :student_id 
+                WHERE s.student_id = :student_id
                 AND s.isDeleted = 0 
-                AND s.status = 'active'
+                AND s.status = 'active' OR s.status = 'inactive' OR s.status = 'graduate' OR s.status = 'graduate' OR s.status = 'suspend'
                 LIMIT 1
             ");
             $stmt->bindParam(':student_id', $id);
