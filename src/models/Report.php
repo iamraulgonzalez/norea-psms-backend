@@ -207,6 +207,27 @@ class Report {
         }
     }
 
+    public function getAllStudentbyYearStudyGraduate($year_study_id) {
+        try {
+            $query = "SELECT * FROM view_all_students_by_year_study_graduate WHERE year_study_id = ?";
+            $params = [$year_study_id];
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute($params);
+
+            return [
+                'status' => 'success',
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getAllStudentbyYearStudy: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Database error: ' . $e->getMessage()
+            ];
+        }
+    }
+
     public function getStudentByGrade($grade_id) {
         try {
             $query = "SELECT * FROM v_getStudentByGrade WHERE grade_id = ?";
